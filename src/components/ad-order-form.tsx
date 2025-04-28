@@ -209,8 +209,13 @@ export default function AdOrderForm() {
     } else {
       setStampPreview(null);
     }
+     // Reset the file input value after handling the upload
+     if (stampFileRef.current) {
+        stampFileRef.current.value = '';
+    }
   }, [toast]);
 
+  // Function to programmatically trigger the file input click
   const triggerStampUpload = useCallback(() => {
     stampFileRef.current?.click();
   }, []);
@@ -263,7 +268,7 @@ export default function AdOrderForm() {
             </Button>
         </div>
 
-      <Card id="printable-area" ref={printableAreaRef} className="w-full print-border-heavy rounded-none shadow-none p-5 border-2 border-black"> {/* Added border-2 border-black */}
+      <Card id="printable-area" ref={printableAreaRef} className="w-full print-border-heavy rounded-none shadow-none p-5 border-2 border-black">
         <CardContent className="p-0">
           {/* Header */}
           <div className="text-center bg-black text-white p-1 rounded mb-5 header-title">
@@ -273,7 +278,7 @@ export default function AdOrderForm() {
            {/* Address Boxes */}
           <div className="flex justify-between gap-3 mb-5">
             {/* Left Address Box */}
-            <div className="w-[48%] print-border rounded p-2 border border-black"> {/* Ensured border */}
+            <div className="w-[48%] print-border rounded p-2 border border-black">
                 <p className="text-sm leading-tight">
                     Lehar Advertising Agency Pvt. Ltd.<br />
                     D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
@@ -284,7 +289,7 @@ export default function AdOrderForm() {
                 </p>
             </div>
             {/* Right Address Box */}
-            <div className="w-[48%] print-border rounded p-2 space-y-2 border border-black"> {/* Ensured border */}
+            <div className="w-[48%] print-border rounded p-2 space-y-2 border border-black">
                  {/* R.O. No. LN */}
                  <div className="flex items-center">
                      <Label htmlFor="roNumber" className="w-20 text-sm shrink-0">R.O.No.LN:</Label>
@@ -359,34 +364,8 @@ export default function AdOrderForm() {
             </div>
           </div>
 
-            {/* Heading & Package */}
-          <div className="flex gap-3 mb-5">
-            <div className="flex-1 print-border-heavy rounded p-2 border-2 border-black"> {/* Changed border to border-2 */}
-              <Label htmlFor="caption" className="block mb-1">Heading/Caption:</Label>
-              <Input
-                id="caption"
-                type="text"
-                placeholder="Enter caption here"
-                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                value={caption}
-                onChange={(e) => setCaption(e.target.value)}
-              />
-            </div>
-            <div className="w-[30%] print-border-heavy rounded p-2 border-2 border-black"> {/* Changed border to border-2 */}
-              <Label htmlFor="package" className="block mb-1">Package:</Label>
-              <Input
-                id="package"
-                type="text"
-                placeholder="Enter package name"
-                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                value={packageName}
-                onChange={(e) => setPackageName(e.target.value)}
-              />
-            </div>
-          </div>
-
-           {/* Advertisement Manager Section */}
-            <div className="print-border rounded p-2 mb-5 border border-black"> {/* Ensured border */}
+           {/* Advertisement Manager Section - Moved Before Heading/Package */}
+            <div className="print-border rounded p-2 mb-5 border border-black">
                 <Label className="block mb-1">The Advertisement Manager</Label>
                 <Input
                     type="text"
@@ -402,8 +381,35 @@ export default function AdOrderForm() {
                     value={advertisementManagerLine2}
                     onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
                 />
-                 <p className="text-sm mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p> {/* Added text line */}
+                 <p className="text-sm mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
             </div>
+
+
+            {/* Heading & Package */}
+          <div className="flex gap-3 mb-5">
+            <div className="flex-1 print-border-heavy rounded p-2 border-2 border-black">
+              <Label htmlFor="caption" className="block mb-1">Heading/Caption:</Label>
+              <Input
+                id="caption"
+                type="text"
+                placeholder="Enter caption here"
+                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                value={caption}
+                onChange={(e) => setCaption(e.target.value)}
+              />
+            </div>
+            <div className="w-[30%] print-border-heavy rounded p-2 border-2 border-black">
+              <Label htmlFor="package" className="block mb-1">Package:</Label>
+              <Input
+                id="package"
+                type="text"
+                placeholder="Enter package name"
+                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                value={packageName}
+                onChange={(e) => setPackageName(e.target.value)}
+              />
+            </div>
+          </div>
 
 
           {/* Schedule Table */}
@@ -443,7 +449,8 @@ export default function AdOrderForm() {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table>{' '}
+            {/* Removed extra whitespace causing hydration error */}
              <div className="flex gap-2 mt-2 no-print">
                 <Button variant="outline" size="sm" onClick={addRow}>
                     <PlusCircle className="mr-2 h-4 w-4" /> Add Row
@@ -455,7 +462,7 @@ export default function AdOrderForm() {
           </div>
 
           {/* Matter Section */}
-          <div className="flex h-[150px] print-border rounded mb-5 overflow-hidden border border-black"> {/* Ensured border */}
+          <div className="flex h-[150px] print-border rounded mb-5 overflow-hidden border border-black">
             <div className="vertical-label bg-black text-white flex items-center justify-center p-1" style={{ writingMode: 'vertical-lr', textOrientation: 'mixed' }}>
               <span className="text-base font-bold transform rotate-180">MATTER</span>
             </div>
@@ -470,7 +477,7 @@ export default function AdOrderForm() {
           </div>
 
           {/* Billing Info */}
-          <div className="print-border rounded p-2 mb-5 border border-black"> {/* Ensured border */}
+          <div className="print-border rounded p-2 mb-5 border border-black">
             <p className="font-bold mb-1">Forward all bills with relevant voucher copies to:</p>
             <p className="text-sm leading-tight">
               D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
@@ -482,16 +489,19 @@ export default function AdOrderForm() {
           </div>
 
           {/* Notes & Stamp */}
-          <div className="relative print-border rounded p-2 pr-[130px] border border-black"> {/* Ensured border */}
+           <div className="relative print-border rounded p-2 pr-[140px] border border-black"> {/* Increased right padding for larger stamp */}
             <p className="font-bold mb-1">Note:</p>
             <ol className="list-decimal list-inside text-sm space-y-1">
-              <li>Space reserved vide our letter No. <Input type="text" value={noteInput} onChange={(e) => setNoteInput(e.target.value)} className="inline-block w-24 h-5 p-0 border-0 border-b border-black rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none font-bold" /></li>
+              <li>Space reserved vide our letter No.<Input type="text" value={noteInput} onChange={(e) => setNoteInput(e.target.value)} className="inline-block w-24 h-5 p-0 border-0 border-b border-black rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none font-bold" /></li>
               <li>No two advertisements of the same client should appear in the same issue.</li>
               <li>Please quote R.O. No. in all your bills and letters.</li>
               <li>Please send two voucher copies of good reproduction within 3 days of publishing.</li>
             </ol>
-             {/* Stamp Area */}
-            <div className="stamp-container absolute top-2 right-2 w-[100px] h-[100px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden border-none"> {/* Explicitly set border-none */}
+             {/* Stamp Area - Increased size, click triggers upload */}
+            <div
+                className="stamp-container absolute top-2 right-2 w-[120px] h-[120px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden border-none" /* Increased size */
+                onClick={triggerStampUpload} /* Trigger upload on container click */
+             >
                 <Input
                     type="file"
                     ref={stampFileRef}
@@ -506,14 +516,14 @@ export default function AdOrderForm() {
                             id="stampPreview"
                             src={stampPreview}
                             alt="Stamp Preview"
-                            width={100} // Fixed width
-                            height={100} // Fixed height
-                            className="object-contain w-full h-full" // Use object-contain
+                            width={120} // Increased width to match container
+                            height={120} // Increased height to match container
+                            className="object-contain w-full h-full" // Use object-contain to fit image within bounds
                             unoptimized // Good for Data URIs
                           />
                      </div>
                 ) : (
-                     <Label htmlFor="stampFile" className="text-center text-xs text-muted-foreground cursor-pointer p-1">Click to Upload Stamp</Label>
+                     <Label htmlFor="stampFile" className="text-center text-xs text-muted-foreground cursor-pointer p-1 no-print">Click to Upload Stamp</Label>
                 )}
             </div>
           </div>
