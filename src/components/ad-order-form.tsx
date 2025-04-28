@@ -54,8 +54,8 @@ export default function AdOrderForm() {
   const [stampPreview, setStampPreview] = useState<string | null>(null);
   const [noteInput, setNoteInput] = useState('');
   const [roNumber, setRoNumber] = useState('');
-  // Initialize orderDate with the current date
-  const [orderDate, setOrderDate] = useState<Date | undefined>(new Date());
+  // Initialize orderDate to undefined to prevent hydration mismatch
+  const [orderDate, setOrderDate] = useState<Date | undefined>(undefined);
   const [clientName, setClientName] = useState('');
   const [advertisementManagerLine1, setAdvertisementManagerLine1] = useState(''); // State for Adv Manager Line 1
   const [advertisementManagerLine2, setAdvertisementManagerLine2] = useState(''); // State for Adv Manager Line 2
@@ -108,10 +108,11 @@ export default function AdOrderForm() {
     } finally {
       isInitialLoadRef.current = false;
     }
-  }, [toast]);
+  }, [toast]); // Runs only once on client after mount
 
   // Save data to localStorage with debounce
   useEffect(() => {
+    // Skip saving during initial load until recovery logic finishes
     if (isInitialLoadRef.current) {
       return;
     }
@@ -484,6 +485,7 @@ export default function AdOrderForm() {
                             objectFit="contain" // Ensure the image fits within the container without cropping
                             objectPosition="center" // Center the image within the container
                             className="p-0" // Ensure no padding interferes
+                            unoptimized // Added to potentially help with hydration if next/image optimizations cause issues, review if needed
                           />
                      </div>
                 ) : (
