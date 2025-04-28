@@ -66,7 +66,7 @@ export default function AdOrderForm() {
         setScheduleRows(loadedRows);
         setStampPreview(parsedData.stampPreview || null);
         toast({
-          title: "Data Recovered",
+          title: "Draft Recovered", // Changed toast title
           description: "Previously entered form data has been loaded.",
         });
       }
@@ -74,7 +74,7 @@ export default function AdOrderForm() {
       console.error("Failed to load data from localStorage:", error);
       toast({
         title: "Recovery Failed",
-        description: "Could not recover previous form data.",
+        description: "Could not recover previous draft data. Please check console for errors.", // Updated description
         variant: "destructive",
       });
     } finally {
@@ -191,14 +191,14 @@ export default function AdOrderForm() {
     try {
         localStorage.removeItem(LOCAL_STORAGE_KEY);
         toast({
-            title: "Form Cleared",
-            description: "Form data and recovered data have been cleared.",
+            title: "Draft Cleared", // Changed toast title
+            description: "Form data and saved draft have been cleared.", // Changed description
         });
     } catch (error) {
         console.error("Failed to clear localStorage:", error);
          toast({
             title: "Clear Error",
-            description: "Could not clear stored recovery data.",
+            description: "Could not clear stored draft data.", // Changed description
             variant: "destructive",
         });
     }
@@ -210,7 +210,7 @@ export default function AdOrderForm() {
     <div className="max-w-[210mm] mx-auto font-bold">
        <div className="flex justify-end gap-2 mb-4 no-print">
             <Button onClick={handleClearForm} variant="outline">
-              <Eraser className="mr-2 h-4 w-4" /> Clear Form & Data
+              <Eraser className="mr-2 h-4 w-4" /> Clear Form & Draft
             </Button>
             <Button onClick={handlePrint}>
               Print Release Order
