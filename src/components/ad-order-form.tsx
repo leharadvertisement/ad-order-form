@@ -369,7 +369,9 @@ export default function AdOrderForm() {
                     value={advertisementManagerLine2}
                     onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
                 />
+                 <p className="text-sm mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p> {/* Added text line */}
             </div>
+
 
           {/* Schedule Table */}
           <div className="mb-5">
@@ -471,8 +473,8 @@ export default function AdOrderForm() {
                         src={stampPreview}
                         alt="Stamp Preview"
                         layout="fill"
-                        objectFit="cover" // Ensure image covers the container
-                        objectPosition="center" // Center the image
+                        objectFit="contain" // Changed from cover to contain
+                        objectPosition="center" // Keep centered
                         className="p-0" // Remove padding if any
                       />
                 ) : (
@@ -485,4 +487,3 @@ export default function AdOrderForm() {
     </div>
   );
 }
-
