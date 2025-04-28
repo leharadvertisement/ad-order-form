@@ -123,7 +123,7 @@ body {
    }
 
 
-  /* Custom styles for print and potential export (like Word .doc / PDF) */
+  /* Custom styles for print and potential export (like PDF) */
   @media print {
      /* Basic setup */
      body, html {
@@ -153,7 +153,7 @@ body {
      #printable-area .font-normal { font-weight: normal !important; }
 
      /* Hide non-print elements */
-     .no-print, .no-print * {
+     .no-print, .no-print *, input[type="text"], textarea, .popover-trigger-container button, #stampContainerElement > *:not(#stampPreviewPrint), .popover-content {
        display: none !important;
        visibility: hidden !important;
        width: 0 !important;
@@ -162,6 +162,17 @@ body {
        position: absolute !important;
        left: -9999px !important;
      }
+
+    /* Ensure print-specific elements are visible */
+    .print-input-value, .print-textarea-value, .print-date-span, #stampPreviewPrint, .print-stamp-placeholder {
+        display: block !important;
+        visibility: visible !important;
+        width: auto !important;
+        height: auto !important;
+        overflow: visible !important;
+        position: static !important;
+     }
+
 
      /* Ensure the main printable card takes full width and has padding */
      #printable-area {
@@ -187,6 +198,8 @@ body {
        text-align: center !important;
        font-size: 14pt !important;
        font-weight: bold !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
      }
 
       /* Layout Containers */
@@ -226,15 +239,17 @@ body {
           display: inline-block !important;
        }
 
+      /* Advertisement Manager Section */
       .advertisement-manager-section {
         border: 1px solid black !important;
         padding: 8px !important;
         margin-bottom: 15px !important;
       }
-      .advertisement-manager-section label { display: block !important; margin-bottom: 5px !important; font-size: 10pt !important; }
-      .advertisement-manager-section p { margin-top: 10px !important; font-size: 9pt !important; }
+       .advertisement-manager-section label { display: block !important; margin-bottom: 5px !important; font-size: 10pt !important; }
+       .advertisement-manager-section p { margin-top: 10px !important; font-size: 9pt !important; }
 
 
+      /* Heading & Package */
       .heading-package-container {
         display: flex !important;
         gap: 10px !important;
@@ -263,7 +278,7 @@ body {
 
 
      /* Inputs and Textareas */
-     input[type="text"], .print-input-value, .print-textarea-value {
+     .print-input-value, .print-textarea-value {
         border: none !important;
         border-bottom: 1px solid black !important;
         padding: 2px 0 !important;
@@ -285,10 +300,7 @@ body {
       .print-textarea-value {
          min-height: 100px !important; /* Specific min height for textarea replacement */
       }
-      /* Hide original inputs/textareas */
-      input[type="text"], textarea {
-        display: none !important;
-      }
+
 
      /* Table Styles */
       .table-container-print { margin-bottom: 15px !important; }

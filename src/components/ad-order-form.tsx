@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
+
 interface ScheduleRow {
   id: number;
   keyNo: string;
@@ -219,7 +220,7 @@ export default function AdOrderForm() {
     stampFileRef.current?.click();
   }, []);
 
- // --- PDF Download Logic ---
+  // --- PDF Download Logic ---
  const handleDownloadPdf = useCallback(async () => {
     if (!printableAreaRef.current) {
       toast({
@@ -234,44 +235,44 @@ export default function AdOrderForm() {
     const filenameDate = displayDate ? displayDate.replace(/\./g, '-') : 'NoDate';
     const filename = `Release_Order_${roNumber || 'NoRO'}_${filenameDate}.pdf`;
 
-    // Temporarily add print-specific elements
+    // Temporarily add print-specific elements before capturing
+    const tempElements: HTMLElement[] = []; // Store references to remove later
     const inputs = elementToCapture.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('input[type="text"], textarea');
     inputs.forEach(el => {
       const valueDiv = document.createElement('div');
       valueDiv.className = el.tagName === 'TEXTAREA' ? 'print-textarea-value' : 'print-input-value';
       valueDiv.textContent = el.value;
-      el.parentNode?.insertBefore(valueDiv, el.nextSibling); // Insert the div after the input/textarea
+      el.parentNode?.insertBefore(valueDiv, el.nextSibling);
+      tempElements.push(valueDiv); // Add to removal list
     });
 
-     // Handle Date Picker Button explicitly for print
-     const dateButtonContainer = elementToCapture.querySelector('.popover-trigger-container');
-     const dateSpan = document.createElement('span');
-     dateSpan.className = 'print-date-span'; // Add class for print styling
-     dateSpan.textContent = displayDate || 'N/A';
-     if (dateButtonContainer) {
-        dateButtonContainer.appendChild(dateSpan); // Add the span for printing
-     }
+    const dateButtonContainer = elementToCapture.querySelector('.popover-trigger-container');
+    let dateSpan: HTMLSpanElement | null = null;
+    if (dateButtonContainer) {
+        dateSpan = document.createElement('span');
+        dateSpan.className = 'print-date-span';
+        dateSpan.textContent = displayDate || 'N/A';
+        dateButtonContainer.appendChild(dateSpan);
+        tempElements.push(dateSpan); // Add to removal list
+    }
 
      // Handle Stamp Image for print
-     const stampContainer = elementToCapture.querySelector('#stampContainerElement');
-     const stampImagePrint = document.createElement('img');
-     stampImagePrint.id = "stampPreviewPrint"; // Use different ID for print image
-     if (stampPreview) {
-       stampImagePrint.src = stampPreview;
-       stampImagePrint.alt = "Stamp Preview";
-     }
-     const stampPlaceholder = document.createElement('div');
-     stampPlaceholder.className = 'print-stamp-placeholder';
-     stampPlaceholder.textContent = 'No Stamp Uploaded';
-
-      // Find the dedicated print stamp container and append the image or placeholder
      const printStampContainer = elementToCapture.querySelector('.print-stamp-container');
      if (printStampContainer) {
         printStampContainer.innerHTML = ''; // Clear previous content
         if (stampPreview) {
+          const stampImagePrint = document.createElement('img');
+          stampImagePrint.id = "stampPreviewPrint";
+          stampImagePrint.src = stampPreview;
+          stampImagePrint.alt = "Stamp Preview";
           printStampContainer.appendChild(stampImagePrint);
+          tempElements.push(stampImagePrint); // Add to removal list (indirectly via parent removal)
         } else {
+          const stampPlaceholder = document.createElement('div');
+          stampPlaceholder.className = 'print-stamp-placeholder';
+          stampPlaceholder.textContent = 'No Stamp Uploaded';
           printStampContainer.appendChild(stampPlaceholder);
+          tempElements.push(stampPlaceholder); // Add to removal list (indirectly via parent removal)
         }
      }
 
@@ -280,69 +281,86 @@ export default function AdOrderForm() {
       // Use html2canvas to capture the element
       const canvas = await html2canvas(elementToCapture, {
         scale: 2, // Increase scale for better quality
-        useCORS: true, // Important if images are from external sources
-        backgroundColor: '#ffffff', // Set background to white
-        logging: true, // Enable logging for debugging
-        scrollX: 0, // Prevent horizontal scrolling issues
-        scrollY: -window.scrollY, // Adjust for vertical scroll position
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false, // Disable logging for cleaner console
+        scrollX: 0,
+        scrollY: -window.scrollY,
         windowWidth: elementToCapture.scrollWidth,
         windowHeight: elementToCapture.scrollHeight,
         onclone: (clonedDoc) => {
-             // Apply print styles specifically for html2canvas rendering
+            // Apply print styles specifically for html2canvas rendering
+            // Ensure all necessary print styles are applied here
              const printStyle = clonedDoc.createElement('style');
              printStyle.innerHTML = `
                  @media print {
-                   /* Include all refined print styles from globals.css here */
-                   body, html { margin: 0 !important; padding: 0 !important; width: 210mm !important; background-color: white !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-                   #printable-area, #printable-area * { font-family: Arial, sans-serif !important; font-weight: bold !important; font-size: 10pt !important; line-height: 1.2 !important; box-sizing: border-box !important; color: black !important; border-color: black !important; background-color: transparent !important; }
-                   #printable-area .text-sm { font-size: 9pt !important; } #printable-area .text-xs { font-size: 8pt !important; } #printable-area .font-normal { font-weight: normal !important; }
-                   .no-print, .no-print *, input[type="text"], textarea, .popover-trigger-container button, #stampContainerElement > *:not(#stampPreviewPrint) { display: none !important; visibility: hidden !important; width: 0 !important; height: 0 !important; overflow: hidden !important; position: absolute !important; left: -9999px !important; }
-                   .print-input-value, .print-textarea-value, .print-date-span, #stampPreviewPrint, .print-stamp-placeholder { display: block !important; visibility: visible !important; width: auto !important; height: auto !important; overflow: visible !important; position: static !important; }
-                   #printable-area { width: 100% !important; max-width: 100% !important; border: 2px solid black !important; padding: 15px !important; margin: 0 !important; box-shadow: none !important; page-break-inside: avoid !important; }
-                   #printable-area > .p-0 { padding: 0 !important; }
-                   .header-title { background-color: black !important; color: white !important; padding: 4px 0 !important; margin-bottom: 15px !important; text-align: center !important; font-size: 14pt !important; font-weight: bold !important; }
-                   .address-container { display: flex !important; justify-content: space-between !important; gap: 10px !important; margin-bottom: 15px !important; width: 100% !important; }
-                   .address-box, .ro-date-client-container { width: 48% !important; border: 1px solid black !important; padding: 8px !important; vertical-align: top !important; min-height: 100px !important; }
-                   .address-box p { margin: 0 0 2px 0 !important; font-size: 9pt !important; line-height: 1.3 !important; }
-                   .ro-date-client-container .field-row { display: flex !important; align-items: baseline !important; margin-bottom: 8px !important; min-height: 1.5em; }
-                   .ro-date-client-container label { width: 70px !important; flex-shrink: 0 !important; margin-right: 5px !important; font-size: 9pt !important; }
-                   .print-date-span { border-bottom: 1px solid black !important; padding: 1px 0 !important; min-width: 100px !important; display: inline-block !important; }
-                   .advertisement-manager-section { border: 1px solid black !important; padding: 8px !important; margin-bottom: 15px !important; }
-                   .advertisement-manager-section label { display: block !important; margin-bottom: 5px !important; font-size: 10pt !important; }
-                   .advertisement-manager-section p { margin-top: 10px !important; font-size: 9pt !important; }
-                   .heading-package-container { display: flex !important; gap: 10px !important; margin-bottom: 15px !important; width: 100% !important; }
-                   .heading-caption-box { flex: 1 !important; border: 2px solid black !important; padding: 8px !important; vertical-align: top !important; min-height: 50px !important; }
-                   .package-box { width: 30% !important; border: 2px solid black !important; padding: 8px !important; vertical-align: top !important; min-height: 50px !important; }
-                   .heading-caption-box label, .package-box label { display: block !important; margin-bottom: 4px !important; font-size: 10pt !important; }
-                   .print-input-value, .print-textarea-value { border: none !important; border-bottom: 1px solid black !important; padding: 2px 0 !important; background: transparent !important; color: black !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; border-radius: 0 !important; box-shadow: none !important; height: auto !important; min-height: 1.4em !important; width: 100% !important; font-size: 10pt !important; font-weight: bold !important; display: block !important; white-space: pre-wrap !important; word-wrap: break-word !important; }
-                   .print-textarea-value { min-height: 100px !important; }
-                   .table-container-print { margin-bottom: 15px !important; }
-                   table.print-table { width: 100% !important; border-collapse: collapse !important; border: 2px solid black !important; table-layout: fixed !important; page-break-inside: auto !important; }
-                   table.print-table thead.print-table-header th { border: 1px solid black !important; padding: 4px !important; font-size: 9pt !important; font-weight: bold !important; background-color: #f0f0f0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; text-align: left !important; }
-                   table.print-table tbody tr { page-break-inside: avoid !important; }
-                   table.print-table td.print-table-cell { border: 1px solid black !important; padding: 0 !important; vertical-align: top !important; height: auto !important; }
-                   .print-table-cell .print-input-value { padding: 4px !important; border: none !important; min-height: 2.5em !important; height: 100% !important; font-size: 10pt !important; font-weight: bold !important; }
-                   .matter-box { display: flex !important; min-height: 150px !important; border: 2px solid black !important; margin-bottom: 15px !important; width: 100% !important; overflow: hidden !important; }
-                   .vertical-label { background-color: black !important; color: white !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; writing-mode: vertical-lr !important; text-orientation: mixed !important; transform: rotate(180deg) !important; width: 30px !important; display: flex !important; align-items: center !important; justify-content: center !important; padding: 4px !important; font-size: 12pt !important; font-weight: bold !important; flex-shrink: 0 !important; }
-                   .matter-content { flex: 1 !important; padding: 5px !important; position: relative; }
-                   .matter-content .print-textarea-value { min-height: 140px !important; height: 100% !important; border: none !important; padding: 0 !important; }
-                   .billing-address-box { border: 1px solid black !important; padding: 8px !important; margin-bottom: 15px !important; }
-                   .billing-title-underline { border-bottom: 2px solid black !important; display: inline-block !important; padding-bottom: 1px !important; margin-bottom: 5px !important; }
-                   .billing-address-box p { margin: 0 0 2px 0 !important; font-size: 9pt !important; line-height: 1.3 !important; padding-top: 5px !important; }
+                    /* Include all refined print styles from globals.css here */
+                    /* Basic setup */
+                    body, html { margin: 0 !important; padding: 0 !important; width: 210mm !important; height: auto !important; background-color: white !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                    #printable-area, #printable-area * { font-family: Arial, sans-serif !important; font-weight: bold !important; font-size: 10pt !important; line-height: 1.2 !important; box-sizing: border-box !important; color: black !important; border-color: black !important; background-color: transparent !important; }
+                    #printable-area .text-sm { font-size: 9pt !important; }
+                    #printable-area .text-xs { font-size: 8pt !important; }
+                    #printable-area .font-normal { font-weight: normal !important; }
+                    /* Hide non-print elements */
+                    .no-print, .no-print *, input[type="text"], textarea, .popover-trigger-container button, #stampContainerElement > *:not(#stampPreviewPrint), .popover-content { display: none !important; visibility: hidden !important; width: 0 !important; height: 0 !important; overflow: hidden !important; position: absolute !important; left: -9999px !important; }
+                    /* Ensure print-specific elements are visible */
+                    .print-input-value, .print-textarea-value, .print-date-span, #stampPreviewPrint, .print-stamp-placeholder { display: block !important; visibility: visible !important; width: auto !important; height: auto !important; overflow: visible !important; position: static !important; }
+                    #printable-area { width: 100% !important; max-width: 100% !important; border: 2px solid black !important; padding: 15px !important; margin: 0 !important; box-shadow: none !important; page-break-inside: avoid !important; }
+                    #printable-area > .p-0 { padding: 0 !important; }
+                    .header-title { background-color: black !important; color: white !important; padding: 4px 0 !important; margin-bottom: 15px !important; text-align: center !important; font-size: 14pt !important; font-weight: bold !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;}
+                    /* Layout Containers */
+                    .address-container { display: flex !important; justify-content: space-between !important; gap: 10px !important; margin-bottom: 15px !important; width: 100% !important; }
+                    .address-box, .ro-date-client-container { width: 48% !important; border: 1px solid black !important; padding: 8px !important; vertical-align: top !important; min-height: 100px !important; }
+                    .address-box p { margin: 0 0 2px 0 !important; font-size: 9pt !important; line-height: 1.3 !important; }
+                    .ro-date-client-container .field-row { display: flex !important; align-items: baseline !important; margin-bottom: 8px !important; min-height: 1.5em; }
+                    .ro-date-client-container label { width: 70px !important; flex-shrink: 0 !important; margin-right: 5px !important; font-size: 9pt !important; }
+                    .print-date-span { border-bottom: 1px solid black !important; padding: 1px 0 !important; min-width: 100px !important; display: inline-block !important; }
+                    /* Advertisement Manager Section */
+                    .advertisement-manager-section { border: 1px solid black !important; padding: 8px !important; margin-bottom: 15px !important; }
+                     .advertisement-manager-section label { display: block !important; margin-bottom: 5px !important; font-size: 10pt !important; }
+                     .advertisement-manager-section p { margin-top: 10px !important; font-size: 9pt !important; }
+                     /* Heading & Package */
+                    .heading-package-container { display: flex !important; gap: 10px !important; margin-bottom: 15px !important; width: 100% !important; }
+                    .heading-caption-box { flex: 1 !important; border: 2px solid black !important; padding: 8px !important; vertical-align: top !important; min-height: 50px !important; }
+                    .package-box { width: 30% !important; border: 2px solid black !important; padding: 8px !important; vertical-align: top !important; min-height: 50px !important; }
+                    .heading-caption-box label, .package-box label { display: block !important; margin-bottom: 4px !important; font-size: 10pt !important; }
+                    /* Input/Textarea Replacements */
+                    .print-input-value, .print-textarea-value { border: none !important; border-bottom: 1px solid black !important; padding: 2px 0 !important; background: transparent !important; color: black !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; border-radius: 0 !important; box-shadow: none !important; height: auto !important; min-height: 1.4em !important; width: 100% !important; font-size: 10pt !important; font-weight: bold !important; display: block !important; white-space: pre-wrap !important; word-wrap: break-word !important; }
+                    .print-textarea-value { min-height: 100px !important; }
+                    /* Table Styles */
+                    .table-container-print { margin-bottom: 15px !important; }
+                    table.print-table { width: 100% !important; border-collapse: collapse !important; border: 2px solid black !important; table-layout: fixed !important; page-break-inside: auto !important; }
+                    table.print-table thead.print-table-header th { border: 1px solid black !important; padding: 4px !important; font-size: 9pt !important; font-weight: bold !important; background-color: #f0f0f0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; text-align: left !important; }
+                    table.print-table tbody tr { page-break-inside: avoid !important; }
+                    table.print-table td.print-table-cell { border: 1px solid black !important; padding: 0 !important; vertical-align: top !important; height: auto !important; }
+                    .print-table-cell .print-input-value { padding: 4px !important; border: none !important; min-height: 2.5em !important; height: 100% !important; font-size: 10pt !important; font-weight: bold !important; }
+                    /* Matter Section */
+                    .matter-box { display: flex !important; min-height: 150px !important; border: 2px solid black !important; margin-bottom: 15px !important; width: 100% !important; overflow: hidden !important; }
+                    .vertical-label { background-color: black !important; color: white !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; writing-mode: vertical-lr !important; text-orientation: mixed !important; transform: rotate(180deg) !important; width: 30px !important; display: flex !important; align-items: center !important; justify-content: center !important; padding: 4px !important; font-size: 12pt !important; font-weight: bold !important; flex-shrink: 0 !important; }
+                    .matter-content { flex: 1 !important; padding: 5px !important; position: relative; }
+                    .matter-content .print-textarea-value { min-height: 140px !important; height: 100% !important; border: none !important; padding: 0 !important; }
+                    /* Billing Info */
+                    .billing-address-box { border: 1px solid black !important; padding: 8px !important; margin-bottom: 15px !important; }
+                    .billing-title-underline { border-bottom: 2px solid black !important; display: inline-block !important; padding-bottom: 1px !important; margin-bottom: 5px !important; }
+                    .billing-address-box p { margin: 0 0 2px 0 !important; font-size: 9pt !important; line-height: 1.3 !important; padding-top: 5px !important; }
+                    /* Notes & Stamp */
                     .notes-stamp-container { display: flex !important; justify-content: space-between !important; gap: 10px !important; width: 100% !important; }
-                   .notes-container { flex: 1 !important; border: 1px solid black !important; padding: 8px !important; min-height: 150px !important; position: relative; }
-                   .note-title-underline { border-bottom: 2px solid black !important; display: inline-block !important; padding-bottom: 1px !important; margin-bottom: 5px !important; }
-                   .notes-container ol { padding-left: 25px !important; margin-top: 5px !important; list-style-position: outside !important; font-size: 9pt !important; }
-                   .notes-container li { margin-bottom: 3px !important; page-break-inside: avoid !important; }
-                   .print-stamp-container { width: 180px !important; height: 150px !important; border: none !important; flex-shrink: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; overflow: hidden !important; background-color: white !important; }
-                   #stampPreviewPrint { display: block !important; max-width: 100% !important; max-height: 100% !important; width: auto !important; height: auto !important; object-fit: contain !important; object-position: center center !important; border: none !important; }
-                   .print-stamp-placeholder { width: 100% !important; height: 100% !important; border: 1px dashed #ccc !important; display: flex !important; align-items: center !important; justify-content: center !important; font-size: 9pt !important; color: #aaa !important; }
-                   table { page-break-inside: auto; } tr { page-break-inside: avoid; page-break-after: auto; } thead { display: table-header-group; } tfoot { display: table-footer-group; }
-                   .underline-black { border-bottom: 2px solid black !important; }
-                }
+                    .notes-container { flex: 1 !important; border: 1px solid black !important; padding: 8px !important; min-height: 150px !important; position: relative; }
+                    .note-title-underline { border-bottom: 2px solid black !important; display: inline-block !important; padding-bottom: 1px !important; margin-bottom: 5px !important; }
+                    .notes-container ol { padding-left: 25px !important; margin-top: 5px !important; list-style-position: outside !important; font-size: 9pt !important; }
+                    .notes-container li { margin-bottom: 3px !important; page-break-inside: avoid !important; }
+                    /* Stamp Area */
+                    .print-stamp-container { width: 180px !important; height: 150px !important; border: none !important; flex-shrink: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; overflow: hidden !important; background-color: white !important; }
+                    #stampPreviewPrint { display: block !important; max-width: 100% !important; max-height: 100% !important; width: auto !important; height: auto !important; object-fit: contain !important; object-position: center center !important; border: none !important; }
+                    .print-stamp-placeholder { width: 100% !important; height: 100% !important; border: 1px dashed #ccc !important; display: flex !important; align-items: center !important; justify-content: center !important; font-size: 9pt !important; color: #aaa !important; }
+                    /* Table page breaking */
+                    table { page-break-inside: auto; } tr { page-break-inside: avoid; page-break-after: auto; } thead { display: table-header-group; } tfoot { display: table-footer-group; }
+                    /* Underlines */
+                    .underline-black { border-bottom: 2px solid black !important; }
+                 }
              `;
              clonedDoc.head.appendChild(printStyle);
-              // Ensure the root element is visible for rendering
+             // Ensure the root element and printable area are visible for rendering
              clonedDoc.body.style.visibility = 'visible';
              const printableAreaClone = clonedDoc.getElementById('printable-area');
              if (printableAreaClone) {
@@ -350,11 +368,6 @@ export default function AdOrderForm() {
              }
          }
       });
-
-      // Remove temporary print elements after canvas generation
-      elementToCapture.querySelectorAll('.print-input-value, .print-textarea-value, .print-date-span').forEach(el => el.remove());
-       if (printStampContainer) printStampContainer.innerHTML = ''; // Clear print stamp container
-
 
       // Create PDF
       const imgData = canvas.toDataURL('image/png');
@@ -370,20 +383,22 @@ export default function AdOrderForm() {
       const imgWidth = imgProps.width;
       const imgHeight = imgProps.height;
 
-      // Calculate the ratio to fit the image within the A4 page dimensions
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      // Calculate the ratio to fit the image within the A4 page dimensions, considering margins
+      const margin = 10; // Example margin in mm
+      const usableWidth = pdfWidth - 2 * margin;
+      const usableHeight = pdfHeight - 2 * margin;
+      const ratio = Math.min(usableWidth / imgWidth, usableHeight / imgHeight);
 
       // Calculate the scaled dimensions
       const scaledWidth = imgWidth * ratio;
       const scaledHeight = imgHeight * ratio;
 
-       // Calculate position to center the image (optional, can set xPos, yPos to 0 for top-left)
-      const xPos = (pdfWidth - scaledWidth) / 2;
-      const yPos = (pdfHeight - scaledHeight) / 2 > 0 ? (pdfHeight - scaledHeight) / 2 : 0; // Ensure yPos is not negative
+      // Calculate position to center the image within the usable area
+      const xPos = margin + (usableWidth - scaledWidth) / 2;
+      const yPos = margin + (usableHeight - scaledHeight) / 2 > margin ? margin + (usableHeight - scaledHeight) / 2 : margin; // Ensure yPos is not negative
 
-      // Add the image to the PDF, ensuring it fits the page
+      // Add the image to the PDF
       pdf.addImage(imgData, 'PNG', xPos, yPos, scaledWidth, scaledHeight);
-
       pdf.save(filename);
 
       toast({
@@ -398,13 +413,12 @@ export default function AdOrderForm() {
         description: `Could not generate the PDF. ${error instanceof Error ? error.message : String(error)}`,
         variant: 'destructive',
       });
-
-       // Clean up temporary elements even on error
-        elementToCapture.querySelectorAll('.print-input-value, .print-textarea-value, .print-date-span').forEach(el => el.remove());
-        if (printStampContainer) printStampContainer.innerHTML = '';
-
+    } finally {
+       // Remove temporary print elements after canvas generation or on error
+       tempElements.forEach(el => el.remove());
+        if (printStampContainer) printStampContainer.innerHTML = ''; // Clear print stamp container
     }
-  }, [printableAreaRef, toast, roNumber, displayDate, stampPreview, isClient]); // Added dependencies
+  }, [printableAreaRef, toast, roNumber, displayDate, stampPreview, isClient]);
 
 
   const handleClearForm = useCallback(() => {
@@ -545,33 +559,7 @@ export default function AdOrderForm() {
             </div>
           </div>
 
-            {/* Advertisement Manager Section */}
-          <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
-            <Label className="block mb-1">The Advertisement Manager</Label>
-             <div className="relative mb-1">
-              <Input
-                id="adManager1"
-                type="text"
-                placeholder="Line 1"
-                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                value={advertisementManagerLine1}
-                onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
-              />
-             </div>
-            <div className="relative">
-            <Input
-              id="adManager2"
-              type="text"
-              placeholder="Line 2"
-              className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-              value={advertisementManagerLine2}
-              onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
-            />
-             </div>
-            <p className="text-sm mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
-          </div>
-
-          {/* Heading & Package Section */}
+           {/* Heading & Package Section */}
            <div className="heading-package-container flex gap-3 mb-5">
              <div className="heading-caption-box flex-1 print-border-heavy rounded p-2 border-2 border-black">
               <Label htmlFor="caption" className="block mb-1">Heading/Caption:</Label>
@@ -598,6 +586,34 @@ export default function AdOrderForm() {
           </div>
 
 
+            {/* Advertisement Manager Section */}
+          <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
+            <Label className="block mb-1">The Advertisement Manager</Label>
+             <div className="relative mb-1">
+              <Input
+                id="adManager1"
+                type="text"
+                placeholder="Line 1"
+                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                value={advertisementManagerLine1}
+                onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
+              />
+             </div>
+            <div className="relative">
+            <Input
+              id="adManager2"
+              type="text"
+              placeholder="Line 2"
+              className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+              value={advertisementManagerLine2}
+              onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
+            />
+             </div>
+            <p className="text-sm mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
+          </div>
+
+
+
           {/* Schedule Table */}
           <div className="mb-5 table-container-print">
              <Table className="print-table print-border border border-black">
@@ -616,27 +632,21 @@ export default function AdOrderForm() {
                   <TableRow key={row.id}>
                     <TableCell className="print-border-thin border border-black p-0 print-table-cell">
                       <Input id={`keyNo-${row.id}`} type="text" value={row.keyNo} onChange={(e) => handleScheduleChange(row.id, 'keyNo', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
-                      {/* Div for print */}
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell">
                       <Input id={`publication-${row.id}`} type="text" value={row.publication} onChange={(e) => handleScheduleChange(row.id, 'publication', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
-                       {/* Div for print */}
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell">
                       <Input id={`edition-${row.id}`} type="text" value={row.edition} onChange={(e) => handleScheduleChange(row.id, 'edition', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
-                       {/* Div for print */}
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell">
                       <Input id={`size-${row.id}`} type="text" value={row.size} onChange={(e) => handleScheduleChange(row.id, 'size', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
-                       {/* Div for print */}
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell">
                       <Input id={`scheduledDate-${row.id}`} type="text" value={row.scheduledDate} onChange={(e) => handleScheduleChange(row.id, 'scheduledDate', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
-                       {/* Div for print */}
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell">
                       <Input id={`position-${row.id}`} type="text" value={row.position} onChange={(e) => handleScheduleChange(row.id, 'position', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
-                       {/* Div for print */}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -665,7 +675,6 @@ export default function AdOrderForm() {
                 value={matter}
                 onChange={(e) => setMatter(e.target.value)}
               />
-               {/* Div for print */}
             </div>
           </div>
 
@@ -697,7 +706,7 @@ export default function AdOrderForm() {
                {/* Stamp Area for Screen */}
                <div
                   id="stampContainerElement"
-                  className="stamp-container w-[180px] h-[150px] bg-white flex items-center justify-center cursor-pointer overflow-hidden group border-dashed border-gray-300 no-print" // Dashed border for screen, hidden in print
+                  className="stamp-container w-[180px] h-[150px] bg-white flex items-center justify-center cursor-pointer overflow-hidden group no-print" // Removed border-dashed and border-gray-300
                   onClick={triggerStampUpload}
                   onMouseEnter={triggerStampUpload}
                >
@@ -715,9 +724,9 @@ export default function AdOrderForm() {
                               id="stampPreviewScreen" // Different ID for screen image
                               src={stampPreview}
                               alt="Stamp Preview"
-                              width={180} // Fixed width for screen display
-                              height={150} // Fixed height for screen display
-                              style={{ objectFit: 'contain' }}
+                              width={180} // Fixed width
+                              height={150} // Fixed height
+                              style={{ objectFit: 'contain' }} // Ensure image fits without stretching
                             />
                             {/* Hover effect */}
                             <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity no-print">
