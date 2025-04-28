@@ -120,7 +120,7 @@ export default function AdOrderForm() {
     if (!dateToFormat || isNaN(dateToFormat.getTime())) {
         // If orderDate is somehow invalid or undefined after load, default to today
         dateToFormat = new Date();
-        if (isInitialLoadRef.current) { // Only setOrderDate if it's initial load phase
+        if (!isInitialLoadRef.current) { // Only setOrderDate if it's NOT initial load phase to avoid loop
            setOrderDate(dateToFormat);
         }
     }
@@ -231,7 +231,7 @@ export default function AdOrderForm() {
     stampFileRef.current?.click();
   }, []);
 
-  // --- Word Document Download Logic (Basic HTML Export) ---
+  // --- Word Document Download Logic (Enhanced for better layout preservation) ---
   const handleDownloadDoc = useCallback(() => {
      if (!printableAreaRef.current) {
             toast({
@@ -243,140 +243,212 @@ export default function AdOrderForm() {
         }
 
        try {
-            // Clone the printable area to avoid modifying the live DOM
+            // 1. Clone the printable area
             const printableElement = printableAreaRef.current.cloneNode(true) as HTMLElement;
 
-            // Remove non-printable elements from the clone
+            // 2. Remove non-printable elements from the clone
             const nonPrintElements = printableElement.querySelectorAll('.no-print');
             nonPrintElements.forEach(el => el.remove());
 
-            // --- Capture Input Values (Crucial for HTML Export) ---
-            // For inputs: copy value to a 'value' attribute (Word might read this)
+            // --- 3. Capture Input & Textarea Values in the Clone ---
             const inputs = printableElement.querySelectorAll('input[type="text"], textarea');
             inputs.forEach(el => {
-                const input = el as HTMLInputElement | HTMLTextAreaElement;
-                // Set value attribute for simple inputs
-                if (input.tagName === 'INPUT') {
-                    input.setAttribute('value', input.value);
-                }
-                 // For textareas, replace the element with a div containing the text
-                 // This often renders better in Word's HTML import
-                 else if (input.tagName === 'TEXTAREA') {
+                // Find the corresponding live element by ID (assuming IDs are unique)
+                const liveElement = document.getElementById(el.id) as HTMLInputElement | HTMLTextAreaElement | null;
+                 if (!liveElement) return; // Skip if live element not found
+
+                 const value = liveElement.value;
+
+                if (el.tagName === 'INPUT' && (el as HTMLInputElement).type === 'text') {
+                    const inputClone = el as HTMLInputElement;
+                    inputClone.setAttribute('value', value); // Set value attribute for Word
+                    // Apply inline styles for better consistency in Word
+                    inputClone.style.border = 'none';
+                    inputClone.style.borderBottom = '1px solid black';
+                    inputClone.style.padding = '1px 0';
+                    inputClone.style.fontSize = '14px';
+                    inputClone.style.fontWeight = 'bold';
+                    inputClone.style.fontFamily = 'Arial, sans-serif';
+                    inputClone.style.width = '100%'; // Ensure width is maintained
+                    inputClone.style.backgroundColor = 'transparent'; // Prevent grey background in Word
+                    // Remove potentially problematic classes
+                    inputClone.classList.remove('focus-visible:ring-0', 'focus-visible:ring-offset-0', 'shadow-none');
+                } else if (el.tagName === 'TEXTAREA') {
+                    const textareaClone = el as HTMLTextAreaElement;
                     const div = document.createElement('div');
                     // Preserve whitespace and newlines
                     div.style.whiteSpace = 'pre-wrap';
                     div.style.wordWrap = 'break-word';
-                    div.style.minHeight = input.style.height || '80px'; // Try to keep height
-                    div.style.width = '100%';
-                    div.textContent = input.value;
-                    // Copy relevant classes for styling if needed
-                    div.className = input.className.replace('focus-visible:ring-0 focus-visible:ring-offset-0', ''); // Remove focus styles
-                    div.style.border = 'none'; // Remove textarea border
-                    div.style.fontFamily = 'Arial, sans-serif'; // Ensure font
-                    div.style.fontWeight = 'bold';
+                    div.style.width = '100%'; // Take full width
+                    div.style.minHeight = '100px'; // Ensure minimum height
                     div.style.fontSize = '14px';
-                    input.parentNode?.replaceChild(div, input);
+                    div.style.fontWeight = 'bold';
+                    div.style.fontFamily = 'Arial, sans-serif';
+                    div.style.padding = '4px'; // Add some padding
+                    div.textContent = value;
+                    // Replace textarea with the styled div
+                    textareaClone.parentNode?.replaceChild(div, textareaClone);
                 }
             });
 
-            // Handle Date Picker Button - Replace with static text
-             const dateButton = printableElement.querySelector('#orderDate span');
-             if (dateButton) {
-                 const dateText = dateButton.textContent;
+            // --- 4. Handle Date Picker Button in the Clone ---
+             const dateButtonContainer = printableElement.querySelector('.popover-trigger-container');
+             if (dateButtonContainer) {
                  const dateSpan = document.createElement('span');
-                 dateSpan.textContent = dateText;
-                 dateSpan.style.fontFamily = 'Arial, sans-serif';
-                 dateSpan.style.fontWeight = 'bold';
+                 dateSpan.textContent = displayDate || 'N/A'; // Use the formatted displayDate
                  dateSpan.style.fontSize = '14px';
-                  // Replace the button with the span
-                  const parent = dateButton.closest('.popover-trigger-container'); // Assuming a container helps
-                  if (parent) {
-                     parent.innerHTML = ''; // Clear existing button content
-                     parent.appendChild(dateSpan);
-                     parent.style.borderBottom = '1px solid black'; // Add underline style
-                     parent.style.padding = '1px 0';
-                  } else {
-                     // Fallback if no specific container
-                      const originalButton = printableElement.querySelector('#orderDate');
-                      originalButton?.parentNode?.replaceChild(dateSpan, originalButton);
-                  }
-
+                 dateSpan.style.fontWeight = 'bold';
+                 dateSpan.style.fontFamily = 'Arial, sans-serif';
+                 dateSpan.style.borderBottom = '1px solid black';
+                 dateSpan.style.padding = '2px 0';
+                 dateSpan.style.display = 'inline-block'; // To hold the border
+                 dateButtonContainer.innerHTML = ''; // Clear existing button content
+                 dateButtonContainer.appendChild(dateSpan);
              }
 
-            // Get the modified HTML
-            let htmlContent = printableElement.innerHTML;
+            // --- 5. Handle Stamp Image in the Clone ---
+            const stampContainerClone = printableElement.querySelector('.stamp-container');
+            if (stampContainerClone) {
+                stampContainerClone.innerHTML = ''; // Clear any placeholder text/icons
+                if (stampPreview) {
+                    // Ensure the base64 string is valid and complete
+                    const validBase64 = stampPreview.startsWith('data:image') ? stampPreview : `data:image/png;base64,${stampPreview}`; // Add prefix if missing
+                    const img = document.createElement('img');
+                    img.src = validBase64;
+                    img.alt = 'Stamp';
+                    // Apply precise styles for Word rendering
+                    img.style.width = '180px';
+                    img.style.height = '150px';
+                    img.style.objectFit = 'contain';
+                    img.style.display = 'block'; // Crucial for Word
+                    img.id = 'stampPreview'; // Keep ID if needed
+                    stampContainerClone.appendChild(img);
+                }
+                 // Apply container styles directly for Word
+                (stampContainerClone as HTMLElement).style.position = 'absolute';
+                (stampContainerClone as HTMLElement).style.top = '10px';
+                (stampContainerClone as HTMLElement).style.right = '10px';
+                (stampContainerClone as HTMLElement).style.width = '180px';
+                (stampContainerClone as HTMLElement).style.height = '150px';
+                (stampContainerClone as HTMLElement).style.display = 'flex';
+                (stampContainerClone as HTMLElement).style.alignItems = 'center';
+                (stampContainerClone as HTMLElement).style.justifyContent = 'center';
+                (stampContainerClone as HTMLElement).style.overflow = 'hidden';
+                (stampContainerClone as HTMLElement).style.border = 'none'; // Ensure no border on container
+                 (stampContainerClone as HTMLElement).style.backgroundColor = 'white'; // Explicit background
 
-            // Basic CSS for Word (inline styles are more reliable)
-            // Note: Complex CSS (like Tailwind classes) might not translate well.
+            }
+
+
+            // --- 6. Get the modified HTML of the clone ---
+            let htmlContent = printableElement.outerHTML; // Use outerHTML to include the Card itself
+
+            // --- 7. Define CSS for Word (prioritize inline styles where possible, basic CSS as fallback) ---
+            // Keep this minimal and focused on structural elements Word understands.
+            // Use !important sparingly, rely more on inline styles set above.
             const styles = `
                 <style>
-                    body { font-family: Arial, sans-serif; font-weight: bold; font-size: 14px; }
+                    body { font-family: Arial, sans-serif; font-weight: bold; font-size: 14px; margin: 20px; /* Add margins for Word page layout */ }
+                    /* Ensure the main card container has a border */
+                    .print-border-heavy { border: 2px solid black !important; padding: 20px; }
+
                     table { border-collapse: collapse; width: 100%; border: 2px solid black; margin-top: 20px; }
-                    th, td { border: 1px solid black; padding: 6px; font-size: 14px; vertical-align: top; } /* Added vertical-align */
-                    th { background-color: #f0f0f0; font-weight: bold; }
-                    .print-border { border: 1px solid black !important; }
-                    .print-border-heavy { border: 2px solid black !important; }
-                    .header-title { background-color: black !important; color: white !important; padding: 4px; text-align: center; }
-                    .vertical-label { writing-mode: vertical-lr; text-orientation: mixed; background: black; color: white; padding: 4px; font-size: 16px; text-align: center; vertical-align: middle; }
-                    .matter-box { display: flex; height: 150px; border: 2px solid black; margin-top: 20px; border-radius: 4px; overflow: hidden; }
-                    .matter-content { flex: 1; padding: 4px; }
-                    .notes-container { border: 2px solid black; padding: 10px 200px 10px 10px; border-radius: 4px; margin-top: 20px; position: relative; min-height: 170px; } /* Increased right padding */
-                    .stamp-container { position: absolute; top: 10px; right: 10px; width: 180px; height: 150px; background: white; display: flex; align-items: center; justify-content: center; overflow: hidden; } /* Removed border */
-                    #stampPreview { max-width: 100%; max-height: 100%; object-fit: contain; display: block; } /* Ensure image displays */
-                    ol { margin-top: 10px; font-size: 14px; padding-left: 20px; } /* Ensure list padding */
-                    .underline-black { border-bottom: 2px solid black; display: inline-block; padding-bottom: 1px; } /* Class for underlines */
-                     input[type="text"] { border: none; border-bottom: 1px solid black; padding: 4px; font-size: 14px; font-weight: bold; box-sizing: border-box; width: 100%; } /* Style inputs for Word */
-                     /* Ensure input values are visible */
-                     input[value] { color: black !important; -webkit-text-fill-color: black !important; }
+                    th, td { border: 1px solid black !important; padding: 6px !important; font-size: 14px !important; vertical-align: top; font-weight: bold; font-family: Arial, sans-serif; }
+                    th { background-color: #f0f0f0 !important; } /* Use standard color */
+                    input[type="text"] { /* Already styled inline, this is a fallback */
+                        border: none !important;
+                        border-bottom: 1px solid black !important;
+                        padding: 1px 0 !important;
+                        font-size: 14px !important;
+                        font-weight: bold !important;
+                        font-family: Arial, sans-serif !important;
+                        width: 100%;
+                        background-color: transparent !important;
+                    }
+                     /* Ensure the div replacing textarea keeps styles */
+                    div[style*="white-space: pre-wrap"] {
+                        font-size: 14px !important;
+                        font-weight: bold !important;
+                        font-family: Arial, sans-serif !important;
+                        padding: 4px !important;
+                        width: 100%;
+                        min-height: 100px; /* Ensure height */
+                    }
 
+                    .header-title { background-color: black !important; color: white !important; padding: 4px !important; text-align: center !important; margin-bottom: 20px; font-size: 20px; }
+                    .vertical-label { writing-mode: tb-rl; /* Standard property */ transform: rotate(180deg); background: black !important; color: white !important; padding: 4px !important; font-size: 16px; text-align: center; vertical-align: middle; font-weight: bold; display: flex; align-items: center; justify-content: center; width: 30px; /* Give it a fixed width */ }
+                    .matter-box { display: flex; height: 150px; border: 2px solid black !important; margin-top: 20px; border-radius: 0px; /* Word might ignore radius */ overflow: hidden; }
+                    .matter-content { flex: 1; padding: 4px !important; }
+                    .notes-container { border: 1px solid black !important; /* Standard border */ padding: 10px 200px 10px 10px !important; /* Keep padding */ margin-top: 20px; position: relative; min-height: 170px !important; }
+                     /* Stamp container styling (already inline, this is fallback) */
+                     .stamp-container { position: absolute; top: 10px; right: 10px; width: 180px; height: 150px; background: white; display: flex; align-items: center; justify-content: center; overflow: hidden; border: none !important; }
+                     #stampPreview { max-width: 100%; max-height: 100%; object-fit: contain; display: block; } /* Ensure image displays */
 
-                     /* Address layout specifically */
-                     .address-box { border: 1px solid black; padding: 8px; margin-bottom: 10px; font-size: 12px; line-height: 1.4; } /* Basic styling for address boxes */
-                     .address-container { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 20px; }
-                     .address-container > div { width: 48%; } /* Approx width for two columns */
-
-                     /* Specific layout for RO/Date/Client */
-                     .ro-date-client-container { border: 1px solid black; padding: 8px; space-y: 8px; } /* Border and spacing */
-                     .ro-date-client-container .field-row { display: flex; align-items: center; margin-bottom: 5px; } /* Flex layout for label+input */
-                     .ro-date-client-container label { width: 80px; shrink: 0; margin-right: 5px; font-weight: bold; font-size: 14px; }
-                     .ro-date-client-container span, /* For static date */
-                     .ro-date-client-container input { flex-grow: 1; border: none; border-bottom: 1px solid black; font-weight: bold; font-size: 14px; padding: 2px; }
-
-
-                     /* Explicit style for the underline */
+                    ol { margin-top: 10px; font-size: 14px !important; padding-left: 40px !important; /* Word needs more padding */ list-style-position: outside !important; }
+                    li { margin-bottom: 5px; /* Spacing for list items */ }
+                    .underline-black { border-bottom: 2px solid black; display: inline-block; padding-bottom: 1px; }
                     .note-title-underline, .billing-title-underline {
-                        border-bottom: 2px solid black;
-                        display: inline-block; /* Necessary for border-bottom to apply correctly */
-                        padding-bottom: 1px; /* Adjust spacing */
-                        margin-bottom: 4px; /* Space below the line */
+                        border-bottom: 2px solid black !important;
+                        display: inline-block;
+                        padding-bottom: 1px;
+                        margin-bottom: 8px !important; /* Increased margin */
+                        font-weight: bold !important;
+                        font-size: 14px !important;
                      }
+                     /* Address layout using simple divs or paragraphs */
+                     .address-container { display: table; width: 100%; border-spacing: 10px 0; /* Simulate gap */ margin-bottom: 20px; }
+                     .address-box { display: table-cell; width: 48%; border: 1px solid black !important; padding: 8px !important; font-size: 12px !important; line-height: 1.4 !important; vertical-align: top; }
+                     .address-box p { margin: 0; padding: 0; font-size: 12px !important; line-height: 1.4 !important; font-weight: bold; font-family: Arial, sans-serif; }
+
+                     /* RO/Date/Client layout */
+                     .ro-date-client-container { border: 1px solid black !important; padding: 8px !important; width: 48%; display: table-cell; vertical-align: top; }
+                     .ro-date-client-container .field-row { margin-bottom: 8px !important; display: flex; align-items: baseline; }
+                     .ro-date-client-container label { width: 80px; flex-shrink: 0; margin-right: 5px; font-weight: bold !important; font-size: 14px !important; font-family: Arial, sans-serif; }
+                      /* Span for date, input for others */
+                     .ro-date-client-container span,
+                     .ro-date-client-container input[type="text"] {
+                          flex-grow: 1;
+                          border: none !important;
+                          border-bottom: 1px solid black !important;
+                          font-weight: bold !important;
+                          font-size: 14px !important;
+                          padding: 2px 0 !important;
+                          font-family: Arial, sans-serif;
+                          background-color: transparent !important;
+                     }
+
+                     /* Advertisement Manager specific styles */
+                      .advertisement-manager-section { border: 1px solid black !important; padding: 8px !important; margin-bottom: 20px; }
+                      .advertisement-manager-section label { display: block; margin-bottom: 4px; font-weight: bold; }
+                      .advertisement-manager-section input[type="text"] { margin-bottom: 8px; }
+                      .advertisement-manager-section p { font-size: 14px !important; font-weight: bold; margin-top: 10px; }
+
+                      /* Heading/Package specific styles */
+                      .heading-package-container { display: table; width: 100%; border-spacing: 10px 0; margin-bottom: 20px; }
+                      .heading-caption-box { display: table-cell; width: 68%; border: 2px solid black !important; padding: 8px !important; vertical-align: top; }
+                      .package-box { display: table-cell; width: 30%; border: 2px solid black !important; padding: 8px !important; vertical-align: top; }
+                      .heading-caption-box label, .package-box label { display: block; margin-bottom: 4px; font-weight: bold; }
+
+
                 </style>
             `;
 
-
-            // Combine styles and HTML content
-             // Preserve Stamp Image: Embed as Base64 if available
-             let stampImgTag = '';
-             if (stampPreview) {
-                // Ensure the base64 string is valid and complete
-                 const validBase64 = stampPreview.startsWith('data:image') ? stampPreview : `data:image/png;base64,${stampPreview}`; // Add prefix if missing (assuming PNG)
-                 stampImgTag = `<img id="stampPreview" src="${validBase64}" alt="Stamp" style="width: 180px; height: 150px; object-fit: contain; display: block;" />`;
-             }
-
-
-              // Replace the placeholder div with the actual image tag OR remove if no image
-            htmlContent = htmlContent.replace(
-                /<div class="stamp-container.*?<\/div>/s, // Match the whole container
-                `<div class="stamp-container" style="position: absolute; top: 10px; right: 10px; width: 180px; height: 150px; background: white; display: flex; align-items: center; justify-content: center; overflow: hidden;">${stampImgTag || ''}</div>` // Recreate container with image
-             );
-
-
+            // --- 8. Combine styles and HTML ---
             const fullHtml = `
                 <!DOCTYPE html>
-                <html lang="en">
+                <html xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
                 <head>
                     <meta charset="UTF-8">
                     <title>Release Order - ${roNumber || 'NoRO'}</title>
+                    <!--[if gte mso 9]>
+                    <xml>
+                        <w:WordDocument>
+                        <w:View>Print</w:View>
+                        <w:Zoom>90</w:Zoom>
+                        <w:DoNotOptimizeForBrowser/>
+                        </w:WordDocument>
+                    </xml>
+                    <![endif]-->
                     ${styles}
                 </head>
                 <body>
@@ -385,13 +457,12 @@ export default function AdOrderForm() {
                 </html>
             `;
 
-            // Create a Blob
-            const blob = new Blob([fullHtml], { type: 'application/msword' }); // Use MIME type for .doc
-
-            // Create a download link
+            // --- 9. Create Blob and Download Link ---
+            const blob = new Blob([fullHtml], { type: 'application/msword' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = `Release_Order_${roNumber || 'NoRO'}_${displayDate || 'NoDate'}.doc`; // Set filename with .doc extension
+            const filenameDate = displayDate ? displayDate.replace(/\./g, '-') : 'NoDate';
+            link.download = `Release_Order_${roNumber || 'NoRO'}_${filenameDate}.doc`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -405,11 +476,11 @@ export default function AdOrderForm() {
          console.error('Error generating Word document:', error);
             toast({
                 title: 'Word Generation Failed',
-                description: `Could not generate the document. ${error instanceof Error ? error.message : ''}`,
+                description: `Could not generate the document. ${error instanceof Error ? error.message : String(error)}`,
                 variant: 'destructive',
             });
         }
-  }, [printableAreaRef, toast, roNumber, displayDate, stampPreview]); // Include stampPreview in dependencies
+  }, [printableAreaRef, toast, roNumber, displayDate, stampPreview, caption, packageName, matter, scheduleRows, clientName, advertisementManagerLine1, advertisementManagerLine2]); // Include all relevant state
 
 
   const handleClearForm = useCallback(() => {
@@ -419,8 +490,9 @@ export default function AdOrderForm() {
     setScheduleRows([{ id: Date.now(), keyNo: '', publication: '', edition: '', size: '', scheduledDate: '', position: '' }]);
     setStampPreview(null);
     setRoNumber('');
-    setOrderDate(new Date()); // Reset date to today
-    setDisplayDate(format(new Date(), "dd.MM.yyyy")); // Update display date immediately
+    const today = new Date();
+    setOrderDate(today); // Reset date to today
+    setDisplayDate(format(today, "dd.MM.yyyy")); // Update display date immediately
     setClientName('');
     setAdvertisementManagerLine1('');
     setAdvertisementManagerLine2('');
@@ -467,14 +539,14 @@ export default function AdOrderForm() {
       <Card id="printable-area" ref={printableAreaRef} className="w-full print-border-heavy rounded-none shadow-none p-5 border-2 border-black">
         <CardContent className="p-0">
           {/* Header */}
-          <div className="text-center bg-black text-white p-1 rounded mb-5 header-title">
-            <h1 className="text-2xl m-0 font-bold">RELEASE ORDER</h1>
+          <div className="text-center bg-black text-white p-1 mb-5 header-title">
+            <h1 className="text-xl m-0 font-bold">RELEASE ORDER</h1> {/* Adjusted size */}
           </div>
 
            {/* Address Boxes Container */}
-           <div className="flex justify-between gap-3 mb-5 address-container">
+           <div className="address-container flex justify-between gap-3 mb-5">
             {/* Left Address Box */}
-             <div className="w-[48%] print-border rounded p-2 border border-black address-box">
+             <div className="address-box w-[48%] print-border rounded p-2 border border-black">
               <p className="text-sm leading-tight">
                 Lehar Advertising Agency Pvt. Ltd.<br />
                 D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
@@ -485,9 +557,9 @@ export default function AdOrderForm() {
               </p>
             </div>
             {/* Right Box: R.O., Date, Client */}
-             <div className="w-[48%] print-border rounded p-2 space-y-2 border border-black ro-date-client-container">
+             <div className="ro-date-client-container w-[48%] print-border rounded p-2 space-y-2 border border-black">
               {/* R.O. No. LN */}
-               <div className="flex items-center field-row">
+               <div className="field-row flex items-center">
                 <Label htmlFor="roNumber" className="w-20 text-sm shrink-0">R.O.No.LN:</Label>
                 <Input
                   id="roNumber"
@@ -499,7 +571,7 @@ export default function AdOrderForm() {
                 />
               </div>
               {/* Date */}
-               <div className="flex items-center field-row popover-trigger-container"> {/* Container for replacement */}
+               <div className="field-row flex items-center popover-trigger-container"> {/* Container for replacement */}
                 <Label htmlFor="orderDate" className="w-20 text-sm shrink-0">Date:</Label>
                 <Popover>
                   <PopoverTrigger asChild>
@@ -509,7 +581,7 @@ export default function AdOrderForm() {
                         "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none",
                         !orderDate && "text-muted-foreground"
                       )}
-                      id="orderDate"
+                      id="orderDateTrigger" // Changed ID to avoid conflict with label's htmlFor
                     >
                       <CalendarIcon className="mr-2 h-4 w-4 no-print" /> {/* Hide icon on print/export */}
                       {/* Display formatted date, ensure it updates */}
@@ -534,7 +606,7 @@ export default function AdOrderForm() {
                 </Popover>
               </div>
               {/* Client */}
-               <div className="flex items-center field-row">
+               <div className="field-row flex items-center">
                 <Label htmlFor="clientName" className="w-20 text-sm shrink-0">Client:</Label>
                 <Input
                   id="clientName"
@@ -549,9 +621,9 @@ export default function AdOrderForm() {
           </div>
 
 
-           {/* Heading & Package Section - Moved before Advertisement Manager */}
-          <div className="flex gap-3 mb-5">
-             <div className="flex-1 print-border-heavy rounded p-2 border-2 border-black">
+           {/* Heading & Package Section */}
+           <div className="heading-package-container flex gap-3 mb-5">
+             <div className="heading-caption-box flex-1 print-border-heavy rounded p-2 border-2 border-black">
               <Label htmlFor="caption" className="block mb-1">Heading/Caption:</Label>
               <Input
                 id="caption"
@@ -562,10 +634,10 @@ export default function AdOrderForm() {
                 onChange={(e) => setCaption(e.target.value)}
               />
             </div>
-             <div className="w-[30%] print-border-heavy rounded p-2 border-2 border-black">
+             <div className="package-box w-[30%] print-border-heavy rounded p-2 border-2 border-black">
               <Label htmlFor="package" className="block mb-1">Package:</Label>
               <Input
-                id="package"
+                id="package" // Use unique ID
                 type="text"
                 placeholder="Enter package name"
                 className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
@@ -577,14 +649,14 @@ export default function AdOrderForm() {
 
 
           {/* Advertisement Manager Section */}
-          <div className="print-border rounded p-2 mb-5 border border-black">
+          <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
             <Label className="block mb-1">The Advertisement Manager</Label>
              <div className="relative mb-1">
               <Input
                 id="adManager1"
                 type="text"
                 placeholder="Line 1"
-                className="w-full border-0 border-b-2 border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
                 value={advertisementManagerLine1}
                 onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
               />
@@ -594,7 +666,7 @@ export default function AdOrderForm() {
               id="adManager2"
               type="text"
               placeholder="Line 2"
-              className="w-full border-0 border-b-2 border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+              className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
               value={advertisementManagerLine2}
               onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
             />
@@ -652,11 +724,11 @@ export default function AdOrderForm() {
           </div>
 
           {/* Matter Section */}
-          <div className="flex h-[150px] print-border-heavy rounded mb-5 overflow-hidden border-2 border-black matter-box">
+          <div className="matter-box flex h-[150px] print-border-heavy rounded mb-5 overflow-hidden border-2 border-black">
             <div className="vertical-label bg-black text-white flex items-center justify-center p-1" style={{ writingMode: 'vertical-lr', textOrientation: 'mixed' }}>
               <span className="text-base font-bold transform rotate-180">MATTER</span>
             </div>
-            <div className="flex-1 p-1 matter-content">
+            <div className="matter-content flex-1 p-1">
               <Textarea
                 id="matterArea"
                 placeholder="Enter matter here..."
@@ -680,9 +752,9 @@ export default function AdOrderForm() {
           </div>
 
           {/* Notes & Stamp */}
-           <div className="relative print-border rounded p-2 pr-[200px] border border-black min-h-[170px] pb-1 notes-container"> {/* Ensure class for targeting */}
+           <div className="notes-container relative print-border rounded p-2 pr-[200px] border border-black min-h-[170px] pb-1"> {/* Ensure class for targeting */}
              <p className="font-bold mb-1 note-title-underline">Note:</p>
-            <ol className="list-decimal list-inside text-sm space-y-1 pt-1">
+            <ol className="list-decimal list-inside text-sm space-y-1 pt-1 pl-4"> {/* Added left padding */}
               <li>Space reserved vide our letter No.</li>
               <li>No two advertisements of the same client should appear in the same issue.</li>
               <li>Please quote R.O. No. in all your bills and letters.</li>
@@ -690,9 +762,10 @@ export default function AdOrderForm() {
             </ol>
              {/* Stamp Area - No border, positioned absolutely */}
              <div
-                className="stamp-container absolute top-2 right-2 w-[180px] h-[150px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden group print-stamp-container" // Kept class for potential print styles
+                className="stamp-container absolute top-2 right-2 w-[180px] h-[150px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden group print-stamp-container border-none" // Explicitly no border
                 onClick={triggerStampUpload}
                 onMouseEnter={triggerStampUpload}
+                id="stampContainerElement" // Added ID for precise targeting
              >
                  <Input
                     type="file"
@@ -704,16 +777,12 @@ export default function AdOrderForm() {
                     />
                  {stampPreview ? (
                      <div className="relative w-full h-full flex items-center justify-center">
-                         <Image
+                         {/* Use img tag for better control in static rendering */}
+                         <img
                             id="stampPreview"
                             src={stampPreview}
                             alt="Stamp Preview"
-                            width={180} // Static width
-                            height={150} // Static height
-                            style={{ objectFit: 'contain', width: '180px', height: '150px' }} // Ensure style matches
-                            className="max-w-full max-h-full" // Keep these for safety
-                            unoptimized
-                            priority // Ensures image loads eagerly
+                            style={{ objectFit: 'contain', width: '180px', height: '150px', display: 'block' }} // Use style for precise sizing
                           />
                           {/* Hover effect - Only show when stampPreview exists */}
                           <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity no-print">
@@ -732,5 +801,3 @@ export default function AdOrderForm() {
     </div>
   );
 }
-
-    

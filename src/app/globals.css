@@ -119,78 +119,130 @@ body {
       @apply border-b-2 border-black inline-block pb-px;
    }
    .note-title-underline, .billing-title-underline {
-      @apply border-b-2 border-black inline-block pb-px mb-1; /* Adjusted margin */
+      @apply border-b-2 border-black inline-block pb-px mb-2; /* Increased margin */
    }
 
 
-  /* Custom styles for print and potential export */
-  @media print {
+  /* Custom styles for print and potential export (like Word .doc) */
+  @media print, screen { /* Apply base styles to screen as well for consistency */
+    /* Apply bold font globally within the printable area for consistency */
+    #printable-area, #printable-area * {
+       font-family: Arial, sans-serif !important;
+       font-weight: bold !important;
+       font-size: 14px !important; /* Ensure consistent font size */
+       box-sizing: border-box; /* Include padding and border in element's total width and height */
+    }
+     /* Specific overrides for elements that shouldn't be bold by default */
+     #printable-area .text-sm { font-size: 12px !important; } /* Adjust smaller text */
+     #printable-area .text-xs { font-size: 10px !important; } /* Adjust smaller text */
+     #printable-area .font-normal { font-weight: normal !important; } /* Allow normal weight */
+
     .no-print {
       display: none !important;
     }
     body, #printable-area {
       margin: 0 !important;
-      padding: 0 !important;
+      padding: 0 !important; /* Remove body padding for print/export */
       border: none !important;
       box-shadow: none !important;
       -webkit-print-color-adjust: exact; /* Ensure background colors print */
       print-color-adjust: exact;
     }
-     /* Ensure borders print correctly */
-    .print-border {
-      border-width: 1px !important; /* Use 1px for regular borders */
+
+     /* Container for the entire form content */
+     #printable-area > .p-0 { /* Target CardContent */
+        padding: 20px !important; /* Add padding inside the main border */
+     }
+
+
+     /* Ensure borders print/export correctly */
+    .print-border, .print-border-heavy, .print-border-thin {
       border-style: solid !important; /* Ensure border style is solid */
       border-color: black !important;
     }
-    .print-border-thin {
-      border-width: 1px !important;
-      border-style: solid !important; /* Ensure border style is solid */
-      border-color: black !important;
-    }
-     .print-border-heavy {
-      border-width: 2px !important; /* Use 2px for heavy borders */
-      border-style: solid !important; /* Ensure border style is solid */
-      border-color: black !important;
-    }
-    input, textarea {
+    .print-border { border-width: 1px !important; }
+    .print-border-thin { border-width: 1px !important; }
+    .print-border-heavy { border-width: 2px !important; }
+
+    /* Inputs and Textareas for print/export */
+    input[type="text"], textarea, input[value] {
+       border: none !important;
        border-bottom: 1px solid black !important;
-       -webkit-print-color-adjust: exact;
-       print-color-adjust: exact;
-       background: transparent !important; /* Make background transparent for print */
+       padding: 1px 0 !important; /* Minimal padding for underline */
+       background: transparent !important; /* Make background transparent */
        color: black !important; /* Ensure text is black */
-        -webkit-text-fill-color: black !important; /* Override browser defaults */
+       -webkit-text-fill-color: black !important; /* Override browser defaults */
+       border-radius: 0 !important; /* No rounded corners */
+       box-shadow: none !important; /* No shadow */
+       height: auto !important; /* Let content determine height */
+       min-height: 1.2em; /* Minimum height for visibility */
     }
-     th, .table-header-print { /* Apply background to table headers and specific class */
+    /* Style the div that replaces textarea */
+     div[style*="white-space: pre-wrap"] {
+        font-size: 14px !important;
+        font-weight: bold !important;
+        font-family: Arial, sans-serif !important;
+        padding: 4px !important;
+        width: 100%;
+        min-height: 100px;
+        border: none !important; /* No border on the div */
+        background-color: transparent !important;
+        color: black !important;
+        line-height: 1.4;
+     }
+
+     th, .table-header-print { /* Apply background to table headers */
       background-color: #f0f0f0 !important;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
-    /* Specific style to remove border from stamp container during print */
+    /* Specific style to remove border from stamp container */
     .print-stamp-container {
         border: none !important;
+        background-color: white !important; /* Ensure white background */
     }
      .vertical-label {
         background-color: black !important;
         color: white !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
+        writing-mode: vertical-lr !important;
+        text-orientation: mixed !important;
+        transform: rotate(180deg) !important; /* Ensure rotation */
+        width: 30px !important; /* Fixed width */
+        padding: 4px !important;
      }
       .header-title {
          background-color: black !important;
         color: white !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
+        padding: 4px !important;
+        margin-bottom: 20px !important;
+        font-size: 20px !important;
       }
-     /* Add a class to ensure TableHeader gets printed borders */
+     /* Ensure TableHeader gets printed borders */
      .print-table-header th {
         border: 1px solid black !important;
+        padding: 6px !important;
      }
-      /* Ensure TableCells print borders */
+      /* Ensure TableCells print borders and padding */
       .print-table-cell {
         border: 1px solid black !important;
-        padding: 6px !important; /* Ensure consistent padding */
+        padding: 0 !important; /* Remove default padding */
       }
-       /* Hide hover effect on print */
+       /* Style inputs within table cells */
+      .print-table-cell input {
+        padding: 6px !important; /* Add padding inside the input */
+        border: none !important; /* Remove input border */
+        height: 100% !important; /* Fill cell height */
+        min-height: 2.5em; /* Ensure minimum height in cells */
+        font-size: 14px !important;
+        font-weight: bold !important;
+      }
+
+
+       /* Hide hover effect on print/export */
       .group-hover\:opacity-100 {
         opacity: 1 !important; /* Ensure image is visible */
       }
@@ -198,65 +250,79 @@ body {
          opacity: 0 !important;
       }
 
-       table {
-        page-break-inside: auto;
-      }
-      tr {
-        page-break-inside: avoid;
-        page-break-after: auto;
-      }
-      thead {
-        display: table-header-group;
-      }
-      tfoot {
-        display: table-footer-group;
-      }
-       /* Ensure inputs keep their values when printing - often tricky */
-        /* Placeholder might need specific handling if visible */
-       input[type="text"]::placeholder, textarea::placeholder {
-          color: transparent !important; /* Hide placeholder */
-       }
-       /* Attempt to force value rendering */
-       input[type="text"][value], textarea {
-         color: black !important;
-         -webkit-text-fill-color: black !important;
-       }
+       /* Table page breaking */
+       table { page-break-inside: auto; width: 100%; }
+       tr { page-break-inside: avoid; page-break-after: auto; }
+       thead { display: table-header-group; }
+       tfoot { display: table-footer-group; }
 
-      /* Explicitly set font for print */
-      body, input, textarea, button, select, table, th, td {
-        font-family: Arial, sans-serif !important;
-        font-weight: bold !important; /* Ensure boldness prints */
-        font-size: 14px !important; /* Ensure consistent font size */
-      }
+       /* Hide placeholder text */
+       input[type="text"]::placeholder, textarea::placeholder {
+          color: transparent !important;
+       }
 
       /* Ensure Date Picker Button content prints as text */
-      #orderDate span {
-        display: inline !important;
-        color: black !important; /* Ensure text color */
+      .popover-trigger-container span {
+         display: inline-block !important;
+         color: black !important; /* Ensure text color */
+         border-bottom: 1px solid black !important; /* Add underline */
+         padding: 2px 0 !important; /* Adjust padding */
+         font-size: 14px !important;
+         font-weight: bold !important;
       }
-      #orderDate svg {
+      #orderDateTrigger svg { /* Target the correct button ID */
          display: none !important; /* Hide the icon */
       }
-      #orderDate {
-         border-bottom: 1px solid black !important; /* Add underline */
-         padding: 1px 0 !important; /* Adjust padding */
-      }
+
        /* Ensure the image prints correctly */
       #stampPreview {
         display: block !important; /* Ensure it's treated as a block element */
-        width: 180px !important; /* Explicit width for print */
-        height: 150px !important; /* Explicit height for print */
+        width: 180px !important; /* Explicit width */
+        height: 150px !important; /* Explicit height */
         object-fit: contain !important; /* Scale down if needed, preserve aspect ratio */
         object-position: center center !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
+        border: none !important; /* Ensure no border on the image itself */
       }
 
-      /* Remove overlay spans if they were added for PDF */
+      /* Layout Containers for Word */
+      .address-container { display: table !important; width: 100% !important; border-spacing: 10px 0 !important; margin-bottom: 20px !important; }
+      .address-box, .ro-date-client-container { display: table-cell !important; width: 48% !important; vertical-align: top !important; padding: 8px !important; }
+      .address-box p { margin: 0 !important; padding: 0 !important; font-size: 12px !important; line-height: 1.4 !important; }
+
+      .ro-date-client-container .field-row { display: flex !important; align-items: baseline !important; margin-bottom: 8px !important; }
+      .ro-date-client-container label { width: 80px !important; flex-shrink: 0 !important; margin-right: 5px !important; }
+
+      .heading-package-container { display: table !important; width: 100% !important; border-spacing: 10px 0 !important; margin-bottom: 20px !important; }
+      .heading-caption-box { display: table-cell !important; width: 68% !important; vertical-align: top !important; padding: 8px !important; }
+      .package-box { display: table-cell !important; width: 30% !important; vertical-align: top !important; padding: 8px !important; }
+      .heading-caption-box label, .package-box label { display: block !important; margin-bottom: 4px !important; }
+
+
+       /* Notes Container */
+       .notes-container {
+         position: relative !important;
+         border: 1px solid black !important;
+         padding: 10px 200px 10px 10px !important; /* Right padding for stamp */
+         min-height: 170px !important;
+         margin-top: 20px !important;
+       }
+       .notes-container ol {
+          padding-left: 40px !important; /* Indent list */
+          margin-top: 10px !important;
+          list-style-position: outside !important;
+       }
+        .notes-container li { margin-bottom: 5px !important; }
+
+        /* Ensure billing address prints correctly */
+       .billing-address-box p {
+         margin: 0 !important; padding: 0 !important; font-size: 12px !important; line-height: 1.4 !important;
+       }
+
+       /* Remove overlay spans if they were added for PDF */
       .pdf-value-overlay {
          display: none !important;
       }
   }
 }
-
-    
