@@ -99,12 +99,16 @@ export default function AdOrderForm() {
         });
       } else {
         // If no saved data, ensure date is today's date
-        setOrderDate(new Date());
+         if (typeof window !== 'undefined') { // Ensure this runs only on client
+          setOrderDate(new Date());
+        }
       }
     } catch (error) {
       console.error("Failed to load data from localStorage:", error);
       // Default to today's date on error as well
-      setOrderDate(new Date());
+       if (typeof window !== 'undefined') { // Ensure this runs only on client
+        setOrderDate(new Date());
+      }
       toast({
         title: "Recovery Failed",
         description: "Could not recover previous draft data. Please check console for errors.",
@@ -265,21 +269,18 @@ export default function AdOrderForm() {
     const updateFormattedDate = () => {
         if (orderDate && !isNaN(orderDate.getTime())) {
             setDisplayDate(format(orderDate, "dd.MM.yyyy"));
-        } else {
-            // If date is invalid or undefined during client-side rendering, try setting to today's date
+        } else if (isClient) { // Only set a new Date if on client and date is invalid
              const today = new Date();
              setOrderDate(today); // Attempt to fix the state
              setDisplayDate(format(today, "dd.MM.yyyy"));
+        } else {
+             // Server-side or before client mount, use a placeholder or empty string
+             setDisplayDate("Loading...");
         }
     };
 
-    if (isClient) {
-        updateFormattedDate();
-    } else {
-        // Server-side or before client mount, use a placeholder
-        // Avoid setting a dynamic value like Date() here for SSR
-        setDisplayDate("Loading...");
-    }
+    updateFormattedDate();
+
   }, [orderDate, isClient]); // Depend on orderDate and isClient
 
 
@@ -346,7 +347,7 @@ export default function AdOrderForm() {
                               {isClient ? (
                                 <span>{displayDate}</span>
                               ) : (
-                                <span>Loading...</span> // Or a placeholder
+                                <span>Loading...</span> // Render placeholder on server
                               )}
                          </Button>
                          </PopoverTrigger>
@@ -498,7 +499,7 @@ export default function AdOrderForm() {
           </div>
 
           {/* Notes & Stamp */}
-           <div className="relative print-border rounded p-2 pr-[200px] border border-black">
+           <div className="relative print-border rounded p-2 pr-[200px] border border-black"> {/* Ensured border class is present */}
             <p className="font-bold mb-1">Note:</p>
             <ol className="list-decimal list-inside text-sm space-y-1">
               <li>Space reserved vide our letter No.&nbsp;<Input type="text" value={noteInput} onChange={(e) => setNoteInput(e.target.value)} className="inline-block w-24 h-5 p-0 border-0 border-b border-black rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none font-bold" /></li>
@@ -508,7 +509,7 @@ export default function AdOrderForm() {
             </ol>
              {/* Stamp Area - Increased size, click triggers upload */}
             <div
-                className="stamp-container absolute top-2 right-2 w-[180px] h-[150px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden border-none group" /* Adjusted height, add group, removed border */
+                className="stamp-container absolute top-2 right-2 w-[180px] h-[150px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden group" /* Removed border-none, added group */
                 onClick={triggerStampUpload} /* Trigger upload on container click */
              >
                 <Input
@@ -520,14 +521,14 @@ export default function AdOrderForm() {
                     id="stampFile"
                     />
                  {stampPreview ? (
-                     <div className="relative w-full h-full">
+                     <div className="relative w-full h-full flex items-center justify-center">
                          <Image
                             id="stampPreview"
                             src={stampPreview}
                             alt="Stamp Preview"
-                            width={180} // Static width matching container
-                            height={150} // Static height matching container
-                            className="object-contain w-full h-full" // Use object-contain to fit image within bounds
+                            width={180} // Explicit width
+                            height={150} // Explicit height
+                            className="object-contain max-w-full max-h-full" // Use object-contain and max sizes
                             unoptimized // Good for Data URIs
                             priority // Prioritize loading the stamp image
                           />
