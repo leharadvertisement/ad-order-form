@@ -9,15 +9,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
-import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon, FileDown } from 'lucide-react';
+import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon } from 'lucide-react'; // Removed FileDown
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+// Removed jsPDF and html2canvas imports
 
 
 interface ScheduleRow {
@@ -61,7 +60,7 @@ export default function AdOrderForm() {
   const [advertisementManagerLine2, setAdvertisementManagerLine2] = useState('');
 
   const stampFileRef = useRef<HTMLInputElement>(null);
-  const printableAreaRef = useRef<HTMLDivElement>(null); // Ref for the area to be captured
+  // Removed printableAreaRef
   const { toast } = useToast();
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isInitialLoadRef = useRef(true);
@@ -114,7 +113,7 @@ export default function AdOrderForm() {
     } finally {
       isInitialLoadRef.current = false;
     }
-  }, [toast]); // Removed orderDate from dependencies to avoid infinite loops
+  }, [toast]);
 
   // Update displayDate only when orderDate changes *after* initial load
   useEffect(() => {
@@ -220,206 +219,7 @@ export default function AdOrderForm() {
     stampFileRef.current?.click();
   }, []);
 
-  // --- PDF Download Logic ---
- const handleDownloadPdf = useCallback(async () => {
-    if (!printableAreaRef.current) {
-      toast({
-        title: 'Error',
-        description: 'Cannot find the form area to generate PDF.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    const elementToCapture = printableAreaRef.current;
-    const filenameDate = displayDate ? displayDate.replace(/\./g, '-') : 'NoDate';
-    const filename = `Release_Order_${roNumber || 'NoRO'}_${filenameDate}.pdf`;
-
-    // Temporarily add print-specific elements before capturing
-    const tempElements: HTMLElement[] = []; // Store references to remove later
-    const inputs = elementToCapture.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('input[type="text"], textarea');
-    inputs.forEach(el => {
-      const valueDiv = document.createElement('div');
-      valueDiv.className = el.tagName === 'TEXTAREA' ? 'print-textarea-value' : 'print-input-value';
-      valueDiv.textContent = el.value;
-      el.parentNode?.insertBefore(valueDiv, el.nextSibling);
-      tempElements.push(valueDiv); // Add to removal list
-    });
-
-    const dateButtonContainer = elementToCapture.querySelector('.popover-trigger-container');
-    let dateSpan: HTMLSpanElement | null = null;
-    if (dateButtonContainer) {
-        dateSpan = document.createElement('span');
-        dateSpan.className = 'print-date-span';
-        dateSpan.textContent = displayDate || 'N/A';
-        dateButtonContainer.appendChild(dateSpan);
-        tempElements.push(dateSpan); // Add to removal list
-    }
-
-     // Handle Stamp Image for print
-     const printStampContainer = elementToCapture.querySelector('.print-stamp-container');
-     if (printStampContainer) {
-        printStampContainer.innerHTML = ''; // Clear previous content
-        if (stampPreview) {
-          const stampImagePrint = document.createElement('img');
-          stampImagePrint.id = "stampPreviewPrint";
-          stampImagePrint.src = stampPreview;
-          stampImagePrint.alt = "Stamp Preview";
-          printStampContainer.appendChild(stampImagePrint);
-          tempElements.push(stampImagePrint); // Add to removal list (indirectly via parent removal)
-        } else {
-          const stampPlaceholder = document.createElement('div');
-          stampPlaceholder.className = 'print-stamp-placeholder';
-          stampPlaceholder.textContent = 'No Stamp Uploaded';
-          printStampContainer.appendChild(stampPlaceholder);
-          tempElements.push(stampPlaceholder); // Add to removal list (indirectly via parent removal)
-        }
-     }
-
-
-    try {
-      // Use html2canvas to capture the element
-      const canvas = await html2canvas(elementToCapture, {
-        scale: 2, // Increase scale for better quality
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        logging: false, // Disable logging for cleaner console
-        scrollX: 0,
-        scrollY: -window.scrollY,
-        windowWidth: elementToCapture.scrollWidth,
-        windowHeight: elementToCapture.scrollHeight,
-        onclone: (clonedDoc) => {
-            // Apply print styles specifically for html2canvas rendering
-            // Ensure all necessary print styles are applied here
-             const printStyle = clonedDoc.createElement('style');
-             printStyle.innerHTML = `
-                 @media print {
-                    /* Include all refined print styles from globals.css here */
-                    /* Basic setup */
-                    body, html { margin: 0 !important; padding: 0 !important; width: 210mm !important; height: auto !important; background-color: white !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-                    #printable-area, #printable-area * { font-family: Arial, sans-serif !important; font-weight: bold !important; font-size: 10pt !important; line-height: 1.2 !important; box-sizing: border-box !important; color: black !important; border-color: black !important; background-color: transparent !important; }
-                    #printable-area .text-sm { font-size: 9pt !important; }
-                    #printable-area .text-xs { font-size: 8pt !important; }
-                    #printable-area .font-normal { font-weight: normal !important; }
-                    /* Hide non-print elements */
-                    .no-print, .no-print *, input[type="text"], textarea, .popover-trigger-container button, #stampContainerElement > *:not(#stampPreviewPrint), .popover-content { display: none !important; visibility: hidden !important; width: 0 !important; height: 0 !important; overflow: hidden !important; position: absolute !important; left: -9999px !important; }
-                    /* Ensure print-specific elements are visible */
-                    .print-input-value, .print-textarea-value, .print-date-span, #stampPreviewPrint, .print-stamp-placeholder { display: block !important; visibility: visible !important; width: auto !important; height: auto !important; overflow: visible !important; position: static !important; }
-                    #printable-area { width: 100% !important; max-width: 100% !important; border: 2px solid black !important; padding: 15px !important; margin: 0 !important; box-shadow: none !important; page-break-inside: avoid !important; }
-                    #printable-area > .p-0 { padding: 0 !important; }
-                    .header-title { background-color: black !important; color: white !important; padding: 4px 0 !important; margin-bottom: 15px !important; text-align: center !important; font-size: 14pt !important; font-weight: bold !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;}
-                    /* Layout Containers */
-                    .address-container { display: flex !important; justify-content: space-between !important; gap: 10px !important; margin-bottom: 15px !important; width: 100% !important; }
-                    .address-box, .ro-date-client-container { width: 48% !important; border: 1px solid black !important; padding: 8px !important; vertical-align: top !important; min-height: 100px !important; }
-                    .address-box p { margin: 0 0 2px 0 !important; font-size: 9pt !important; line-height: 1.3 !important; }
-                    .ro-date-client-container .field-row { display: flex !important; align-items: baseline !important; margin-bottom: 8px !important; min-height: 1.5em; }
-                    .ro-date-client-container label { width: 70px !important; flex-shrink: 0 !important; margin-right: 5px !important; font-size: 9pt !important; }
-                    .print-date-span { border-bottom: 1px solid black !important; padding: 1px 0 !important; min-width: 100px !important; display: inline-block !important; }
-                    /* Advertisement Manager Section */
-                    .advertisement-manager-section { border: 1px solid black !important; padding: 8px !important; margin-bottom: 15px !important; }
-                     .advertisement-manager-section label { display: block !important; margin-bottom: 5px !important; font-size: 10pt !important; }
-                     .advertisement-manager-section p { margin-top: 10px !important; font-size: 9pt !important; }
-                     /* Heading & Package */
-                    .heading-package-container { display: flex !important; gap: 10px !important; margin-bottom: 15px !important; width: 100% !important; }
-                    .heading-caption-box { flex: 1 !important; border: 2px solid black !important; padding: 8px !important; vertical-align: top !important; min-height: 50px !important; }
-                    .package-box { width: 30% !important; border: 2px solid black !important; padding: 8px !important; vertical-align: top !important; min-height: 50px !important; }
-                    .heading-caption-box label, .package-box label { display: block !important; margin-bottom: 4px !important; font-size: 10pt !important; }
-                    /* Input/Textarea Replacements */
-                    .print-input-value, .print-textarea-value { border: none !important; border-bottom: 1px solid black !important; padding: 2px 0 !important; background: transparent !important; color: black !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; border-radius: 0 !important; box-shadow: none !important; height: auto !important; min-height: 1.4em !important; width: 100% !important; font-size: 10pt !important; font-weight: bold !important; display: block !important; white-space: pre-wrap !important; word-wrap: break-word !important; }
-                    .print-textarea-value { min-height: 100px !important; }
-                    /* Table Styles */
-                    .table-container-print { margin-bottom: 15px !important; }
-                    table.print-table { width: 100% !important; border-collapse: collapse !important; border: 2px solid black !important; table-layout: fixed !important; page-break-inside: auto !important; }
-                    table.print-table thead.print-table-header th { border: 1px solid black !important; padding: 4px !important; font-size: 9pt !important; font-weight: bold !important; background-color: #f0f0f0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; text-align: left !important; }
-                    table.print-table tbody tr { page-break-inside: avoid !important; }
-                    table.print-table td.print-table-cell { border: 1px solid black !important; padding: 0 !important; vertical-align: top !important; height: auto !important; }
-                    .print-table-cell .print-input-value { padding: 4px !important; border: none !important; min-height: 2.5em !important; height: 100% !important; font-size: 10pt !important; font-weight: bold !important; }
-                    /* Matter Section */
-                    .matter-box { display: flex !important; min-height: 150px !important; border: 2px solid black !important; margin-bottom: 15px !important; width: 100% !important; overflow: hidden !important; }
-                    .vertical-label { background-color: black !important; color: white !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; writing-mode: vertical-lr !important; text-orientation: mixed !important; transform: rotate(180deg) !important; width: 30px !important; display: flex !important; align-items: center !important; justify-content: center !important; padding: 4px !important; font-size: 12pt !important; font-weight: bold !important; flex-shrink: 0 !important; }
-                    .matter-content { flex: 1 !important; padding: 5px !important; position: relative; }
-                    .matter-content .print-textarea-value { min-height: 140px !important; height: 100% !important; border: none !important; padding: 0 !important; }
-                    /* Billing Info */
-                    .billing-address-box { border: 1px solid black !important; padding: 8px !important; margin-bottom: 15px !important; }
-                    .billing-title-underline { border-bottom: 2px solid black !important; display: inline-block !important; padding-bottom: 1px !important; margin-bottom: 5px !important; }
-                    .billing-address-box p { margin: 0 0 2px 0 !important; font-size: 9pt !important; line-height: 1.3 !important; padding-top: 5px !important; }
-                    /* Notes & Stamp */
-                    .notes-stamp-container { display: flex !important; justify-content: space-between !important; gap: 10px !important; width: 100% !important; }
-                    .notes-container { flex: 1 !important; border: 1px solid black !important; padding: 8px !important; min-height: 150px !important; position: relative; }
-                    .note-title-underline { border-bottom: 2px solid black !important; display: inline-block !important; padding-bottom: 1px !important; margin-bottom: 5px !important; }
-                    .notes-container ol { padding-left: 25px !important; margin-top: 5px !important; list-style-position: outside !important; font-size: 9pt !important; }
-                    .notes-container li { margin-bottom: 3px !important; page-break-inside: avoid !important; }
-                    /* Stamp Area */
-                    .print-stamp-container { width: 180px !important; height: 150px !important; border: none !important; flex-shrink: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; overflow: hidden !important; background-color: white !important; }
-                    #stampPreviewPrint { display: block !important; max-width: 100% !important; max-height: 100% !important; width: auto !important; height: auto !important; object-fit: contain !important; object-position: center center !important; border: none !important; }
-                    .print-stamp-placeholder { width: 100% !important; height: 100% !important; border: 1px dashed #ccc !important; display: flex !important; align-items: center !important; justify-content: center !important; font-size: 9pt !important; color: #aaa !important; }
-                    /* Table page breaking */
-                    table { page-break-inside: auto; } tr { page-break-inside: avoid; page-break-after: auto; } thead { display: table-header-group; } tfoot { display: table-footer-group; }
-                    /* Underlines */
-                    .underline-black { border-bottom: 2px solid black !important; }
-                 }
-             `;
-             clonedDoc.head.appendChild(printStyle);
-             // Ensure the root element and printable area are visible for rendering
-             clonedDoc.body.style.visibility = 'visible';
-             const printableAreaClone = clonedDoc.getElementById('printable-area');
-             if (printableAreaClone) {
-                 printableAreaClone.style.visibility = 'visible';
-             }
-         }
-      });
-
-      // Create PDF
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4', // Standard A4 size
-      });
-
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgProps = pdf.getImageProperties(imgData);
-      const imgWidth = imgProps.width;
-      const imgHeight = imgProps.height;
-
-      // Calculate the ratio to fit the image within the A4 page dimensions, considering margins
-      const margin = 10; // Example margin in mm
-      const usableWidth = pdfWidth - 2 * margin;
-      const usableHeight = pdfHeight - 2 * margin;
-      const ratio = Math.min(usableWidth / imgWidth, usableHeight / imgHeight);
-
-      // Calculate the scaled dimensions
-      const scaledWidth = imgWidth * ratio;
-      const scaledHeight = imgHeight * ratio;
-
-      // Calculate position to center the image within the usable area
-      const xPos = margin + (usableWidth - scaledWidth) / 2;
-      const yPos = margin + (usableHeight - scaledHeight) / 2 > margin ? margin + (usableHeight - scaledHeight) / 2 : margin; // Ensure yPos is not negative
-
-      // Add the image to the PDF
-      pdf.addImage(imgData, 'PNG', xPos, yPos, scaledWidth, scaledHeight);
-      pdf.save(filename);
-
-      toast({
-        title: 'PDF Downloaded',
-        description: 'The release order has been saved as a PDF file.',
-      });
-
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      toast({
-        title: 'PDF Generation Failed',
-        description: `Could not generate the PDF. ${error instanceof Error ? error.message : String(error)}`,
-        variant: 'destructive',
-      });
-    } finally {
-       // Remove temporary print elements after canvas generation or on error
-       tempElements.forEach(el => el.remove());
-        if (printStampContainer) printStampContainer.innerHTML = ''; // Clear print stamp container
-    }
-  }, [printableAreaRef, toast, roNumber, displayDate, stampPreview, isClient]);
-
+  // Removed handleDownloadPdf and related logic
 
   const handleClearForm = useCallback(() => {
     setCaption('');
@@ -467,18 +267,15 @@ export default function AdOrderForm() {
         <Button onClick={handleClearForm} variant="outline">
           <Eraser className="mr-2 h-4 w-4" /> Clear Form & Draft
         </Button>
-         {/* PDF Download Button */}
-         <Button onClick={handleDownloadPdf}>
-            <FileDown className="mr-2 h-4 w-4" /> Download as PDF
-         </Button>
+         {/* PDF Download Button removed */}
       </div>
 
       {/* Printable Area */}
-      <Card id="printable-area" ref={printableAreaRef} className="w-full print-border-heavy rounded-none shadow-none p-5 border-2 border-black">
+      <Card id="printable-area" className="w-full print-border-heavy rounded-none shadow-none p-5 border-2 border-black"> {/* Removed ref */}
         <CardContent className="p-0">
           {/* Header */}
           <div className="text-center bg-black text-white p-1 mb-5 header-title">
-            <h1 className="text-xl m-0 font-bold">RELEASE ORDER</h1> {/* Adjusted size */}
+            <h1 className="text-xl m-0 font-bold">RELEASE ORDER</h1>
           </div>
 
            {/* Address Boxes Container */}
@@ -509,20 +306,19 @@ export default function AdOrderForm() {
                 />
               </div>
               {/* Date */}
-               <div className="field-row flex items-center popover-trigger-container"> {/* Container for replacement */}
+               <div className="field-row flex items-center popover-trigger-container">
                 <Label htmlFor="orderDateTrigger" className="w-20 text-sm shrink-0">Date:</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant={"outline"}
                       className={cn(
-                        "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print", // Hide button itself in print
+                        "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print",
                         !orderDate && "text-muted-foreground"
                       )}
                       id="orderDateTrigger"
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                       {/* Display formatted date from state */}
                        <span>{isClient ? displayDate : "Loading..."}</span>
                     </Button>
                   </PopoverTrigger>
@@ -535,14 +331,13 @@ export default function AdOrderForm() {
                                setOrderDate(date);
                            } else {
                                const today = new Date();
-                               setOrderDate(today); // Fallback to today if invalid date selected
+                               setOrderDate(today);
                            }
                       }}
                       initialFocus
                     />
                   </PopoverContent>
                 </Popover>
-                 {/* Span is added dynamically for print */}
               </div>
               {/* Client */}
                <div className="field-row flex items-center">
@@ -557,6 +352,32 @@ export default function AdOrderForm() {
                 />
               </div>
             </div>
+          </div>
+
+            {/* Advertisement Manager Section */}
+          <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
+            <Label className="block mb-1">The Advertisement Manager</Label>
+             <div className="relative mb-1">
+              <Input
+                id="adManager1"
+                type="text"
+                placeholder="Line 1"
+                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                value={advertisementManagerLine1}
+                onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
+              />
+             </div>
+            <div className="relative">
+            <Input
+              id="adManager2"
+              type="text"
+              placeholder="Line 2"
+              className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+              value={advertisementManagerLine2}
+              onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
+            />
+             </div>
+            <p className="text-sm mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
           </div>
 
            {/* Heading & Package Section */}
@@ -585,35 +406,6 @@ export default function AdOrderForm() {
             </div>
           </div>
 
-
-            {/* Advertisement Manager Section */}
-          <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
-            <Label className="block mb-1">The Advertisement Manager</Label>
-             <div className="relative mb-1">
-              <Input
-                id="adManager1"
-                type="text"
-                placeholder="Line 1"
-                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                value={advertisementManagerLine1}
-                onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
-              />
-             </div>
-            <div className="relative">
-            <Input
-              id="adManager2"
-              type="text"
-              placeholder="Line 2"
-              className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-              value={advertisementManagerLine2}
-              onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
-            />
-             </div>
-            <p className="text-sm mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
-          </div>
-
-
-
           {/* Schedule Table */}
           <div className="mb-5 table-container-print">
              <Table className="print-table print-border border border-black">
@@ -630,22 +422,22 @@ export default function AdOrderForm() {
               <TableBody>
                 {scheduleRows.map((row) => (
                   <TableRow key={row.id}>
-                    <TableCell className="print-border-thin border border-black p-0 print-table-cell">
+                    <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[48px]"> {/* Increased height */}
                       <Input id={`keyNo-${row.id}`} type="text" value={row.keyNo} onChange={(e) => handleScheduleChange(row.id, 'keyNo', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[48px]">
                       <Input id={`publication-${row.id}`} type="text" value={row.publication} onChange={(e) => handleScheduleChange(row.id, 'publication', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[48px]">
                       <Input id={`edition-${row.id}`} type="text" value={row.edition} onChange={(e) => handleScheduleChange(row.id, 'edition', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[48px]">
                       <Input id={`size-${row.id}`} type="text" value={row.size} onChange={(e) => handleScheduleChange(row.id, 'size', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[48px]">
                       <Input id={`scheduledDate-${row.id}`} type="text" value={row.scheduledDate} onChange={(e) => handleScheduleChange(row.id, 'scheduledDate', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[48px]">
                       <Input id={`position-${row.id}`} type="text" value={row.position} onChange={(e) => handleScheduleChange(row.id, 'position', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
                     </TableCell>
                   </TableRow>
@@ -691,7 +483,7 @@ export default function AdOrderForm() {
           </div>
 
           {/* Notes & Stamp Container */}
-           <div className="notes-stamp-container flex gap-3 mb-5">
+           <div className="notes-stamp-container flex gap-3 mb-5 items-start"> {/* Changed from mb-5 */}
                {/* Notes Section */}
                <div className="notes-container flex-1 print-border rounded p-2 border border-black min-h-[150px]">
                  <p className="font-bold mb-1 note-title-underline">Note:</p>
@@ -703,10 +495,10 @@ export default function AdOrderForm() {
                 </ol>
               </div>
 
-               {/* Stamp Area for Screen */}
+               {/* Stamp Area */}
                <div
                   id="stampContainerElement"
-                  className="stamp-container w-[180px] h-[150px] bg-white flex items-center justify-center cursor-pointer overflow-hidden group no-print" // Removed border-dashed and border-gray-300
+                  className="stamp-container w-[180px] h-[150px] bg-transparent flex items-center justify-center cursor-pointer overflow-hidden group no-print relative" // Added relative positioning
                   onClick={triggerStampUpload}
                   onMouseEnter={triggerStampUpload}
                >
@@ -721,12 +513,12 @@ export default function AdOrderForm() {
                    {stampPreview ? (
                        <div className="relative w-full h-full flex items-center justify-center">
                            <Image
-                              id="stampPreviewScreen" // Different ID for screen image
+                              id="stampPreviewScreen"
                               src={stampPreview}
                               alt="Stamp Preview"
-                              width={180} // Fixed width
-                              height={150} // Fixed height
-                              style={{ objectFit: 'contain' }} // Ensure image fits without stretching
+                              width={180}
+                              height={150}
+                              style={{ objectFit: 'contain', maxWidth: '100%', maxHeight: '100%' }} // Use contain and max sizes
                             />
                             {/* Hover effect */}
                             <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity no-print">
@@ -739,10 +531,7 @@ export default function AdOrderForm() {
                        </Label>
                   )}
               </div>
-              {/* Dedicated Stamp Container for Print (Populated dynamically) */}
-              <div className="print-stamp-container w-[180px] h-[150px] hidden">
-                 {/* Content added by handleDownloadPdf */}
-              </div>
+              {/* Removed print-stamp-container */}
             </div>
         </CardContent>
       </Card>
