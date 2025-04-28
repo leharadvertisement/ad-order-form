@@ -129,7 +129,7 @@ body {
     }
      /* Ensure borders print correctly */
     .print-border {
-      border-width: 2px !important;
+      border-width: 1px !important; /* Use 1px for regular borders */
       border-style: solid !important; /* Ensure border style is solid */
       border-color: black !important;
     }
@@ -139,7 +139,7 @@ body {
       border-color: black !important;
     }
      .print-border-heavy {
-      border-width: 4px !important;
+      border-width: 2px !important; /* Use 2px for heavy borders */
       border-style: solid !important; /* Ensure border style is solid */
       border-color: black !important;
     }
@@ -153,11 +153,12 @@ body {
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
-    .stamp-container img {
-       max-width: 100px !important;
-       max-height: 100px !important;
-       width: 100px !important; /* Force width */
-       height: 100px !important; /* Force height */
+    .stamp-container { /* Specifically remove border for stamp container */
+        border: none !important;
+        max-width: 100px !important;
+        max-height: 100px !important;
+        width: 100px !important; /* Force width */
+        height: 100px !important; /* Force height */
     }
      .vertical-label {
         background-color: black !important;

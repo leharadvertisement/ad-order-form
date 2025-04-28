@@ -271,7 +271,7 @@ export default function AdOrderForm() {
            {/* Address Boxes */}
           <div className="flex justify-between gap-3 mb-5">
             {/* Left Address Box */}
-            <div className="w-[48%] print-border rounded p-2"> {/* Removed border-2 border-black */}
+            <div className="w-[48%] print-border rounded p-2">
                 <p className="text-sm leading-tight">
                     Lehar Advertising Agency Pvt. Ltd.<br />
                     D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
@@ -282,7 +282,7 @@ export default function AdOrderForm() {
                 </p>
             </div>
             {/* Right Address Box */}
-            <div className="w-[48%] print-border rounded p-2 space-y-2"> {/* Removed border-2 border-black */}
+            <div className="w-[48%] print-border rounded p-2 space-y-2">
                  {/* R.O. No. LN */}
                  <div className="flex items-center">
                      <Label htmlFor="roNumber" className="w-20 text-sm shrink-0">R.O.No.LN:</Label>
@@ -354,7 +354,7 @@ export default function AdOrderForm() {
           </div>
 
           {/* Advertisement Manager Section - MOVED HERE */}
-            <div className="print-border rounded p-2 mb-5"> {/* Removed border-2 border-black */}
+            <div className="print-border rounded p-2 mb-5">
                 <Label className="block mb-1">The Advertisement Manager</Label>
                 <Input
                     type="text"
@@ -375,7 +375,7 @@ export default function AdOrderForm() {
 
           {/* Caption & Package - MOVED HERE */}
           <div className="flex gap-3 mb-5">
-            <div className="flex-1 print-border rounded p-2"> {/* Removed border-2 border-black */}
+            <div className="flex-1 print-border rounded p-2">
               <Label htmlFor="caption" className="block mb-1">Heading/Caption:</Label>
               <Input
                 id="caption"
@@ -386,7 +386,7 @@ export default function AdOrderForm() {
                 onChange={(e) => setCaption(e.target.value)}
               />
             </div>
-            <div className="w-[30%] print-border rounded p-2"> {/* Removed border-2 border-black */}
+            <div className="w-[30%] print-border rounded p-2">
               <Label htmlFor="package" className="block mb-1">Package:</Label>
               <Input
                 id="package"
@@ -402,7 +402,7 @@ export default function AdOrderForm() {
 
           {/* Schedule Table */}
           <div className="mb-5">
-            <Table className="print-border"> {/* Removed border-2 border-black */}
+            <Table className="print-border">
               <TableHeader className="bg-secondary">
                 <TableRow>
                   <TableHead className="w-[10%] print-border-thin border border-black p-1.5 text-sm font-bold">Key No.</TableHead>
@@ -449,7 +449,7 @@ export default function AdOrderForm() {
           </div>
 
           {/* Matter Section */}
-          <div className="flex h-[150px] print-border rounded mb-5 overflow-hidden"> {/* Removed border-2 border-black */}
+          <div className="flex h-[150px] print-border rounded mb-5 overflow-hidden">
             <div className="vertical-label bg-black text-white flex items-center justify-center p-1" style={{ writingMode: 'vertical-lr', textOrientation: 'mixed' }}>
               <span className="text-base font-bold transform rotate-180">MATTER</span>
             </div>
@@ -464,7 +464,7 @@ export default function AdOrderForm() {
           </div>
 
           {/* Billing Info */}
-          <div className="print-border rounded p-2 mb-5"> {/* Removed border-2 border-black */}
+          <div className="print-border rounded p-2 mb-5">
             <p className="font-bold mb-1">Forward all bills with relevant voucher copies to:</p>
             <p className="text-sm leading-tight">
               D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
@@ -476,16 +476,16 @@ export default function AdOrderForm() {
           </div>
 
           {/* Notes & Stamp */}
-          <div className="relative print-border rounded p-2 pr-[130px]"> {/* Removed border-2 border-black */}
+          <div className="relative print-border rounded p-2 pr-[130px]">
             <p className="font-bold mb-1">Note:</p>
             <ol className="list-decimal list-inside text-sm space-y-1">
-              <li>Space reserved vide our letter No. <Input type="text" value={noteInput} onChange={(e) => setNoteInput(e.target.value)} className="inline-block w-24 h-5 p-0 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none font-bold" /></li>
+              <li>Space reserved vide our letter No.<Input type="text" value={noteInput} onChange={(e) => setNoteInput(e.target.value)} className="inline-block w-24 h-5 p-0 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none font-bold" /></li>
               <li>No two advertisements of the same client should appear in the same issue.</li>
               <li>Please quote R.O. No. in all your bills and letters.</li>
               <li>Please send two voucher copies of good reproduction within 3 days of publishing.</li>
             </ol>
              {/* Stamp Area */}
-            <div className="stamp-container absolute top-2 right-2 w-[100px] h-[100px] print-border-thin rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden"> {/* Removed border border-black */}
+            <div className="stamp-container absolute top-2 right-2 w-[100px] h-[100px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden"> {/* Removed print-border-thin */}
                 <Input
                     type="file"
                     ref={stampFileRef}
@@ -495,15 +495,14 @@ export default function AdOrderForm() {
                     id="stampFile"
                     />
                  {stampPreview ? (
-                     <div className="relative w-full h-full"> {/* Use full width/height container */}
+                     <div className="relative w-full h-full">
                          <Image
                             id="stampPreview"
                             src={stampPreview}
                             alt="Stamp Preview"
-                            width={100} // Specify width
-                            height={100} // Specify height
-                            objectFit="contain" // Ensure the image fits without distortion
-                            className="p-0"
+                            width={100} // Fixed width
+                            height={100} // Fixed height
+                            className="object-contain w-full h-full" // Use object-contain and full width/height
                             unoptimized
                           />
                      </div>
