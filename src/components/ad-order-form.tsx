@@ -286,11 +286,9 @@ export default function AdOrderForm() {
                 <div className="w-[48%] h-24 bg-muted rounded animate-pulse"></div> {/* Left Address placeholder */}
                 <div className="w-[48%] h-24 bg-muted rounded animate-pulse"></div> {/* Right Box placeholder */}
             </div>
-            <div className="h-16 bg-muted rounded animate-pulse"></div> {/* Ad Manager placeholder */}
-            <div className="flex gap-3">
-                 <div className="flex-1 h-16 bg-muted rounded animate-pulse"></div> {/* Heading placeholder */}
-                 <div className="w-[30%] h-16 bg-muted rounded animate-pulse"></div> {/* Package placeholder */}
-            </div>
+             <div className="h-16 bg-muted rounded animate-pulse"></div> {/* Heading placeholder */}
+             <div className="h-16 bg-muted rounded animate-pulse"></div> {/* Package placeholder */}
+            <div className="h-24 bg-muted rounded animate-pulse"></div> {/* Ad Manager placeholder */}
             <div className="h-48 bg-muted rounded animate-pulse"></div> {/* Table placeholder */}
             <div className="h-36 bg-muted rounded animate-pulse"></div> {/* Matter placeholder */}
             <div className="h-24 bg-muted rounded animate-pulse"></div> {/* Billing placeholder */}
@@ -407,33 +405,7 @@ export default function AdOrderForm() {
             </div>
           </div>
 
-           {/* Advertisement Manager Section */}
-           <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
-             <Label className="block mb-1">The Advertisement Manager</Label>
-              <div className="relative mb-1">
-               <Input
-                 id="adManager1"
-                 type="text"
-                 placeholder="Line 1"
-                 className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                 value={advertisementManagerLine1}
-                 onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
-               />
-              </div>
-             <div className="relative">
-             <Input
-               id="adManager2"
-               type="text"
-               placeholder="Line 2"
-               className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-               value={advertisementManagerLine2}
-               onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
-             />
-              </div>
-             <p className="text-sm mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
-           </div>
-
-            {/* Heading & Package Section */}
+           {/* Heading & Package Section */}
              <div className="heading-package-container flex gap-3 mb-5">
              <div className="heading-caption-box flex-1 print-border-heavy rounded p-2 border-2 border-black">
               <Label htmlFor="caption" className="block mb-1">Heading/Caption:</Label>
@@ -459,6 +431,32 @@ export default function AdOrderForm() {
             </div>
           </div>
 
+            {/* Advertisement Manager Section */}
+           <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
+             <Label className="block mb-1">The Advertisement Manager</Label>
+              <div className="relative mb-1">
+               <Input
+                 id="adManager1"
+                 type="text"
+                 placeholder="Line 1"
+                 className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                 value={advertisementManagerLine1}
+                 onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
+               />
+              </div>
+             <div className="relative">
+             <Input
+               id="adManager2"
+               type="text"
+               placeholder="Line 2"
+               className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+               value={advertisementManagerLine2}
+               onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
+             />
+              </div>
+             <p className="text-sm mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
+           </div>
+
 
           {/* Schedule Table */}
            <div className="mb-5 table-container-print"> {/* Ensure this class is used for print adjustments */}
@@ -477,22 +475,22 @@ export default function AdOrderForm() {
                 {scheduleRows.map((row) => (
                   <TableRow key={row.id}>
                     {/* Adjusted height using min-h class */}
-                    <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[52px] h-[52px] align-top">
+                    <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[60px] h-[60px] align-top"> {/* Increased min-h and h */}
                       <Input id={`keyNo-${row.id}`} type="text" value={row.keyNo} onChange={(e) => handleScheduleChange(row.id, 'keyNo', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[52px] h-[52px] align-top">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[60px] h-[60px] align-top"> {/* Increased min-h and h */}
                       <Input id={`publication-${row.id}`} type="text" value={row.publication} onChange={(e) => handleScheduleChange(row.id, 'publication', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[52px] h-[52px] align-top">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[60px] h-[60px] align-top"> {/* Increased min-h and h */}
                       <Input id={`edition-${row.id}`} type="text" value={row.edition} onChange={(e) => handleScheduleChange(row.id, 'edition', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[52px] h-[52px] align-top">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[60px] h-[60px] align-top"> {/* Increased min-h and h */}
                       <Input id={`size-${row.id}`} type="text" value={row.size} onChange={(e) => handleScheduleChange(row.id, 'size', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[52px] h-[52px] align-top">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[60px] h-[60px] align-top"> {/* Increased min-h and h */}
                       <Input id={`scheduledDate-${row.id}`} type="text" value={row.scheduledDate} onChange={(e) => handleScheduleChange(row.id, 'scheduledDate', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[52px] h-[52px] align-top">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[60px] h-[60px] align-top"> {/* Increased min-h and h */}
                       <Input id={`position-${row.id}`} type="text" value={row.position} onChange={(e) => handleScheduleChange(row.id, 'position', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
                     </TableCell>
                   </TableRow>
@@ -607,3 +605,4 @@ export default function AdOrderForm() {
     </div>
   );
 }
+
