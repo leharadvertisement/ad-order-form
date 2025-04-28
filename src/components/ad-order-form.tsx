@@ -37,8 +37,8 @@ interface FormData {
   roNumber: string;
   orderDate: string | null;
   clientName: string;
-  advertisementManagerLine1: string; // Added for Advertisement Manager
-  advertisementManagerLine2: string; // Added for Advertisement Manager
+  advertisementManagerLine1: string;
+  advertisementManagerLine2: string;
 }
 
 const LOCAL_STORAGE_KEY = 'adOrderFormData';
@@ -359,7 +359,33 @@ export default function AdOrderForm() {
             </div>
           </div>
 
-          {/* Advertisement Manager Section */}
+            {/* Heading & Package */}
+          <div className="flex gap-3 mb-5">
+            <div className="flex-1 print-border-heavy rounded p-2 border-2 border-black"> {/* Changed border to border-2 */}
+              <Label htmlFor="caption" className="block mb-1">Heading/Caption:</Label>
+              <Input
+                id="caption"
+                type="text"
+                placeholder="Enter caption here"
+                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                value={caption}
+                onChange={(e) => setCaption(e.target.value)}
+              />
+            </div>
+            <div className="w-[30%] print-border-heavy rounded p-2 border-2 border-black"> {/* Changed border to border-2 */}
+              <Label htmlFor="package" className="block mb-1">Package:</Label>
+              <Input
+                id="package"
+                type="text"
+                placeholder="Enter package name"
+                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                value={packageName}
+                onChange={(e) => setPackageName(e.target.value)}
+              />
+            </div>
+          </div>
+
+           {/* Advertisement Manager Section */}
             <div className="print-border rounded p-2 mb-5 border border-black"> {/* Ensured border */}
                 <Label className="block mb-1">The Advertisement Manager</Label>
                 <Input
@@ -379,36 +405,10 @@ export default function AdOrderForm() {
                  <p className="text-sm mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p> {/* Added text line */}
             </div>
 
-          {/* Caption & Package */}
-          <div className="flex gap-3 mb-5">
-            <div className="flex-1 print-border rounded p-2 border-2 border-black"> {/* Added border-2 border-black */}
-              <Label htmlFor="caption" className="block mb-1">Heading/Caption:</Label>
-              <Input
-                id="caption"
-                type="text"
-                placeholder="Enter caption here"
-                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                value={caption}
-                onChange={(e) => setCaption(e.target.value)}
-              />
-            </div>
-            <div className="w-[30%] print-border rounded p-2 border-2 border-black"> {/* Added border-2 border-black */}
-              <Label htmlFor="package" className="block mb-1">Package:</Label>
-              <Input
-                id="package"
-                type="text"
-                placeholder="Enter package name"
-                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                value={packageName}
-                onChange={(e) => setPackageName(e.target.value)}
-              />
-            </div>
-          </div>
-
 
           {/* Schedule Table */}
           <div className="mb-5">
-            <Table className="print-border border border-black"> {/* Ensured border */}
+            <Table className="print-border border border-black">
               <TableHeader className="bg-secondary print-table-header">
                 <TableRow>
                   <TableHead className="w-[10%] print-border-thin border border-black p-1.5 text-sm font-bold">Key No.</TableHead>
@@ -485,13 +485,13 @@ export default function AdOrderForm() {
           <div className="relative print-border rounded p-2 pr-[130px] border border-black"> {/* Ensured border */}
             <p className="font-bold mb-1">Note:</p>
             <ol className="list-decimal list-inside text-sm space-y-1">
-              <li>Space reserved vide our letter No.<Input type="text" value={noteInput} onChange={(e) => setNoteInput(e.target.value)} className="inline-block w-24 h-5 p-0 border-0 border-b border-black rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none font-bold" /></li>
+              <li>Space reserved vide our letter No. <Input type="text" value={noteInput} onChange={(e) => setNoteInput(e.target.value)} className="inline-block w-24 h-5 p-0 border-0 border-b border-black rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none font-bold" /></li>
               <li>No two advertisements of the same client should appear in the same issue.</li>
               <li>Please quote R.O. No. in all your bills and letters.</li>
               <li>Please send two voucher copies of good reproduction within 3 days of publishing.</li>
             </ol>
              {/* Stamp Area */}
-            <div className="stamp-container absolute top-2 right-2 w-[100px] h-[100px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden"> {/* Removed border */}
+            <div className="stamp-container absolute top-2 right-2 w-[100px] h-[100px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden border-none"> {/* Explicitly set border-none */}
                 <Input
                     type="file"
                     ref={stampFileRef}
