@@ -1,14 +1,15 @@
+
 'use client';
 
 import type { ChangeEvent } from 'react';
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
-import { PlusCircle, Trash2 } from 'lucide-react';
+import { PlusCircle, Trash2, Eraser } from 'lucide-react'; // Added Eraser icon
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 
@@ -22,6 +23,17 @@ interface ScheduleRow {
   position: string;
 }
 
+interface FormData {
+  caption: string;
+  packageName: string;
+  matter: string;
+  scheduleRows: ScheduleRow[];
+  stampPreview: string | null;
+}
+
+const LOCAL_STORAGE_KEY = 'adOrderFormData';
+const DEBOUNCE_DELAY = 500; // milliseconds
+
 export default function AdOrderForm() {
   const [caption, setCaption] = useState('');
   const [packageName, setPackageName] = useState('');
@@ -33,6 +45,81 @@ export default function AdOrderForm() {
   const stampFileRef = useRef<HTMLInputElement>(null);
   const printableAreaRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isInitialLoadRef = useRef(true); // Ref to track initial load
+
+  // --- Data Recovery Logic ---
+
+  // Load data from localStorage on mount
+  useEffect(() => {
+    try {
+      const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (savedData) {
+        const parsedData: FormData = JSON.parse(savedData);
+        setCaption(parsedData.caption || '');
+        setPackageName(parsedData.packageName || '');
+        setMatter(parsedData.matter || '');
+        // Ensure scheduleRows is an array and has at least one row
+        const loadedRows = Array.isArray(parsedData.scheduleRows) && parsedData.scheduleRows.length > 0
+          ? parsedData.scheduleRows
+          : [{ id: Date.now(), keyNo: '', publication: '', edition: '', size: '', scheduledDate: '', position: '' }];
+        setScheduleRows(loadedRows);
+        setStampPreview(parsedData.stampPreview || null);
+        toast({
+          title: "Data Recovered",
+          description: "Previously entered form data has been loaded.",
+        });
+      }
+    } catch (error) {
+      console.error("Failed to load data from localStorage:", error);
+      toast({
+        title: "Recovery Failed",
+        description: "Could not recover previous form data.",
+        variant: "destructive",
+      });
+    } finally {
+       isInitialLoadRef.current = false; // Mark initial load as complete
+    }
+  }, [toast]); // Only run on mount
+
+
+  // Save data to localStorage with debounce
+  useEffect(() => {
+    // Skip saving during the initial load before data is potentially recovered
+    if (isInitialLoadRef.current) {
+      return;
+    }
+
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+
+    debounceTimeoutRef.current = setTimeout(() => {
+      try {
+        const dataToSave: FormData = { caption, packageName, matter, scheduleRows, stampPreview };
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToSave));
+         // console.log("Form data saved to localStorage"); // Optional: for debugging
+      } catch (error) {
+        console.error("Failed to save data to localStorage:", error);
+        // Optionally notify user, but might be too noisy
+        // toast({
+        //   title: "Save Failed",
+        //   description: "Could not save form progress automatically.",
+        //   variant: "destructive",
+        // });
+      }
+    }, DEBOUNCE_DELAY);
+
+    // Cleanup function to clear timeout if component unmounts
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    };
+  }, [caption, packageName, matter, scheduleRows, stampPreview]);
+
+
+  // --- Form Handlers ---
 
   const addRow = useCallback(() => {
     setScheduleRows((prevRows) => [
@@ -64,7 +151,8 @@ export default function AdOrderForm() {
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        setStampPreview(e.target?.result as string);
+        const result = e.target?.result as string;
+        setStampPreview(result); // Update state first
          toast({
             title: "Stamp Uploaded",
             description: "Stamp image successfully uploaded.",
@@ -91,9 +179,39 @@ export default function AdOrderForm() {
     window.print();
   }, []);
 
+  const handleClearForm = useCallback(() => {
+    setCaption('');
+    setPackageName('');
+    setMatter('');
+    setScheduleRows([{ id: Date.now(), keyNo: '', publication: '', edition: '', size: '', scheduledDate: '', position: '' }]);
+    setStampPreview(null);
+    if (stampFileRef.current) {
+        stampFileRef.current.value = ''; // Clear file input visually
+    }
+    try {
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
+        toast({
+            title: "Form Cleared",
+            description: "Form data and recovered data have been cleared.",
+        });
+    } catch (error) {
+        console.error("Failed to clear localStorage:", error);
+         toast({
+            title: "Clear Error",
+            description: "Could not clear stored recovery data.",
+            variant: "destructive",
+        });
+    }
+
+  }, [toast]);
+
+
   return (
     <div className="max-w-[210mm] mx-auto font-bold">
-       <div className="flex justify-end mb-4 no-print">
+       <div className="flex justify-end gap-2 mb-4 no-print">
+            <Button onClick={handleClearForm} variant="outline">
+              <Eraser className="mr-2 h-4 w-4" /> Clear Form & Data
+            </Button>
             <Button onClick={handlePrint}>
               Print Release Order
             </Button>
