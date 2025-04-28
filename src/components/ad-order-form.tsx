@@ -304,7 +304,7 @@ export default function AdOrderForm() {
                             id="orderDate"
                         >
                             <CalendarIcon className="mr-2 h-4 w-4" />
-                            {orderDate ? format(orderDate, "PPP") : <span>Pick a date</span>}
+                            {orderDate ? format(orderDate, "dd.MM.yyyy") : <span>Pick a date</span>}
                         </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0 no-print">
@@ -480,8 +480,8 @@ export default function AdOrderForm() {
                         src={stampPreview}
                         alt="Stamp Preview"
                         layout="fill"
-                        objectFit="contain"
-                        objectPosition="center"
+                        objectFit="contain" // Changed from cover to contain
+                        objectPosition="center" // Ensure it's centered
                         className="p-0" // Ensure no padding interferes
                       />
                 ) : (
