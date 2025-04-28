@@ -269,14 +269,22 @@ export default function AdOrderForm() {
      // This function now runs only on the client
     const updateFormattedDate = () => {
         if (orderDate && !isNaN(orderDate.getTime())) {
-            setDisplayDate(format(orderDate, "dd.MM.yyyy"));
-        } else if (isClient) { // Only set a new Date if on client and date is invalid
+            try {
+                 setDisplayDate(format(orderDate, "dd.MM.yyyy"));
+            } catch (error) {
+                 console.error("Error formatting date:", error);
+                 // Fallback or handle the error, e.g., display a default string
+                 const today = new Date();
+                 setOrderDate(today); // Attempt to fix the state with a valid date
+                 setDisplayDate(format(today, "dd.MM.yyyy"));
+            }
+        } else if (isClient) { // Only set a new Date if on client and date is invalid/null
              const today = new Date();
              setOrderDate(today); // Attempt to fix the state
              setDisplayDate(format(today, "dd.MM.yyyy"));
         } else {
              // Server-side or before client mount, use a placeholder or empty string
-             setDisplayDate("Loading...");
+             setDisplayDate("Loading..."); // Placeholder for SSR
         }
     };
 
@@ -349,11 +357,11 @@ export default function AdOrderForm() {
                              id="orderDate"
                          >
                              <CalendarIcon className="mr-2 h-4 w-4" />
-                             {/* Use the displayDate state here */}
+                             {/* Render based on client-side readiness */}
                               {isClient ? (
                                 <span>{displayDate}</span>
                               ) : (
-                                <span>Loading...</span> // Render placeholder on server/initial load
+                                <span>Loading...</span> // Server/Initial Render Placeholder
                               )}
                          </Button>
                          </PopoverTrigger>
@@ -494,8 +502,8 @@ export default function AdOrderForm() {
 
           {/* Billing Info */}
           <div className="print-border rounded p-2 mb-5 border border-black">
-            <p className="font-bold mb-1">Forward all bills with relevant voucher copies to:</p>
-            <p className="text-sm leading-tight">
+            <p className="font-bold mb-1 border-b border-black inline-block">Forward all bills with relevant voucher copies to:</p>
+            <p className="text-sm leading-tight pt-1">
               D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
               Alaknanda Commercial Complex,<br />
               New Delhi-110019<br />
@@ -506,9 +514,9 @@ export default function AdOrderForm() {
 
           {/* Notes & Stamp */}
            <div className="relative print-border rounded p-2 pr-[200px] border border-black min-h-[170px]"> {/* Ensured border visibility */}
-            <p className="font-bold mb-1">Note:</p>
-            <ol className="list-decimal list-inside text-sm space-y-1">
-              <li>Space reserved vide our letter No.<Input type="text" value={noteInput} onChange={(e) => setNoteInput(e.target.value)} className="inline-block w-24 h-5 p-0 border-0 border-b border-black rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none font-bold" /></li>
+            <p className="font-bold mb-1 border-b border-black inline-block">Note:</p>
+            <ol className="list-decimal list-inside text-sm space-y-1 pt-1">
+              <li>Space reserved vide our letter No. <Input type="text" value={noteInput} onChange={(e) => setNoteInput(e.target.value)} className="inline-block w-24 h-5 p-0 border-0 border-b border-black rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none font-bold" /></li>
               <li>No two advertisements of the same client should appear in the same issue.</li>
               <li>Please quote R.O. No. in all your bills and letters.</li>
               <li>Please send two voucher copies of good reproduction within 3 days of publishing.</li>
@@ -532,9 +540,9 @@ export default function AdOrderForm() {
                             id="stampPreview"
                             src={stampPreview}
                             alt="Stamp Preview"
-                            width={180} // Keep width
-                            height={150} // Keep height
-                            style={{ objectFit: 'contain', width: '100%', height: '100%' }} // Changed to contain, width/height 100%
+                            width={180} // Explicit width
+                            height={150} // Explicit height
+                            style={{ objectFit: 'contain', width: '100%', height: '100%' }} // Use contain and ensure it fills the container
                             unoptimized // Good for Data URIs
                             priority // Prioritize loading the stamp image
                           />
