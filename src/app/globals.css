@@ -123,204 +123,343 @@ body {
    }
 
 
-  /* Custom styles for print and potential export (like Word .doc) */
+  /* Custom styles for print and potential export (like Word .doc / PDF) */
   @media print {
-    /* Apply bold font globally within the printable area for consistency */
-    #printable-area, #printable-area * {
+     /* Basic setup */
+     body, html {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 210mm !important; /* A4 Width */
+        height: auto !important;
+        background-color: white !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+     }
+
+     #printable-area, #printable-area * {
        font-family: Arial, sans-serif !important;
        font-weight: bold !important;
-       font-size: 14px !important; /* Ensure consistent font size */
-       box-sizing: border-box; /* Include padding and border in element's total width and height */
-    }
-     /* Specific overrides for elements that shouldn't be bold by default */
-     #printable-area .text-sm { font-size: 12px !important; } /* Adjust smaller text */
-     #printable-area .text-xs { font-size: 10px !important; } /* Adjust smaller text */
-     #printable-area .font-normal { font-weight: normal !important; } /* Allow normal weight */
-
-    .no-print {
-      display: none !important;
-    }
-    body, #printable-area {
-      margin: 0 !important;
-      padding: 0 !important; /* Remove body padding for print/export */
-      border: none !important;
-      box-shadow: none !important;
-      -webkit-print-color-adjust: exact; /* Ensure background colors print */
-      print-color-adjust: exact;
-    }
-
-     /* Container for the entire form content */
-     #printable-area > .p-0 { /* Target CardContent */
-        padding: 20px !important; /* Add padding inside the main border */
+       font-size: 10pt !important; /* Standard print font size */
+       line-height: 1.2 !important;
+       box-sizing: border-box !important;
+       color: black !important; /* Ensure all text is black */
+       border-color: black !important; /* Ensure all borders are black */
+       background-color: transparent !important; /* Reset backgrounds */
      }
 
+     /* Specific font size adjustments */
+     #printable-area .text-sm { font-size: 9pt !important; }
+     #printable-area .text-xs { font-size: 8pt !important; }
+     #printable-area .font-normal { font-weight: normal !important; }
 
-     /* Ensure borders print/export correctly */
-    .print-border, .print-border-heavy, .print-border-thin {
-      border-style: solid !important; /* Ensure border style is solid */
-      border-color: black !important;
-    }
-    .print-border { border-width: 1px !important; }
-    .print-border-thin { border-width: 1px !important; }
-    .print-border-heavy { border-width: 2px !important; }
-
-    /* Inputs and Textareas for print/export */
-    input[type="text"], textarea, input[value] {
-       border: none !important;
-       border-bottom: 1px solid black !important;
-       padding: 1px 0 !important; /* Minimal padding for underline */
-       background: transparent !important; /* Make background transparent */
-       color: black !important; /* Ensure text is black */
-       -webkit-text-fill-color: black !important; /* Override browser defaults */
-       border-radius: 0 !important; /* No rounded corners */
-       box-shadow: none !important; /* No shadow */
-       height: auto !important; /* Let content determine height */
-       min-height: 1.2em; /* Minimum height for visibility */
-    }
-    /* Style the div that replaces textarea */
-     div[style*="white-space: pre-wrap"] {
-        font-size: 14px !important;
-        font-weight: bold !important;
-        font-family: Arial, sans-serif !important;
-        padding: 4px !important;
-        width: 100%;
-        min-height: 100px;
-        border: none !important; /* No border on the div */
-        background-color: transparent !important;
-        color: black !important;
-        line-height: 1.4;
+     /* Hide non-print elements */
+     .no-print, .no-print * {
+       display: none !important;
+       visibility: hidden !important;
+       width: 0 !important;
+       height: 0 !important;
+       overflow: hidden !important;
+       position: absolute !important;
+       left: -9999px !important;
      }
 
-     th, .table-header-print { /* Apply background to table headers */
-      background-color: #f0f0f0 !important;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-    }
-    /* Specific style to remove border from stamp container */
-    .print-stamp-container {
+     /* Ensure the main printable card takes full width and has padding */
+     #printable-area {
+        width: 100% !important;
+        max-width: 100% !important;
+        border: 2px solid black !important;
+        padding: 15px !important; /* Inner padding for the content */
+        margin: 0 !important;
+        box-shadow: none !important;
+        page-break-inside: avoid !important; /* Try to keep the whole form on one page */
+     }
+      #printable-area > .p-0 { /* Target CardContent for internal padding */
+         padding: 0 !important; /* Remove CardContent's default padding */
+      }
+
+
+     /* Header */
+     .header-title {
+       background-color: black !important;
+       color: white !important;
+       padding: 4px 0 !important;
+       margin-bottom: 15px !important;
+       text-align: center !important;
+       font-size: 14pt !important;
+       font-weight: bold !important;
+     }
+
+      /* Layout Containers */
+      .address-container {
+        display: flex !important;
+        justify-content: space-between !important;
+        gap: 10px !important;
+        margin-bottom: 15px !important;
+        width: 100% !important;
+      }
+      .address-box, .ro-date-client-container {
+        width: 48% !important;
+        border: 1px solid black !important;
+        padding: 8px !important;
+        vertical-align: top !important;
+        min-height: 100px !important; /* Ensure minimum height */
+      }
+      .address-box p { margin: 0 0 2px 0 !important; font-size: 9pt !important; line-height: 1.3 !important; }
+
+      .ro-date-client-container .field-row {
+        display: flex !important;
+        align-items: baseline !important;
+        margin-bottom: 8px !important;
+        min-height: 1.5em; /* Ensure space for content */
+      }
+      .ro-date-client-container label {
+        width: 70px !important; /* Slightly reduced label width */
+        flex-shrink: 0 !important;
+        margin-right: 5px !important;
+        font-size: 9pt !important;
+      }
+      /* Style the span replacing the date button */
+       .print-date-span {
+          border-bottom: 1px solid black !important;
+          padding: 1px 0 !important;
+          min-width: 100px !important; /* Give it some width */
+          display: inline-block !important;
+       }
+
+      .advertisement-manager-section {
+        border: 1px solid black !important;
+        padding: 8px !important;
+        margin-bottom: 15px !important;
+      }
+      .advertisement-manager-section label { display: block !important; margin-bottom: 5px !important; font-size: 10pt !important; }
+      .advertisement-manager-section p { margin-top: 10px !important; font-size: 9pt !important; }
+
+
+      .heading-package-container {
+        display: flex !important;
+        gap: 10px !important;
+        margin-bottom: 15px !important;
+        width: 100% !important;
+      }
+      .heading-caption-box {
+        flex: 1 !important;
+        border: 2px solid black !important;
+        padding: 8px !important;
+        vertical-align: top !important;
+        min-height: 50px !important;
+      }
+      .package-box {
+        width: 30% !important;
+        border: 2px solid black !important;
+        padding: 8px !important;
+        vertical-align: top !important;
+        min-height: 50px !important;
+      }
+      .heading-caption-box label, .package-box label {
+        display: block !important;
+        margin-bottom: 4px !important;
+        font-size: 10pt !important;
+      }
+
+
+     /* Inputs and Textareas */
+     input[type="text"], .print-input-value, .print-textarea-value {
         border: none !important;
-        background-color: white !important; /* Ensure white background */
-    }
-     .vertical-label {
-        background-color: black !important;
-        color: white !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-        writing-mode: vertical-lr !important;
-        text-orientation: mixed !important;
-        transform: rotate(180deg) !important; /* Ensure rotation */
-        width: 30px !important; /* Fixed width */
-        padding: 4px !important;
-     }
-      .header-title {
-         background-color: black !important;
-        color: white !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-        padding: 4px !important;
-        margin-bottom: 20px !important;
-        font-size: 20px !important;
-      }
-     /* Ensure TableHeader gets printed borders */
-     .print-table-header th {
-        border: 1px solid black !important;
-        padding: 6px !important;
-     }
-      /* Ensure TableCells print borders and padding */
-      .print-table-cell {
-        border: 1px solid black !important;
-        padding: 0 !important; /* Remove default padding */
-      }
-       /* Style inputs within table cells */
-      .print-table-cell input {
-        padding: 6px !important; /* Add padding inside the input */
-        border: none !important; /* Remove input border */
-        height: 100% !important; /* Fill cell height */
-        min-height: 2.5em; /* Ensure minimum height in cells */
-        font-size: 14px !important;
+        border-bottom: 1px solid black !important;
+        padding: 2px 0 !important;
+        background: transparent !important;
+        color: black !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        height: auto !important;
+        min-height: 1.4em !important; /* Ensure minimum height */
+        width: 100% !important; /* Ensure full width within container */
+        font-size: 10pt !important;
         font-weight: bold !important;
+        display: block !important; /* Ensure block display */
+        white-space: pre-wrap !important; /* Allow wrapping */
+        word-wrap: break-word !important;
+     }
+      .print-textarea-value {
+         min-height: 100px !important; /* Specific min height for textarea replacement */
+      }
+      /* Hide original inputs/textareas */
+      input[type="text"], textarea {
+        display: none !important;
+      }
+
+     /* Table Styles */
+      .table-container-print { margin-bottom: 15px !important; }
+      table.print-table {
+         width: 100% !important;
+         border-collapse: collapse !important;
+         border: 2px solid black !important;
+         table-layout: fixed !important; /* Helps control column widths */
+         page-break-inside: auto !important;
+      }
+      table.print-table thead.print-table-header th {
+         border: 1px solid black !important;
+         padding: 4px !important;
+         font-size: 9pt !important;
+         font-weight: bold !important;
+         background-color: #f0f0f0 !important;
+         -webkit-print-color-adjust: exact !important;
+         print-color-adjust: exact !important;
+         text-align: left !important;
+      }
+     table.print-table tbody tr {
+        page-break-inside: avoid !important;
+     }
+     table.print-table td.print-table-cell {
+        border: 1px solid black !important;
+        padding: 0 !important; /* Remove padding on cell */
+        vertical-align: top !important; /* Align content top */
+        height: auto !important;
+     }
+      /* Style the div replacing the input inside table cells */
+     .print-table-cell .print-input-value {
+         padding: 4px !important; /* Add padding inside the div */
+         border: none !important; /* No border for the div */
+         min-height: 2.5em !important; /* Ensure minimum height in cells */
+         height: 100% !important;
+         font-size: 10pt !important;
+         font-weight: bold !important;
+     }
+
+     /* Matter Section */
+     .matter-box {
+       display: flex !important;
+       min-height: 150px !important; /* Fixed height */
+       border: 2px solid black !important;
+       margin-bottom: 15px !important;
+       width: 100% !important;
+       overflow: hidden !important; /* Prevent content overflow */
+     }
+     .vertical-label {
+       background-color: black !important;
+       color: white !important;
+       -webkit-print-color-adjust: exact !important;
+       print-color-adjust: exact !important;
+       writing-mode: vertical-lr !important;
+       text-orientation: mixed !important;
+       transform: rotate(180deg) !important; /* Keep text upright */
+       width: 30px !important;
+       display: flex !important;
+       align-items: center !important;
+       justify-content: center !important;
+       padding: 4px !important;
+       font-size: 12pt !important;
+       font-weight: bold !important;
+       flex-shrink: 0 !important;
+     }
+     .matter-content {
+       flex: 1 !important;
+       padding: 5px !important; /* Padding inside the content area */
+       position: relative; /* Needed for the pseudo-element */
+     }
+      .matter-content .print-textarea-value {
+        min-height: 140px !important; /* Adjust to fit inside padding */
+        height: 100% !important;
+        border: none !important; /* No border for the div inside */
+        padding: 0 !important;
+      }
+
+      /* Billing Info */
+      .billing-address-box {
+         border: 1px solid black !important;
+         padding: 8px !important;
+         margin-bottom: 15px !important;
+      }
+      .billing-title-underline {
+         border-bottom: 2px solid black !important;
+         display: inline-block !important;
+         padding-bottom: 1px !important;
+         margin-bottom: 5px !important;
+      }
+       .billing-address-box p {
+         margin: 0 0 2px 0 !important;
+         font-size: 9pt !important;
+         line-height: 1.3 !important;
+         padding-top: 5px !important;
+       }
+
+      /* Notes & Stamp */
+      .notes-stamp-container {
+         display: flex !important;
+         justify-content: space-between !important;
+         gap: 10px !important;
+         width: 100% !important;
+      }
+      .notes-container {
+         flex: 1 !important; /* Takes remaining space */
+         border: 1px solid black !important;
+         padding: 8px !important;
+         min-height: 150px !important; /* Match stamp height */
+         position: relative; /* For list positioning */
+      }
+      .note-title-underline {
+        border-bottom: 2px solid black !important;
+        display: inline-block !important;
+        padding-bottom: 1px !important;
+        margin-bottom: 5px !important;
+      }
+      .notes-container ol {
+        padding-left: 25px !important; /* Adjust list indentation */
+        margin-top: 5px !important;
+        list-style-position: outside !important;
+        font-size: 9pt !important;
+      }
+      .notes-container li {
+        margin-bottom: 3px !important;
+        page-break-inside: avoid !important;
       }
 
 
-       /* Hide hover effect on print/export */
-      .group-hover\:opacity-100 {
-        opacity: 1 !important; /* Ensure image is visible */
-      }
-      .group:hover .group-hover\:opacity-100 { /* Target hover state explicitly */
-         opacity: 0 !important;
-      }
+     /* Stamp Area */
+     .print-stamp-container {
+       width: 180px !important; /* Fixed width */
+       height: 150px !important; /* Fixed height */
+       border: none !important; /* No border around the container */
+       flex-shrink: 0 !important; /* Prevent shrinking */
+       display: flex !important;
+       align-items: center !important;
+       justify-content: center !important;
+       overflow: hidden !important;
+       background-color: white !important; /* Ensure white background */
+     }
+     #stampPreviewPrint {
+        display: block !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
+        width: auto !important; /* Let aspect ratio determine */
+        height: auto !important; /* Let aspect ratio determine */
+        object-fit: contain !important; /* Scale down, preserve aspect ratio */
+        object-position: center center !important;
+        border: none !important; /* Ensure no border on the image itself */
+     }
+     .print-stamp-placeholder {
+        width: 100% !important;
+        height: 100% !important;
+        border: 1px dashed #ccc !important; /* Optional: show dashed border if no image */
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 9pt !important;
+        color: #aaa !important;
+     }
+
 
        /* Table page breaking */
-       table { page-break-inside: auto; width: 100%; }
+       table { page-break-inside: auto; }
        tr { page-break-inside: avoid; page-break-after: auto; }
-       thead { display: table-header-group; }
+       thead { display: table-header-group; } /* Repeat header on new pages */
        tfoot { display: table-footer-group; }
 
-       /* Hide placeholder text */
-       input[type="text"]::placeholder, textarea::placeholder {
-          color: transparent !important;
-       }
+       /* Ensure underlines print */
+       .underline-black { border-bottom: 2px solid black !important; }
 
-      /* Ensure Date Picker Button content prints as text */
-      .popover-trigger-container span {
-         display: inline-block !important;
-         color: black !important; /* Ensure text color */
-         border-bottom: 1px solid black !important; /* Add underline */
-         padding: 2px 0 !important; /* Adjust padding */
-         font-size: 14px !important;
-         font-weight: bold !important;
-      }
-      #orderDateTrigger svg { /* Target the correct button ID */
-         display: none !important; /* Hide the icon */
-      }
+  } /* End @media print */
 
-       /* Ensure the image prints correctly */
-      #stampPreview {
-        display: block !important; /* Ensure it's treated as a block element */
-        width: 180px !important; /* Explicit width */
-        height: 150px !important; /* Explicit height */
-        object-fit: contain !important; /* Scale down if needed, preserve aspect ratio */
-        object-position: center center !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-        border: none !important; /* Ensure no border on the image itself */
-      }
-
-      /* Layout Containers for Print/Word */
-      .address-container { display: flex !important; justify-content: space-between !important; gap: 10px !important; margin-bottom: 20px !important; }
-      .address-box, .ro-date-client-container { width: 48% !important; border: 1px solid black !important; padding: 8px !important; vertical-align: top !important; }
-      .address-box p { margin: 0 !important; padding: 0 !important; font-size: 12px !important; line-height: 1.4 !important; }
-
-      .ro-date-client-container .field-row { display: flex !important; align-items: baseline !important; margin-bottom: 8px !important; }
-      .ro-date-client-container label { width: 80px !important; flex-shrink: 0 !important; margin-right: 5px !important; }
-
-      .heading-package-container { display: flex !important; gap: 10px !important; margin-bottom: 20px !important; }
-      .heading-caption-box { flex: 1 !important; border: 2px solid black !important; padding: 8px !important; vertical-align: top !important; }
-      .package-box { width: 30% !important; border: 2px solid black !important; padding: 8px !important; vertical-align: top !important; }
-      .heading-caption-box label, .package-box label { display: block !important; margin-bottom: 4px !important; }
-
-
-       /* Notes Container */
-       .notes-container {
-         position: relative !important;
-         border: 1px solid black !important;
-         padding: 10px 200px 10px 10px !important; /* Right padding for stamp */
-         min-height: 170px !important;
-         margin-top: 20px !important;
-       }
-       .notes-container ol {
-          padding-left: 40px !important; /* Indent list */
-          margin-top: 10px !important;
-          list-style-position: outside !important;
-       }
-        .notes-container li { margin-bottom: 5px !important; }
-
-        /* Ensure billing address prints correctly */
-       .billing-address-box p {
-         margin: 0 !important; padding: 0 !important; font-size: 12px !important; line-height: 1.4 !important;
-       }
-        .advertisement-manager-section { border: 1px solid black !important; padding: 8px !important; margin-bottom: 20px !important; }
-        .advertisement-manager-section p { margin-top: 10px !important; }
-  }
-
-}
+} /* End @layer base */
