@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { ChangeEvent } from 'react';
@@ -8,13 +9,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
-import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon } from 'lucide-react';
+import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon, Download } from 'lucide-react'; // Added Download icon
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
-import { cn } from '@/lib/utils'; // Import cn utility
+import { cn } from '@/lib/utils';
+import jsPDF from 'jspdf'; // Added jsPDF import
+import html2canvas from 'html2canvas'; // Added html2canvas import
+
 
 interface ScheduleRow {
   id: number;
@@ -51,25 +55,20 @@ export default function AdOrderForm() {
   ]);
   const [stampPreview, setStampPreview] = useState<string | null>(null);
   const [roNumber, setRoNumber] = useState('');
-  // Initialize orderDate to undefined to prevent hydration mismatch
   const [orderDate, setOrderDate] = useState<Date | undefined>(undefined);
   const [clientName, setClientName] = useState('');
-  const [advertisementManagerLine1, setAdvertisementManagerLine1] = useState(''); // State for Adv Manager Line 1
-  const [advertisementManagerLine2, setAdvertisementManagerLine2] = useState(''); // State for Adv Manager Line 2
-
+  const [advertisementManagerLine1, setAdvertisementManagerLine1] = useState('');
+  const [advertisementManagerLine2, setAdvertisementManagerLine2] = useState('');
 
   const stampFileRef = useRef<HTMLInputElement>(null);
-  const printableAreaRef = useRef<HTMLDivElement>(null);
+  const printableAreaRef = useRef<HTMLDivElement>(null); // Ref for the area to be captured
   const { toast } = useToast();
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isInitialLoadRef = useRef(true);
-  const [isClient, setIsClient] = useState(false); // State to track client-side mounting
+  const [isClient, setIsClient] = useState(false);
 
-  // --- Data Recovery Logic ---
   useEffect(() => {
-    // Indicate client-side has mounted
     setIsClient(true);
-
     try {
       const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (savedData) {
@@ -83,52 +82,39 @@ export default function AdOrderForm() {
         setScheduleRows(loadedRows);
         setStampPreview(parsedData.stampPreview || null);
         setRoNumber(parsedData.roNumber || '');
-        // Load saved date or default to today if null/invalid
-        const savedDate = parsedData.orderDate ? new Date(parsedData.orderDate) : undefined; // Load as potentially undefined
-        // Only set date if it's valid, otherwise let the isClient effect handle it
+        const savedDate = parsedData.orderDate ? new Date(parsedData.orderDate) : undefined;
         if (savedDate && !isNaN(savedDate.getTime())) {
-             setOrderDate(savedDate);
+          setOrderDate(savedDate);
         }
         setClientName(parsedData.clientName || '');
-        setAdvertisementManagerLine1(parsedData.advertisementManagerLine1 || ''); // Load Adv Manager Line 1
-        setAdvertisementManagerLine2(parsedData.advertisementManagerLine2 || ''); // Load Adv Manager Line 2
-        // Commenting out toast for recovery as it might be annoying on every load
-        // toast({
-        //   title: "Draft Recovered",
-        //   description: "Previously entered form data has been loaded.",
-        // });
+        setAdvertisementManagerLine1(parsedData.advertisementManagerLine1 || '');
+        setAdvertisementManagerLine2(parsedData.advertisementManagerLine2 || '');
       }
     } catch (error) {
       console.error("Failed to load data from localStorage:", error);
       toast({
         title: "Recovery Failed",
-        description: "Could not recover previous draft data. Please check console for errors.",
+        description: "Could not recover previous draft data.",
         variant: "destructive",
       });
     } finally {
       isInitialLoadRef.current = false;
     }
-  }, [toast]); // Runs only once on client after mount
+  }, [toast]);
 
-   // Set initial date to today only on the client after mount, if not recovered
-   useEffect(() => {
+  useEffect(() => {
     if (isClient && orderDate === undefined) {
       setOrderDate(new Date());
     }
   }, [isClient, orderDate]);
 
-
-  // Save data to localStorage with debounce
   useEffect(() => {
-    // Skip saving during initial load until recovery logic finishes AND isClient is true
     if (isInitialLoadRef.current || !isClient) {
       return;
     }
-
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
     }
-
     debounceTimeoutRef.current = setTimeout(() => {
       try {
         const dataToSave: FormData = {
@@ -138,29 +124,22 @@ export default function AdOrderForm() {
           scheduleRows,
           stampPreview,
           roNumber,
-          orderDate: orderDate && !isNaN(orderDate.getTime()) ? orderDate.toISOString() : null, // Save valid date
+          orderDate: orderDate && !isNaN(orderDate.getTime()) ? orderDate.toISOString() : null,
           clientName,
-          advertisementManagerLine1, // Save Adv Manager Line 1
-          advertisementManagerLine2, // Save Adv Manager Line 2
+          advertisementManagerLine1,
+          advertisementManagerLine2,
         };
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToSave));
-        // console.log("Form data saved to localStorage");
       } catch (error) {
         console.error("Failed to save data to localStorage:", error);
-        // Optionally notify user
       }
     }, DEBOUNCE_DELAY);
-
     return () => {
       if (debounceTimeoutRef.current) {
         clearTimeout(debounceTimeoutRef.current);
       }
     };
-    // Add new state variables to dependency array
   }, [caption, packageName, matter, scheduleRows, stampPreview, roNumber, orderDate, clientName, advertisementManagerLine1, advertisementManagerLine2, isClient]);
-
-
-  // --- Form Handlers ---
 
   const addRow = useCallback(() => {
     setScheduleRows((prevRows) => [
@@ -173,7 +152,7 @@ export default function AdOrderForm() {
     if (scheduleRows.length > 1) {
       setScheduleRows((prevRows) => prevRows.slice(0, -1));
     } else {
-       toast({
+      toast({
         title: "Cannot delete last row",
         description: "At least one schedule row is required.",
         variant: "destructive",
@@ -195,36 +174,146 @@ export default function AdOrderForm() {
         const result = e.target?.result as string;
         setStampPreview(result);
         toast({
-            title: "Stamp Uploaded",
-            description: "Stamp image successfully uploaded.",
-         });
+          title: "Stamp Uploaded",
+          description: "Stamp image successfully uploaded.",
+        });
       };
       reader.onerror = () => {
-         toast({
-            title: "Upload Error",
-            description: "Failed to read the stamp image.",
-            variant: "destructive",
-          });
+        toast({
+          title: "Upload Error",
+          description: "Failed to read the stamp image.",
+          variant: "destructive",
+        });
       }
       reader.readAsDataURL(file);
     } else {
       setStampPreview(null);
     }
-     // Reset the file input value after handling the upload
-     if (stampFileRef.current) {
-        stampFileRef.current.value = '';
+    if (stampFileRef.current) {
+      stampFileRef.current.value = '';
     }
   }, [toast]);
 
-  // Function to programmatically trigger the file input click
   const triggerStampUpload = useCallback(() => {
     stampFileRef.current?.click();
   }, []);
 
-  const handlePrint = useCallback(() => {
-    // Use window.print() which allows printing or saving as PDF
-    window.print();
-  }, []);
+  // --- PDF Download Logic ---
+  const handleDownloadPdf = useCallback(async () => {
+     if (!printableAreaRef.current) {
+            toast({
+                title: 'Error',
+                description: 'Cannot find the form area to generate PDF.',
+                variant: 'destructive',
+            });
+            return;
+        }
+
+        // Temporarily hide non-printable elements before capturing
+        const nonPrintElements = printableAreaRef.current.querySelectorAll('.no-print');
+        nonPrintElements.forEach(el => (el as HTMLElement).style.display = 'none');
+
+        try {
+            const canvas = await html2canvas(printableAreaRef.current, {
+                scale: 2, // Increase scale for better quality
+                useCORS: true, // Important for external images like the stamp
+                logging: false, // Disable logging for cleaner console
+                onclone: (document) => {
+                     // Ensure styles are applied correctly in the cloned document
+                    const style = document.createElement('style');
+                    // Inject global CSS and print styles directly
+                    style.innerHTML = `
+                        @import url('https://fonts.googleapis.com/css2?family=Arial:wght@700&display=swap');
+                        body { font-family: Arial, sans-serif !important; font-weight: bold !important; font-size: 14px !important; }
+                        .print-border { border: 1px solid black !important; }
+                        .print-border-thin { border: 1px solid black !important; }
+                        .print-border-heavy { border: 2px solid black !important; }
+                        .print-table-header th { border: 1px solid black !important; background-color: #f0f0f0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                        .print-table-cell { border: 1px solid black !important; padding: 6px !important; /* Ensure padding for cell content */}
+                        .vertical-label { background-color: black !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                        .header-title { background-color: black !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                        input, textarea { border: none !important; border-bottom: 1px solid black !important; font-family: Arial, sans-serif !important; font-weight: bold !important; font-size: 14px !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; background: transparent !important; }
+                        /* Ensure input values are rendered */
+                        input[type="text"], textarea { display: inline-block; /* Or block */ min-height: 1em; /* Ensure it has some height */}
+
+                        /* Retain values for inputs/textarea in canvas */
+                         ${Array.from(printableAreaRef.current?.querySelectorAll('input[type="text"], textarea') || []).map((el, index) => {
+                            const input = el as HTMLInputElement | HTMLTextAreaElement;
+                            const id = input.id || `el-${index}`; // Ensure unique ID if needed
+                            input.setAttribute('data-original-id', id); // Keep track if ID changes
+                            return `#${id}::before { content: "${input.value.replace(/"/g, '\\"')}"; display: block; }`;
+                          }).join('\n')}
+
+                         /* Ensure stamp image prints correctly */
+                         #stampPreview { display: block !important; width: 180px !important; height: 150px !important; object-fit: contain !important; object-position: center center !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                         .stamp-container { border: none !important; } /* Hide stamp container border */
+                    `;
+                    document.head.appendChild(style);
+
+                     // Explicitly set values for inputs/textareas in the cloned document
+                    const originalInputs = Array.from(printableAreaRef.current?.querySelectorAll('input[type="text"], textarea') || []) as (HTMLInputElement | HTMLTextAreaElement)[];
+                    originalInputs.forEach((originalInput) => {
+                        const cloneId = originalInput.getAttribute('data-original-id');
+                        const clonedInput = document.querySelector(`[data-original-id="${cloneId}"]`) as HTMLInputElement | HTMLTextAreaElement;
+                        if (clonedInput) {
+                            clonedInput.value = originalInput.value;
+                             // Style to make text visible - may need adjustments
+                            clonedInput.style.color = 'black';
+                            clonedInput.style.webkitTextFillColor = 'black'; // For WebKit browsers
+                        }
+                    });
+
+                }
+            });
+
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4', // Standard A4 size
+            });
+
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+            const imgProps = pdf.getImageProperties(imgData);
+            const imgWidth = pdfWidth; // Fit to width
+            const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+
+             // Check if content exceeds one page
+            let heightLeft = imgHeight;
+            let position = 0;
+            const pageMargin = 5; // Add some margin
+
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pdfHeight - (pageMargin * 2) ; // Adjust available height with margins
+
+            while (heightLeft > 0) {
+                 position -= (pdfHeight - (pageMargin * 2));
+                 pdf.addPage();
+                 pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                 heightLeft -= (pdfHeight - (pageMargin*2));
+            }
+
+
+            pdf.save(`Release_Order_${roNumber || 'NoRO'}_${displayDate}.pdf`);
+             toast({
+                title: 'PDF Downloaded',
+                description: 'The release order has been saved as a PDF.',
+            });
+
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            toast({
+                title: 'PDF Generation Failed',
+                description: 'Could not generate the PDF. Please check the console for errors.',
+                variant: 'destructive',
+            });
+        } finally {
+             // Show non-printable elements again after capturing
+            nonPrintElements.forEach(el => (el as HTMLElement).style.display = '');
+        }
+  }, [printableAreaRef, toast, roNumber, displayDate]); // Added dependencies
+
 
   const handleClearForm = useCallback(() => {
     setCaption('');
@@ -233,81 +322,68 @@ export default function AdOrderForm() {
     setScheduleRows([{ id: Date.now(), keyNo: '', publication: '', edition: '', size: '', scheduledDate: '', position: '' }]);
     setStampPreview(null);
     setRoNumber('');
-    setOrderDate(new Date()); // Reset date to today
+    setOrderDate(new Date());
     setClientName('');
-    setAdvertisementManagerLine1(''); // Clear Adv Manager Line 1
-    setAdvertisementManagerLine2(''); // Clear Adv Manager Line 2
+    setAdvertisementManagerLine1('');
+    setAdvertisementManagerLine2('');
     if (stampFileRef.current) {
-        stampFileRef.current.value = '';
+      stampFileRef.current.value = '';
     }
     try {
-        localStorage.removeItem(LOCAL_STORAGE_KEY);
-        toast({
-            title: "Draft Cleared",
-            description: "Form data and saved draft have been cleared.",
-        });
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
+      toast({
+        title: "Draft Cleared",
+        description: "Form data and saved draft have been cleared.",
+      });
     } catch (error) {
-        console.error("Failed to clear localStorage:", error);
-         toast({
-            title: "Clear Error",
-            description: "Could not clear stored draft data.",
-            variant: "destructive",
-        });
+      console.error("Failed to clear localStorage:", error);
+      toast({
+        title: "Clear Error",
+        description: "Could not clear stored draft data.",
+        variant: "destructive",
+      });
     }
-
   }, [toast]);
 
+  const [displayDate, setDisplayDate] = useState<string>('Loading date...');
 
-  // Use state for the formatted date string to display
-  const [displayDate, setDisplayDate] = useState<string>('Loading date...'); // Initialize with placeholder
-
-  // Effect to update the display date when orderDate changes or on initial client load
   useEffect(() => {
-    if (!isClient) return; // Don't run on server
-
+    if (!isClient) return;
     let dateToFormat: Date | undefined = orderDate;
-
-    // If orderDate is still undefined or invalid after potential recovery, use today's date
     if (!dateToFormat || isNaN(dateToFormat.getTime())) {
-        dateToFormat = new Date();
-        // No need to setOrderDate here, it's handled by the recovery/initialization logic
+      dateToFormat = new Date();
     }
-
     try {
-        // Format the valid date
-        setDisplayDate(format(dateToFormat, "dd.MM.yyyy"));
+      setDisplayDate(format(dateToFormat, "dd.MM.yyyy"));
     } catch (error) {
-        console.error("Error formatting date:", error);
-        // Fallback to today's date formatted if error occurs
-        const today = new Date();
-        try {
-             setDisplayDate(format(today, "dd.MM.yyyy"));
-        } catch (formatError) {
-             console.error("Error formatting fallback date:", formatError);
-             setDisplayDate("Invalid Date"); // Fallback display text
-        }
+      console.error("Error formatting date:", error);
+      const today = new Date();
+      try {
+        setDisplayDate(format(today, "dd.MM.yyyy"));
+      } catch (formatError) {
+        console.error("Error formatting fallback date:", formatError);
+        setDisplayDate("Invalid Date");
+      }
     }
+  }, [orderDate, isClient]);
 
-  }, [orderDate, isClient]); // Depend on orderDate and isClient state
-
-
-  // Render null or a placeholder on the server until client mounts
   if (!isClient) {
-      return null; // Or a loading skeleton
+    return null;
   }
-
 
   return (
     <div className="max-w-[210mm] mx-auto font-bold">
-       <div className="flex justify-end gap-2 mb-4 no-print">
-            <Button onClick={handleClearForm} variant="outline">
-              <Eraser className="mr-2 h-4 w-4" /> Clear Form & Draft
-            </Button>
-            <Button onClick={handlePrint}>
-              Print / Save as PDF
-            </Button>
-        </div>
+      {/* Action Buttons - Moved Download PDF button here */}
+      <div className="flex justify-end gap-2 mb-4 no-print">
+        <Button onClick={handleClearForm} variant="outline">
+          <Eraser className="mr-2 h-4 w-4" /> Clear Form & Draft
+        </Button>
+         <Button onClick={handleDownloadPdf}>
+            <Download className="mr-2 h-4 w-4" /> Download as PDF
+         </Button>
+      </div>
 
+      {/* Printable Area */}
       <Card id="printable-area" ref={printableAreaRef} className="w-full print-border-heavy rounded-none shadow-none p-5 border-2 border-black">
         <CardContent className="p-0">
           {/* Header */}
@@ -315,97 +391,96 @@ export default function AdOrderForm() {
             <h1 className="text-2xl m-0 font-bold">RELEASE ORDER</h1>
           </div>
 
-           {/* Address Boxes */}
+          {/* Address Boxes */}
           <div className="flex justify-between gap-3 mb-5">
             {/* Left Address Box */}
             <div className="w-[48%] print-border rounded p-2 border border-black">
-                <p className="text-sm leading-tight">
-                    Lehar Advertising Agency Pvt. Ltd.<br />
-                    D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
-                    Alaknanda Commercial Complex,<br />
-                    New Delhi-110019<br />
-                    Tel: 49573333, 34, 35, 36<br />
-                    Fax: 26028101
-                </p>
+              <p className="text-sm leading-tight">
+                Lehar Advertising Agency Pvt. Ltd.<br />
+                D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
+                Alaknanda Commercial Complex,<br />
+                New Delhi-110019<br />
+                Tel: 49573333, 34, 35, 36<br />
+                Fax: 26028101
+              </p>
             </div>
             {/* Right Address Box */}
             <div className="w-[48%] print-border rounded p-2 space-y-2 border border-black">
-                 {/* R.O. No. LN */}
-                 <div className="flex items-center">
-                     <Label htmlFor="roNumber" className="w-20 text-sm shrink-0">R.O.No.LN:</Label>
-                     <Input
-                        id="roNumber"
-                        type="text"
-                        placeholder="Enter R.O. No."
-                        className="flex-1 h-6 border-0 border-b-2 border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
-                        value={roNumber}
-                        onChange={(e) => setRoNumber(e.target.value)}
+              {/* R.O. No. LN */}
+              <div className="flex items-center">
+                <Label htmlFor="roNumber" className="w-20 text-sm shrink-0">R.O.No.LN:</Label>
+                <Input
+                  id="roNumber"
+                  type="text"
+                  placeholder="Enter R.O. No."
+                  className="flex-1 h-6 border-0 border-b-2 border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
+                  value={roNumber}
+                  onChange={(e) => setRoNumber(e.target.value)}
+                />
+              </div>
+              {/* Date */}
+              <div className="flex items-center">
+                <Label htmlFor="orderDate" className="w-20 text-sm shrink-0">Date:</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "flex-1 justify-start text-left font-bold h-6 border-0 border-b-2 border-black rounded-none px-1 py-0.5 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none",
+                        !orderDate && "text-muted-foreground"
+                      )}
+                      id="orderDate"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      <span>{displayDate}</span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 no-print">
+                    <Calendar
+                      mode="single"
+                      selected={orderDate}
+                      onSelect={setOrderDate}
+                      initialFocus
                     />
-                 </div>
-                 {/* Date */}
-                 <div className="flex items-center">
-                    <Label htmlFor="orderDate" className="w-20 text-sm shrink-0">Date:</Label>
-                     <Popover>
-                         <PopoverTrigger asChild>
-                         <Button
-                             variant={"outline"}
-                             className={cn(
-                             "flex-1 justify-start text-left font-bold h-6 border-0 border-b-2 border-black rounded-none px-1 py-0.5 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none",
-                             !orderDate && "text-muted-foreground"
-                             )}
-                             id="orderDate"
-                         >
-                             <CalendarIcon className="mr-2 h-4 w-4" />
-                             {/* Display date or placeholder */}
-                              <span>{displayDate}</span> {/* Use displayDate state */}
-                         </Button>
-                         </PopoverTrigger>
-                         <PopoverContent className="w-auto p-0 no-print">
-                         <Calendar
-                             mode="single"
-                             selected={orderDate}
-                             onSelect={setOrderDate} // Directly update the Date object state
-                             initialFocus
-                         />
-                         </PopoverContent>
-                     </Popover>
-                 </div>
-                  {/* Client */}
-                 <div className="flex items-center">
-                     <Label htmlFor="clientName" className="w-20 text-sm shrink-0">Client:</Label>
-                     <Input
-                        id="clientName"
-                        type="text"
-                        placeholder="Enter Client Name"
-                        className="flex-1 h-6 border-0 border-b-2 border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
-                        value={clientName}
-                        onChange={(e) => setClientName(e.target.value)}
-                    />
-                 </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+              {/* Client */}
+              <div className="flex items-center">
+                <Label htmlFor="clientName" className="w-20 text-sm shrink-0">Client:</Label>
+                <Input
+                  id="clientName"
+                  type="text"
+                  placeholder="Enter Client Name"
+                  className="flex-1 h-6 border-0 border-b-2 border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
+                  value={clientName}
+                  onChange={(e) => setClientName(e.target.value)}
+                />
+              </div>
             </div>
           </div>
 
-          {/* Advertisement Manager Section - Swapped with Heading & Package */}
-            <div className="print-border rounded p-2 mb-5 border border-black">
-                <Label className="block mb-1">The Advertisement Manager</Label>
-                <Input
-                    type="text"
-                    placeholder="Line 1"
-                    className="w-full border-0 border-b-2 border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto mb-1"
-                    value={advertisementManagerLine1}
-                    onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
-                />
-                <Input
-                    type="text"
-                    placeholder="Line 2"
-                    className="w-full border-0 border-b-2 border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                    value={advertisementManagerLine2}
-                    onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
-                />
-                 <p className="text-sm mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
-            </div>
+          {/* Advertisement Manager Section */}
+          <div className="print-border rounded p-2 mb-5 border border-black">
+            <Label className="block mb-1">The Advertisement Manager</Label>
+            <Input
+              type="text"
+              placeholder="Line 1"
+              className="w-full border-0 border-b-2 border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto mb-1"
+              value={advertisementManagerLine1}
+              onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
+            />
+            <Input
+              type="text"
+              placeholder="Line 2"
+              className="w-full border-0 border-b-2 border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+              value={advertisementManagerLine2}
+              onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
+            />
+            <p className="text-sm mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
+          </div>
 
-          {/* Heading & Package - Swapped with Advertisement Manager */}
+          {/* Heading & Package Section */}
           <div className="flex gap-3 mb-5">
             <div className="flex-1 print-border-heavy rounded p-2 border-2 border-black">
               <Label htmlFor="caption" className="block mb-1">Heading/Caption:</Label>
@@ -431,9 +506,9 @@ export default function AdOrderForm() {
             </div>
           </div>
 
-
           {/* Schedule Table */}
           <div className="mb-5">
+             {/* Ensure table has correct classes for PDF rendering */}
             <Table className="print-border border border-black">
               <TableHeader className="bg-secondary print-table-header">
                 <TableRow>
@@ -516,10 +591,11 @@ export default function AdOrderForm() {
               <li>Please quote R.O. No. in all your bills and letters.</li>
               <li>Please send two voucher copies of good reproduction within 3 days of publishing.</li>
             </ol>
-             {/* Stamp Area */}
+             {/* Stamp Area - Hidden border in print, interactive in browser */}
              <div
-                className="stamp-container absolute top-2 right-2 w-[180px] h-[150px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden group border-none print-stamp-container"
+                className="stamp-container absolute top-2 right-2 w-[180px] h-[150px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden group print-stamp-container border-none" // Added border-none and kept print-stamp-container
                 onClick={triggerStampUpload}
+                onMouseEnter={triggerStampUpload} // Optionally trigger on hover too
              >
                  <Input
                     type="file"
@@ -535,16 +611,16 @@ export default function AdOrderForm() {
                             id="stampPreview"
                             src={stampPreview}
                             alt="Stamp Preview"
-                            width={180} // Static width
-                            height={150} // Static height
-                            style={{ objectFit: 'contain', width: '180px', height: '150px' }} // Ensure consistent size
+                            width={180}
+                            height={150}
+                            style={{ objectFit: 'contain', width: '180px', height: '150px' }}
                             className="max-w-full max-h-full"
                             unoptimized
                             priority
                           />
                           {/* Hover effect - Only show when stampPreview exists */}
                           <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity no-print">
-                            <span className="text-white text-xs font-bold">Click to Change</span>
+                            <span className="text-white text-xs font-bold">Click/Hover to Change</span>
                           </div>
                      </div>
                 ) : (
