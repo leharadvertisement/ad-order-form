@@ -10,16 +10,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
-import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon, Download } from 'lucide-react';
+import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon, Printer } from 'lucide-react'; // Changed Download to Printer
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
-
+// Removed jsPDF and html2canvas imports as they are no longer needed for print
 
 interface ScheduleRow {
   id: number;
@@ -233,168 +231,17 @@ export default function AdOrderForm() {
     stampFileRef.current?.click();
   }, []);
 
-  const handleDownloadPdf = useCallback(async () => {
-    const printableElement = printableAreaRef.current;
-    if (!printableElement) {
+  // Function to trigger the browser's print dialog
+  const handlePrint = useCallback(() => {
       toast({
-        title: "Error",
-        description: "Could not find the printable area.",
-        variant: "destructive",
+          title: "Preparing Print...",
+          description: "Opening print dialog.",
       });
-      return;
-    }
-
-    toast({
-      title: "Generating PDF...",
-      description: "Please wait while the PDF is being created.",
-    });
-
-    try {
-      // Temporarily remove no-print elements for capture
-      const noPrintElements = printableElement.querySelectorAll<HTMLElement>('.no-print');
-      noPrintElements.forEach(el => el.style.display = 'none');
-
-      // Ensure print-only elements are visible for capture
-      const printOnlyElements = printableElement.querySelectorAll<HTMLElement>('.print-only, .print-only-block, .print-only-inline-block');
-      const originalDisplayStyles = new Map<HTMLElement, string>();
-      printOnlyElements.forEach(el => {
-        originalDisplayStyles.set(el, el.style.display);
-        if (el.classList.contains('print-only-block')) {
-           el.style.display = 'block';
-        } else if (el.classList.contains('print-only-inline-block')) {
-           el.style.display = 'inline-block';
-        } else {
-           el.style.display = 'inline';
-        }
-      });
-
-
-      // Use html2canvas to capture the element
-      const canvas = await html2canvas(printableElement, {
-        scale: 2, // Increase scale for better quality
-        useCORS: true, // Important for external images like the stamp
-        logging: false, // Disable logging for cleaner console
-         onclone: (document) => {
-            // Ensure input values are visible in the clone
-            const inputs = document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('input, textarea');
-            inputs.forEach(input => {
-                if (input instanceof HTMLInputElement) {
-                    const valueSpan = document.createElement('span');
-                    valueSpan.textContent = input.value;
-                    valueSpan.style.fontWeight = 'bold'; // Keep bold style if needed
-                    valueSpan.style.fontSize = getComputedStyle(input).fontSize;
-                    valueSpan.style.fontFamily = getComputedStyle(input).fontFamily;
-                    valueSpan.style.lineHeight = getComputedStyle(input).lineHeight;
-                     valueSpan.style.display = 'inline-block'; // Ensure it takes space
-                     valueSpan.style.whiteSpace = 'pre-wrap'; // Handle potential line breaks in textarea
-                     valueSpan.style.width = getComputedStyle(input).width; // Try to match width
-                     valueSpan.style.minHeight = getComputedStyle(input).height; // Try to match height
-                     valueSpan.style.verticalAlign = 'bottom'; // Align similar to input text
-                     valueSpan.style.padding = '1px'; // Minimal padding like input
-                     valueSpan.style.borderBottom = '1px solid black'; // Mimic underline if needed
-
-                    input.style.display = 'none'; // Hide original input
-                    input.parentNode?.insertBefore(valueSpan, input.nextSibling);
-                } else if (input instanceof HTMLTextAreaElement) {
-                     const valueDiv = document.createElement('div'); // Use div for multi-line
-                     valueDiv.textContent = input.value;
-                     valueDiv.style.fontWeight = 'bold';
-                     valueDiv.style.fontSize = getComputedStyle(input).fontSize;
-                     valueDiv.style.fontFamily = getComputedStyle(input).fontFamily;
-                     valueDiv.style.lineHeight = getComputedStyle(input).lineHeight;
-                     valueDiv.style.whiteSpace = 'pre-wrap'; // Preserve whitespace and line breaks
-                     valueDiv.style.width = getComputedStyle(input).width;
-                     valueDiv.style.minHeight = getComputedStyle(input).height;
-                      valueDiv.style.padding = '1px'; // Minimal padding
-
-                     input.style.display = 'none';
-                     input.parentNode?.insertBefore(valueDiv, input.nextSibling);
-                }
-            });
-             // Ensure stamp image is rendered correctly in the clone for canvas
-            const stampContainer = document.getElementById('stampContainerElement');
-            const stampPreviewScreen = document.getElementById('stampPreviewScreen');
-             if (stampContainer && stampPreviewScreen) {
-                // Hide interactive elements if needed, ensure image is visible
-                 const label = stampContainer.querySelector('label');
-                 if (label) label.style.display = 'none';
-                 stampPreviewScreen.style.display = 'block'; // Make sure the image is visible
-             }
-        }
-      });
-
-       // Restore display of no-print elements
-       noPrintElements.forEach(el => el.style.display = ''); // Restore original or default display
-       // Restore display of print-only elements
-       printOnlyElements.forEach(el => {
-           el.style.display = originalDisplayStyles.get(el) || ''; // Restore original display style
-       });
-
-
-      const imgData = canvas.toDataURL('image/png');
-
-      // Define A4 page size in mm
-      const pdfWidth = 210;
-      const pdfHeight = 297;
-
-      // Calculate image dimensions to fit A4, maintaining aspect ratio
-      const canvasAspectRatio = canvas.width / canvas.height;
-      let imgWidth = pdfWidth - 20; // A4 width in mm with 10mm margins
-      let imgHeight = imgWidth / canvasAspectRatio;
-
-      // If height exceeds A4 height with margins, scale by height instead
-       const maxHeight = pdfHeight - 20; // A4 height with 10mm margins
-       if (imgHeight > maxHeight) {
-           imgHeight = maxHeight;
-           imgWidth = imgHeight * canvasAspectRatio;
-       }
-
-       // Calculate margins to center the image
-       const marginLeft = (pdfWidth - imgWidth) / 2;
-       const marginTop = (pdfHeight - imgHeight) / 2;
-
-
-      // Create PDF
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-      });
-
-      // Add image to PDF, centered with margins
-      pdf.addImage(imgData, 'PNG', marginLeft, marginTop, imgWidth, imgHeight);
-
-      // Download PDF
-      const fileName = `ReleaseOrder_${roNumber || 'Draft'}_${displayDate || 'DateNotSet'}.pdf`;
-      pdf.save(fileName);
-
-      toast({
-        title: "PDF Downloaded",
-        description: `${fileName} has been downloaded successfully.`,
-      });
-
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      toast({
-        title: "PDF Generation Failed",
-        description: "An error occurred while creating the PDF.",
-        variant: "destructive",
-      });
-       // Ensure elements are restored even if error occurs
-       const printableElement = printableAreaRef.current;
-       if (printableElement) {
-           const noPrintElements = printableElement.querySelectorAll<HTMLElement>('.no-print');
-           noPrintElements.forEach(el => el.style.display = '');
-           const printOnlyElements = printableElement.querySelectorAll<HTMLElement>('.print-only, .print-only-block, .print-only-inline-block');
-            printOnlyElements.forEach(el => {
-                 // Attempt to restore, though original styles might be lost if error happened early
-                 const originalDisplay = localStorage.getItem(`origDisplay_${el.id}`);
-                 if (originalDisplay) el.style.display = originalDisplay;
-                 else el.style.display = ''; // Fallback
-            });
-       }
-    }
-  }, [toast, roNumber, displayDate]);
+      // Add a small delay to allow the toast to show
+      setTimeout(() => {
+          window.print();
+      }, 300);
+  }, [toast]);
 
   const handleClearForm = useCallback(() => {
     setCaption('');
@@ -442,8 +289,8 @@ export default function AdOrderForm() {
         <Button onClick={handleClearForm} variant="outline">
           <Eraser className="mr-2 h-4 w-4" /> Clear Form & Draft
         </Button>
-         <Button onClick={handleDownloadPdf} variant="default">
-           <Download className="mr-2 h-4 w-4" /> Download PDF
+         <Button onClick={handlePrint} variant="default"> {/* Changed from handleDownloadPdf to handlePrint */}
+           <Printer className="mr-2 h-4 w-4" /> Print Release Order {/* Changed icon and text */}
          </Button>
       </div>
 
@@ -541,6 +388,32 @@ export default function AdOrderForm() {
             </div>
           </div>
 
+            {/* Heading & Package Section */}
+             <div className="heading-package-container flex gap-3 mb-5">
+             <div className="heading-caption-box flex-1 print-border-heavy rounded p-2 border-2 border-black">
+              <Label htmlFor="caption" className="block mb-1">Heading/Caption:</Label>
+              <Input
+                id="caption"
+                type="text"
+                placeholder="Enter caption here"
+                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                value={caption}
+                onChange={(e) => setCaption(e.target.value)}
+              />
+            </div>
+             <div className="package-box w-[30%] print-border-heavy rounded p-2 border-2 border-black">
+              <Label htmlFor="package" className="block mb-1">Package:</Label>
+              <Input
+                id="package" // Use unique ID
+                type="text"
+                placeholder="Enter package name"
+                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                value={packageName}
+                onChange={(e) => setPackageName(e.target.value)}
+              />
+            </div>
+          </div>
+
            {/* Advertisement Manager Section */}
            <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
              <Label className="block mb-1">The Advertisement Manager</Label>
@@ -567,32 +440,6 @@ export default function AdOrderForm() {
              <p className="text-sm mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
            </div>
 
-
-           {/* Heading & Package Section */}
-           <div className="heading-package-container flex gap-3 mb-5">
-             <div className="heading-caption-box flex-1 print-border-heavy rounded p-2 border-2 border-black">
-              <Label htmlFor="caption" className="block mb-1">Heading/Caption:</Label>
-              <Input
-                id="caption"
-                type="text"
-                placeholder="Enter caption here"
-                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                value={caption}
-                onChange={(e) => setCaption(e.target.value)}
-              />
-            </div>
-             <div className="package-box w-[30%] print-border-heavy rounded p-2 border-2 border-black">
-              <Label htmlFor="package" className="block mb-1">Package:</Label>
-              <Input
-                id="package" // Use unique ID
-                type="text"
-                placeholder="Enter package name"
-                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                value={packageName}
-                onChange={(e) => setPackageName(e.target.value)}
-              />
-            </div>
-          </div>
 
           {/* Schedule Table */}
           <div className="mb-5 table-container-print">
@@ -671,7 +518,7 @@ export default function AdOrderForm() {
           </div>
 
           {/* Notes & Stamp Container */}
-           <div className="notes-stamp-container relative flex gap-3 mb-5 items-start print-border rounded p-2 border border-black min-h-[150px]">
+           <div className="notes-stamp-container relative flex gap-3 mb-5 items-start print-border rounded p-2 border border-black min-h-[150px]"> {/* Added print-border */}
                {/* Notes Section */}
                <div className="notes-content flex-1 pr-[190px]"> {/* Added padding to avoid overlap */}
                  <p className="font-bold mb-1 note-title-underline">Note:</p>
@@ -686,7 +533,7 @@ export default function AdOrderForm() {
                {/* Stamp Area - Positioned absolutely within the notes container */}
                <div
                   id="stampContainerElement"
-                  className="stamp-container absolute top-2 right-2 w-[180px] h-[142px] flex items-center justify-center cursor-pointer overflow-hidden group" // Removed border-none, adjusted height slightly
+                  className="stamp-container absolute top-2 right-2 w-[180px] h-[142px] flex items-center justify-center cursor-pointer overflow-hidden group border-none" // Explicitly remove border here
                   onClick={triggerStampUpload}
                   onMouseEnter={triggerStampUpload}
                >
@@ -705,7 +552,7 @@ export default function AdOrderForm() {
                               src={stampPreview}
                               alt="Stamp Preview"
                               width={180} // Explicit width
-                              height={150} // Explicit height
+                              height={142} // Explicit height to match container
                               style={{ objectFit: 'contain', width: '100%', height: '100%' }} // Use contain and 100%
                             />
                             {/* Hover effect */}
@@ -725,7 +572,7 @@ export default function AdOrderForm() {
                           src={stampPreview}
                           alt="Stamp"
                           width={180}
-                          height={150}
+                          height={142} // Match container height
                           style={{ objectFit: 'contain', width: '100%', height: '100%' }}
                         />
                      </div>
@@ -738,3 +585,6 @@ export default function AdOrderForm() {
   );
 }
 
+
+
+    
