@@ -406,7 +406,7 @@ export default function AdOrderForm() {
           {/* Schedule Table */}
           <div className="mb-5">
             <Table className="print-border">
-              <TableHeader className="bg-secondary">
+              <TableHeader className="bg-secondary print-table-header">
                 <TableRow>
                   <TableHead className="w-[10%] print-border-thin border border-black p-1.5 text-sm font-bold">Key No.</TableHead>
                   <TableHead className="w-[25%] print-border-thin border border-black p-1.5 text-sm font-bold">Publication(s)</TableHead>
@@ -419,22 +419,22 @@ export default function AdOrderForm() {
               <TableBody>
                 {scheduleRows.map((row) => (
                   <TableRow key={row.id}>
-                    <TableCell className="print-border-thin border border-black p-0">
+                    <TableCell className="print-border-thin border border-black p-0 print-table-cell">
                       <Input type="text" value={row.keyNo} onChange={(e) => handleScheduleChange(row.id, 'keyNo', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1"/>
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell">
                       <Input type="text" value={row.publication} onChange={(e) => handleScheduleChange(row.id, 'publication', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1"/>
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell">
                       <Input type="text" value={row.edition} onChange={(e) => handleScheduleChange(row.id, 'edition', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1"/>
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell">
                       <Input type="text" value={row.size} onChange={(e) => handleScheduleChange(row.id, 'size', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1"/>
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell">
                       <Input type="text" value={row.scheduledDate} onChange={(e) => handleScheduleChange(row.id, 'scheduledDate', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1"/>
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell">
                       <Input type="text" value={row.position} onChange={(e) => handleScheduleChange(row.id, 'position', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1"/>
                     </TableCell>
                   </TableRow>
@@ -488,7 +488,7 @@ export default function AdOrderForm() {
               <li>Please send two voucher copies of good reproduction within 3 days of publishing.</li>
             </ol>
              {/* Stamp Area */}
-            <div className="stamp-container absolute top-2 right-2 w-[100px] h-[100px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden print-border-thin"> {/* Restored print-border-thin */}
+            <div className="stamp-container absolute top-2 right-2 w-[100px] h-[100px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden"> {/* Removed print-border-thin */}
                 <Input
                     type="file"
                     ref={stampFileRef}
