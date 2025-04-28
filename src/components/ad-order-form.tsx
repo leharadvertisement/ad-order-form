@@ -93,10 +93,11 @@ export default function AdOrderForm() {
         setClientName(parsedData.clientName || '');
         setAdvertisementManagerLine1(parsedData.advertisementManagerLine1 || ''); // Load Adv Manager Line 1
         setAdvertisementManagerLine2(parsedData.advertisementManagerLine2 || ''); // Load Adv Manager Line 2
-        toast({
-          title: "Draft Recovered",
-          description: "Previously entered form data has been loaded.",
-        });
+        // Commenting out toast for recovery as it might be annoying on every load
+        // toast({
+        //   title: "Draft Recovered",
+        //   description: "Previously entered form data has been loaded.",
+        // });
       } else {
         // If no saved data, ensure date is today's date
          if (typeof window !== 'undefined') { // Ensure this runs only on client
@@ -279,7 +280,9 @@ export default function AdOrderForm() {
         }
     };
 
-    updateFormattedDate();
+    if (isClient) {
+      updateFormattedDate();
+    }
 
   }, [orderDate, isClient]); // Depend on orderDate and isClient
 
@@ -499,7 +502,7 @@ export default function AdOrderForm() {
           </div>
 
           {/* Notes & Stamp */}
-           <div className="relative print-border rounded p-2 pr-[200px] border border-black"> {/* Ensured border class is present */}
+           <div className="relative print-border rounded p-2 pr-[200px] border border-black min-h-[170px]"> {/* Added min-height */}
             <p className="font-bold mb-1">Note:</p>
             <ol className="list-decimal list-inside text-sm space-y-1">
               <li>Space reserved vide our letter No.&nbsp;<Input type="text" value={noteInput} onChange={(e) => setNoteInput(e.target.value)} className="inline-block w-24 h-5 p-0 border-0 border-b border-black rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none font-bold" /></li>
@@ -507,12 +510,12 @@ export default function AdOrderForm() {
               <li>Please quote R.O. No. in all your bills and letters.</li>
               <li>Please send two voucher copies of good reproduction within 3 days of publishing.</li>
             </ol>
-             {/* Stamp Area - Increased size, click triggers upload */}
-            <div
-                className="stamp-container absolute top-2 right-2 w-[180px] h-[150px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden group" /* Removed border-none, added group */
-                onClick={triggerStampUpload} /* Trigger upload on container click */
+             {/* Stamp Area */}
+             <div
+                className="stamp-container absolute top-2 right-2 w-[180px] h-[150px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden group border border-black print:border-none" /* Added border */
+                onClick={triggerStampUpload}
              >
-                <Input
+                 <Input
                     type="file"
                     ref={stampFileRef}
                     accept="image/*"
@@ -528,11 +531,11 @@ export default function AdOrderForm() {
                             alt="Stamp Preview"
                             width={180} // Explicit width
                             height={150} // Explicit height
-                            className="object-contain max-w-full max-h-full" // Use object-contain and max sizes
+                            style={{ objectFit: 'contain', maxWidth: '100%', maxHeight: '100%' }} // Use inline style for object-fit
                             unoptimized // Good for Data URIs
                             priority // Prioritize loading the stamp image
                           />
-                         {/* Hover effect - Only show when stampPreview exists */}
+                          {/* Hover effect - Only show when stampPreview exists */}
                           <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity no-print">
                             <span className="text-white text-xs font-bold">Click to Change</span>
                           </div>
