@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import type { ChangeEvent } from 'react';
@@ -9,14 +10,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
-import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon } from 'lucide-react'; // Removed FileDown icon
+import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon, Download } from 'lucide-react'; // Add Download icon
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-// Removed html-docx-js and saveAs imports
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+
 
 interface ScheduleRow {
   id: number;
@@ -218,7 +221,168 @@ export default function AdOrderForm() {
     stampFileRef.current?.click();
   }, []);
 
-  // Removed handleDownloadWordDoc function
+  const handleDownloadPdf = useCallback(async () => {
+    const printableElement = printableAreaRef.current;
+    if (!printableElement) {
+      toast({
+        title: "Error",
+        description: "Could not find the printable area.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Generating PDF...",
+      description: "Please wait while the PDF is being created.",
+    });
+
+    try {
+      // Temporarily remove no-print elements for capture
+      const noPrintElements = printableElement.querySelectorAll<HTMLElement>('.no-print');
+      noPrintElements.forEach(el => el.style.display = 'none');
+
+      // Ensure print-only elements are visible for capture
+      const printOnlyElements = printableElement.querySelectorAll<HTMLElement>('.print-only, .print-only-block, .print-only-inline-block');
+      const originalDisplayStyles = new Map<HTMLElement, string>();
+      printOnlyElements.forEach(el => {
+        originalDisplayStyles.set(el, el.style.display);
+        if (el.classList.contains('print-only-block')) {
+           el.style.display = 'block';
+        } else if (el.classList.contains('print-only-inline-block')) {
+           el.style.display = 'inline-block';
+        } else {
+           el.style.display = 'inline';
+        }
+      });
+
+
+      // Use html2canvas to capture the element
+      const canvas = await html2canvas(printableElement, {
+        scale: 2, // Increase scale for better quality
+        useCORS: true, // Important for external images like the stamp
+        logging: false, // Disable logging for cleaner console
+         onclone: (document) => {
+            // Ensure input values are visible in the clone
+            const inputs = document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('input, textarea');
+            inputs.forEach(input => {
+                if (input instanceof HTMLInputElement) {
+                    const valueSpan = document.createElement('span');
+                    valueSpan.textContent = input.value;
+                    valueSpan.style.fontWeight = 'bold'; // Keep bold style if needed
+                    valueSpan.style.fontSize = getComputedStyle(input).fontSize;
+                    valueSpan.style.fontFamily = getComputedStyle(input).fontFamily;
+                    valueSpan.style.lineHeight = getComputedStyle(input).lineHeight;
+                     valueSpan.style.display = 'inline-block'; // Ensure it takes space
+                     valueSpan.style.whiteSpace = 'pre-wrap'; // Handle potential line breaks in textarea
+                     valueSpan.style.width = getComputedStyle(input).width; // Try to match width
+                     valueSpan.style.minHeight = getComputedStyle(input).height; // Try to match height
+                     valueSpan.style.verticalAlign = 'bottom'; // Align similar to input text
+                     valueSpan.style.padding = '1px'; // Minimal padding like input
+                     valueSpan.style.borderBottom = '1px solid black'; // Mimic underline if needed
+
+                    input.style.display = 'none'; // Hide original input
+                    input.parentNode?.insertBefore(valueSpan, input.nextSibling);
+                } else if (input instanceof HTMLTextAreaElement) {
+                     const valueDiv = document.createElement('div'); // Use div for multi-line
+                     valueDiv.textContent = input.value;
+                     valueDiv.style.fontWeight = 'bold';
+                     valueDiv.style.fontSize = getComputedStyle(input).fontSize;
+                     valueDiv.style.fontFamily = getComputedStyle(input).fontFamily;
+                     valueDiv.style.lineHeight = getComputedStyle(input).lineHeight;
+                     valueDiv.style.whiteSpace = 'pre-wrap'; // Preserve whitespace and line breaks
+                     valueDiv.style.width = getComputedStyle(input).width;
+                     valueDiv.style.minHeight = getComputedStyle(input).height;
+                      valueDiv.style.padding = '1px'; // Minimal padding
+
+                     input.style.display = 'none';
+                     input.parentNode?.insertBefore(valueDiv, input.nextSibling);
+                }
+            });
+             // Ensure stamp image is rendered correctly in the clone for canvas
+            const stampContainer = document.getElementById('stampContainerElement');
+            const stampPreviewScreen = document.getElementById('stampPreviewScreen');
+             if (stampContainer && stampPreviewScreen) {
+                // Hide interactive elements if needed, ensure image is visible
+                 const label = stampContainer.querySelector('label');
+                 if (label) label.style.display = 'none';
+                 stampPreviewScreen.style.display = 'block'; // Make sure the image is visible
+             }
+        }
+      });
+
+       // Restore display of no-print elements
+       noPrintElements.forEach(el => el.style.display = ''); // Restore original or default display
+       // Restore display of print-only elements
+       printOnlyElements.forEach(el => {
+           el.style.display = originalDisplayStyles.get(el) || ''; // Restore original display style
+       });
+
+
+      const imgData = canvas.toDataURL('image/png');
+
+      // Define A4 page size in mm
+      const pdfWidth = 210;
+      const pdfHeight = 297;
+
+      // Calculate image dimensions to fit A4, maintaining aspect ratio
+      const canvasAspectRatio = canvas.width / canvas.height;
+      let imgWidth = pdfWidth - 20; // A4 width in mm with 10mm margins
+      let imgHeight = imgWidth / canvasAspectRatio;
+
+      // If height exceeds A4 height with margins, scale by height instead
+       const maxHeight = pdfHeight - 20; // A4 height with 10mm margins
+       if (imgHeight > maxHeight) {
+           imgHeight = maxHeight;
+           imgWidth = imgHeight * canvasAspectRatio;
+       }
+
+       // Calculate margins to center the image
+       const marginLeft = (pdfWidth - imgWidth) / 2;
+       const marginTop = (pdfHeight - imgHeight) / 2;
+
+
+      // Create PDF
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      // Add image to PDF, centered with margins
+      pdf.addImage(imgData, 'PNG', marginLeft, marginTop, imgWidth, imgHeight);
+
+      // Download PDF
+      const fileName = `ReleaseOrder_${roNumber || 'Draft'}_${displayDate}.pdf`;
+      pdf.save(fileName);
+
+      toast({
+        title: "PDF Downloaded",
+        description: `${fileName} has been downloaded successfully.`,
+      });
+
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast({
+        title: "PDF Generation Failed",
+        description: "An error occurred while creating the PDF.",
+        variant: "destructive",
+      });
+       // Ensure elements are restored even if error occurs
+       const printableElement = printableAreaRef.current;
+       if (printableElement) {
+           const noPrintElements = printableElement.querySelectorAll<HTMLElement>('.no-print');
+           noPrintElements.forEach(el => el.style.display = '');
+           const printOnlyElements = printableElement.querySelectorAll<HTMLElement>('.print-only, .print-only-block, .print-only-inline-block');
+            printOnlyElements.forEach(el => {
+                 // Attempt to restore, though original styles might be lost if error happened early
+                 const originalDisplay = localStorage.getItem(`origDisplay_${el.id}`);
+                 if (originalDisplay) el.style.display = originalDisplay;
+                 else el.style.display = ''; // Fallback
+            });
+       }
+    }
+  }, [toast, roNumber, displayDate]);
 
   const handleClearForm = useCallback(() => {
     setCaption('');
@@ -266,7 +430,9 @@ export default function AdOrderForm() {
         <Button onClick={handleClearForm} variant="outline">
           <Eraser className="mr-2 h-4 w-4" /> Clear Form & Draft
         </Button>
-         {/* Download Word Doc Button removed */}
+        <Button onClick={handleDownloadPdf} variant="default">
+           <Download className="mr-2 h-4 w-4" /> Download PDF
+        </Button>
       </div>
 
       {/* Printable Area */}
@@ -362,31 +528,32 @@ export default function AdOrderForm() {
             </div>
           </div>
 
-          {/* Advertisement Manager Section */}
-          <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
-            <Label className="block mb-1">The Advertisement Manager</Label>
-             <div className="relative mb-1">
-              <Input
-                id="adManager1"
-                type="text"
-                placeholder="Line 1"
-                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                value={advertisementManagerLine1}
-                onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
-              />
-             </div>
-            <div className="relative">
-            <Input
-              id="adManager2"
-              type="text"
-              placeholder="Line 2"
-              className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-              value={advertisementManagerLine2}
-              onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
-            />
-             </div>
-            <p className="text-sm mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
-          </div>
+           {/* Advertisement Manager Section */}
+           <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
+             <Label className="block mb-1">The Advertisement Manager</Label>
+              <div className="relative mb-1">
+               <Input
+                 id="adManager1"
+                 type="text"
+                 placeholder="Line 1"
+                 className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                 value={advertisementManagerLine1}
+                 onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
+               />
+              </div>
+             <div className="relative">
+             <Input
+               id="adManager2"
+               type="text"
+               placeholder="Line 2"
+               className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+               value={advertisementManagerLine2}
+               onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
+             />
+              </div>
+             <p className="text-sm mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
+           </div>
+
 
            {/* Heading & Package Section */}
            <div className="heading-package-container flex gap-3 mb-5">
@@ -464,9 +631,9 @@ export default function AdOrderForm() {
 
           {/* Matter Section */}
           <div className="matter-box flex h-[150px] print-border-heavy rounded mb-5 overflow-hidden border-2 border-black">
-            <div className="vertical-label bg-black text-white flex items-center justify-center p-1">
-              <span className="text-base font-bold transform rotate-180">MATTER</span>
-            </div>
+             <div className="vertical-label bg-black text-white flex items-center justify-center p-1 w-8"> {/* Adjust width as needed */}
+              <span className="text-base font-bold whitespace-nowrap" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>MATTER</span>
+             </div>
             <div className="matter-content flex-1 p-1">
               <Textarea
                 id="matterArea"
@@ -506,7 +673,7 @@ export default function AdOrderForm() {
                {/* Stamp Area */}
                <div
                   id="stampContainerElement"
-                  className="stamp-container w-[180px] h-[150px] flex items-center justify-center cursor-pointer overflow-hidden group relative" // Removed bg-transparent, added overflow-hidden
+                  className="stamp-container w-[180px] h-[150px] flex items-center justify-center cursor-pointer overflow-hidden group relative border-none" // Added border-none
                   onClick={triggerStampUpload}
                   onMouseEnter={triggerStampUpload}
                >
@@ -557,3 +724,4 @@ export default function AdOrderForm() {
     </div>
   );
 }
+
