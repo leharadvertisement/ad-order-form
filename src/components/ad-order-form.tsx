@@ -449,8 +449,7 @@ export default function AdOrderForm() {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>{' '}
-            {/* Removed extra whitespace causing hydration error */}
+            </Table>
              <div className="flex gap-2 mt-2 no-print">
                 <Button variant="outline" size="sm" onClick={addRow}>
                     <PlusCircle className="mr-2 h-4 w-4" /> Add Row
@@ -489,7 +488,7 @@ export default function AdOrderForm() {
           </div>
 
           {/* Notes & Stamp */}
-           <div className="relative print-border rounded p-2 pr-[140px] border border-black"> {/* Increased right padding for larger stamp */}
+           <div className="relative print-border rounded p-2 pr-[170px] border border-black"> {/* Adjusted right padding for wider stamp */}
             <p className="font-bold mb-1">Note:</p>
             <ol className="list-decimal list-inside text-sm space-y-1">
               <li>Space reserved vide our letter No.<Input type="text" value={noteInput} onChange={(e) => setNoteInput(e.target.value)} className="inline-block w-24 h-5 p-0 border-0 border-b border-black rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none font-bold" /></li>
@@ -499,7 +498,7 @@ export default function AdOrderForm() {
             </ol>
              {/* Stamp Area - Increased size, click triggers upload */}
             <div
-                className="stamp-container absolute top-2 right-2 w-[120px] h-[120px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden border-none" /* Increased size */
+                className="stamp-container absolute top-2 right-2 w-[150px] h-[120px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden border-none" /* Increased width, kept height */
                 onClick={triggerStampUpload} /* Trigger upload on container click */
              >
                 <Input
@@ -516,14 +515,17 @@ export default function AdOrderForm() {
                             id="stampPreview"
                             src={stampPreview}
                             alt="Stamp Preview"
-                            width={120} // Increased width to match container
-                            height={120} // Increased height to match container
+                            width={150} // Increased width to match container
+                            height={120} // Kept height
                             className="object-contain w-full h-full" // Use object-contain to fit image within bounds
                             unoptimized // Good for Data URIs
+                            priority // Prioritize loading the stamp image
                           />
                      </div>
                 ) : (
-                     <Label htmlFor="stampFile" className="text-center text-xs text-muted-foreground cursor-pointer p-1 no-print">Click to Upload Stamp</Label>
+                     <Label htmlFor="stampFile" className="text-center text-xs text-muted-foreground cursor-pointer p-1 no-print group-hover:opacity-75 transition-opacity">
+                         Click or Hover<br/> to Upload Stamp
+                     </Label>
                 )}
             </div>
           </div>
@@ -532,3 +534,4 @@ export default function AdOrderForm() {
     </div>
   );
 }
+
