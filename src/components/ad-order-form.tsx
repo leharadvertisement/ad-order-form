@@ -54,7 +54,8 @@ export default function AdOrderForm() {
   const [stampPreview, setStampPreview] = useState<string | null>(null);
   const [noteInput, setNoteInput] = useState('');
   const [roNumber, setRoNumber] = useState('');
-  const [orderDate, setOrderDate] = useState<Date | undefined>(undefined);
+  // Initialize orderDate with the current date
+  const [orderDate, setOrderDate] = useState<Date | undefined>(new Date());
   const [clientName, setClientName] = useState('');
   const [advertisementManagerLine1, setAdvertisementManagerLine1] = useState(''); // State for Adv Manager Line 1
   const [advertisementManagerLine2, setAdvertisementManagerLine2] = useState(''); // State for Adv Manager Line 2
@@ -82,7 +83,8 @@ export default function AdOrderForm() {
         setStampPreview(parsedData.stampPreview || null);
         setNoteInput(parsedData.noteInput || '');
         setRoNumber(parsedData.roNumber || '');
-        setOrderDate(parsedData.orderDate ? new Date(parsedData.orderDate) : undefined);
+        // Load saved date or default to today if null/invalid
+        setOrderDate(parsedData.orderDate ? new Date(parsedData.orderDate) : new Date());
         setClientName(parsedData.clientName || '');
         setAdvertisementManagerLine1(parsedData.advertisementManagerLine1 || ''); // Load Adv Manager Line 1
         setAdvertisementManagerLine2(parsedData.advertisementManagerLine2 || ''); // Load Adv Manager Line 2
@@ -90,9 +92,14 @@ export default function AdOrderForm() {
           title: "Draft Recovered",
           description: "Previously entered form data has been loaded.",
         });
+      } else {
+        // If no saved data, ensure date is today's date
+        setOrderDate(new Date());
       }
     } catch (error) {
       console.error("Failed to load data from localStorage:", error);
+      // Default to today's date on error as well
+      setOrderDate(new Date());
       toast({
         title: "Recovery Failed",
         description: "Could not recover previous draft data. Please check console for errors.",
@@ -213,7 +220,7 @@ export default function AdOrderForm() {
     setStampPreview(null);
     setNoteInput('');
     setRoNumber('');
-    setOrderDate(undefined);
+    setOrderDate(new Date()); // Reset date to today
     setClientName('');
     setAdvertisementManagerLine1(''); // Clear Adv Manager Line 1
     setAdvertisementManagerLine2(''); // Clear Adv Manager Line 2
@@ -473,9 +480,9 @@ export default function AdOrderForm() {
                         src={stampPreview}
                         alt="Stamp Preview"
                         layout="fill"
-                        objectFit="fill" // Changed from contain to fill
-                        objectPosition="center" // Keep centered
-                        className="p-0" // Remove padding if any
+                        objectFit="contain"
+                        objectPosition="center"
+                        className="p-0" // Ensure no padding interferes
                       />
                 ) : (
                      <Label htmlFor="stampFile" className="text-center text-xs text-muted-foreground cursor-pointer p-1">Click to Upload Stamp</Label>
@@ -487,4 +494,3 @@ export default function AdOrderForm() {
     </div>
   );
 }
-
