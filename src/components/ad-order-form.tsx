@@ -335,7 +335,7 @@ export default function AdOrderForm() {
               <li>Please send two voucher copies of good reproduction within 3 days of publishing.</li>
             </ol>
              {/* Stamp Area */}
-            <div className="stamp-container absolute top-2 right-2 w-[100px] h-[100px] print-border-thin border border-black rounded bg-white flex items-center justify-center cursor-pointer" onClick={triggerStampUpload}>
+            <div className="stamp-container absolute top-2 right-2 w-[100px] h-[100px] print-border-thin border border-black rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden" onClick={triggerStampUpload}>
                 <Input
                     type="file"
                     ref={stampFileRef}
@@ -349,9 +349,9 @@ export default function AdOrderForm() {
                         id="stampPreview"
                         src={stampPreview}
                         alt="Stamp Preview"
-                        layout="fill" // Use layout fill to make it responsive
-                        objectFit="contain" // Ensure the image fits within the container without distortion
-                        className="w-full h-full" // Make the image element fill the container
+                        layout="fill" // Use fill to stretch the image within the container
+                        objectFit="contain" // Scale the image to fit while preserving aspect ratio
+                        className="p-1" // Add padding if needed to ensure it doesn't touch edges
                       />
                 ) : (
                      <Label htmlFor="stampFile" className="text-center text-xs text-muted-foreground cursor-pointer p-1">Click to Upload Stamp</Label>
@@ -363,3 +363,4 @@ export default function AdOrderForm() {
     </div>
   );
 }
+
