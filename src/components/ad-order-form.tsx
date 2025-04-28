@@ -351,7 +351,7 @@ export default function AdOrderForm() {
                          >
                              <CalendarIcon className="mr-2 h-4 w-4" />
                              {/* Display date or placeholder */}
-                             <span>{displayDate}</span>
+                              <span>{isClient ? displayDate : 'Loading...'}</span>
                          </Button>
                          </PopoverTrigger>
                          <PopoverContent className="w-auto p-0 no-print">
@@ -443,22 +443,22 @@ export default function AdOrderForm() {
                 {scheduleRows.map((row) => (
                   <TableRow key={row.id}>
                     <TableCell className="print-border-thin border border-black p-0 print-table-cell">
-                      <Input type="text" value={row.keyNo} onChange={(e) => handleScheduleChange(row.id, 'keyNo', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1"/>
+                      <Input type="text" value={row.keyNo} onChange={(e) => handleScheduleChange(row.id, 'keyNo', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-2"/>
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell">
-                      <Input type="text" value={row.publication} onChange={(e) => handleScheduleChange(row.id, 'publication', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1"/>
+                      <Input type="text" value={row.publication} onChange={(e) => handleScheduleChange(row.id, 'publication', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-2"/>
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell">
-                      <Input type="text" value={row.edition} onChange={(e) => handleScheduleChange(row.id, 'edition', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1"/>
+                      <Input type="text" value={row.edition} onChange={(e) => handleScheduleChange(row.id, 'edition', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-2"/>
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell">
-                      <Input type="text" value={row.size} onChange={(e) => handleScheduleChange(row.id, 'size', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1"/>
+                      <Input type="text" value={row.size} onChange={(e) => handleScheduleChange(row.id, 'size', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-2"/>
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell">
-                      <Input type="text" value={row.scheduledDate} onChange={(e) => handleScheduleChange(row.id, 'scheduledDate', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1"/>
+                      <Input type="text" value={row.scheduledDate} onChange={(e) => handleScheduleChange(row.id, 'scheduledDate', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-2"/>
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell">
-                      <Input type="text" value={row.position} onChange={(e) => handleScheduleChange(row.id, 'position', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1"/>
+                      <Input type="text" value={row.position} onChange={(e) => handleScheduleChange(row.id, 'position', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-2"/>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -512,7 +512,7 @@ export default function AdOrderForm() {
             </ol>
              {/* Stamp Area */}
              <div
-                className="stamp-container absolute top-2 right-2 w-[180px] h-[150px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden group"
+                className="stamp-container absolute top-2 right-2 w-[180px] h-[150px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden group border-none" // Added border-none
                 onClick={triggerStampUpload}
              >
                  <Input
@@ -529,9 +529,10 @@ export default function AdOrderForm() {
                             id="stampPreview"
                             src={stampPreview}
                             alt="Stamp Preview"
-                            width={180} // Explicit width
-                            height={150} // Explicit height
-                            style={{ objectFit: 'contain', width: '180px', height: '150px' }} // Force static size
+                            width={180} // Static width
+                            height={150} // Static height
+                            style={{ objectFit: 'contain' }} // Ensure image fits within bounds
+                            className="max-w-full max-h-full" // Ensure image respects container bounds
                             unoptimized // Good for Data URIs
                             priority // Prioritize loading the stamp image
                           />
