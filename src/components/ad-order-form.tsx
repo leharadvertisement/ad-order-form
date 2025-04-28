@@ -1,4 +1,3 @@
-
 'use client';
 
 import type { ChangeEvent } from 'react';
@@ -257,6 +256,33 @@ export default function AdOrderForm() {
   }, [toast]);
 
 
+  // Use state for the formatted date string to display
+  const [displayDate, setDisplayDate] = useState<string>('');
+
+  // Effect to update the display date when orderDate changes or on initial load
+  useEffect(() => {
+     // This function now runs only on the client
+    const updateFormattedDate = () => {
+        if (orderDate && !isNaN(orderDate.getTime())) {
+            setDisplayDate(format(orderDate, "dd.MM.yyyy"));
+        } else {
+            // If date is invalid or undefined during client-side rendering, try setting to today's date
+             const today = new Date();
+             setOrderDate(today); // Attempt to fix the state
+             setDisplayDate(format(today, "dd.MM.yyyy"));
+        }
+    };
+
+    if (isClient) {
+        updateFormattedDate();
+    } else {
+        // Server-side or before client mount, use a placeholder
+        // Avoid setting a dynamic value like Date() here for SSR
+        setDisplayDate("Loading...");
+    }
+  }, [orderDate, isClient]); // Depend on orderDate and isClient
+
+
   return (
     <div className="max-w-[210mm] mx-auto font-bold">
        <div className="flex justify-end gap-2 mb-4 no-print">
@@ -305,49 +331,34 @@ export default function AdOrderForm() {
                  {/* Date */}
                  <div className="flex items-center">
                     <Label htmlFor="orderDate" className="w-20 text-sm shrink-0">Date:</Label>
-                     {/* Conditionally render based on client-side mount */}
-                     {isClient ? (
-                         <Popover>
-                             <PopoverTrigger asChild>
-                             <Button
-                                 variant={"outline"}
-                                 className={cn(
-                                 "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none",
-                                 !orderDate && "text-muted-foreground"
-                                 )}
-                                 id="orderDate"
-                             >
-                                 <CalendarIcon className="mr-2 h-4 w-4" />
-                                 {/* Ensure orderDate is valid before formatting */}
-                                 {orderDate && !isNaN(orderDate.getTime()) ? format(orderDate, "dd.MM.yyyy") : <span>Pick a date</span>}
-                             </Button>
-                             </PopoverTrigger>
-                             <PopoverContent className="w-auto p-0 no-print">
-                             <Calendar
-                                 mode="single"
-                                 selected={orderDate}
-                                 onSelect={setOrderDate}
-                                 initialFocus
-                             />
-                             </PopoverContent>
-                         </Popover>
-                     ) : (
+                     <Popover>
+                         <PopoverTrigger asChild>
                          <Button
                              variant={"outline"}
                              className={cn(
-                             "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none text-muted-foreground"
+                             "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none",
+                             !orderDate && "text-muted-foreground"
                              )}
                              id="orderDate"
-                             disabled
                          >
                              <CalendarIcon className="mr-2 h-4 w-4" />
-                             {/* Display a placeholder or server-rendered date safely */}
-                             <span suppressHydrationWarning>
-                                {/* Render a non-changing value on the server */}
-                                {typeof window === 'undefined' ? format(new Date(), "dd.MM.yyyy") : "Loading..."}
-                             </span>
+                             {/* Use the displayDate state here */}
+                              {isClient ? (
+                                <span>{displayDate}</span>
+                              ) : (
+                                <span>Loading...</span> // Or a placeholder
+                              )}
                          </Button>
-                     )}
+                         </PopoverTrigger>
+                         <PopoverContent className="w-auto p-0 no-print">
+                         <Calendar
+                             mode="single"
+                             selected={orderDate}
+                             onSelect={setOrderDate} // Directly update the Date object state
+                             initialFocus
+                         />
+                         </PopoverContent>
+                     </Popover>
                  </div>
                   {/* Client */}
                  <div className="flex items-center">
@@ -364,7 +375,7 @@ export default function AdOrderForm() {
             </div>
           </div>
 
-           {/* Advertisement Manager Section - Moved Before Heading/Package */}
+          {/* Advertisement Manager Section - Swapped with Heading & Package */}
             <div className="print-border rounded p-2 mb-5 border border-black">
                 <Label className="block mb-1">The Advertisement Manager</Label>
                 <Input
@@ -384,8 +395,7 @@ export default function AdOrderForm() {
                  <p className="text-sm mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
             </div>
 
-
-            {/* Heading & Package */}
+          {/* Heading & Package - Swapped with Advertisement Manager */}
           <div className="flex gap-3 mb-5">
             <div className="flex-1 print-border-heavy rounded p-2 border-2 border-black">
               <Label htmlFor="caption" className="block mb-1">Heading/Caption:</Label>
@@ -488,17 +498,17 @@ export default function AdOrderForm() {
           </div>
 
           {/* Notes & Stamp */}
-           <div className="relative print-border rounded p-2 pr-[190px] border border-black"> {/* Adjusted right padding for wider stamp */}
+           <div className="relative print-border rounded p-2 pr-[200px] border border-black">
             <p className="font-bold mb-1">Note:</p>
             <ol className="list-decimal list-inside text-sm space-y-1">
-              <li>Space reserved vide our letter No. <Input type="text" value={noteInput} onChange={(e) => setNoteInput(e.target.value)} className="inline-block w-24 h-5 p-0 border-0 border-b border-black rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none font-bold" /></li>
+              <li>Space reserved vide our letter No.&nbsp;<Input type="text" value={noteInput} onChange={(e) => setNoteInput(e.target.value)} className="inline-block w-24 h-5 p-0 border-0 border-b border-black rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none font-bold" /></li>
               <li>No two advertisements of the same client should appear in the same issue.</li>
               <li>Please quote R.O. No. in all your bills and letters.</li>
               <li>Please send two voucher copies of good reproduction within 3 days of publishing.</li>
             </ol>
              {/* Stamp Area - Increased size, click triggers upload */}
             <div
-                className="stamp-container absolute top-2 right-2 w-[170px] h-[120px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden border-none group" /* Increased width, kept height, add group */
+                className="stamp-container absolute top-2 right-2 w-[180px] h-[150px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden border-none group" /* Adjusted height, add group, removed border */
                 onClick={triggerStampUpload} /* Trigger upload on container click */
              >
                 <Input
@@ -515,8 +525,8 @@ export default function AdOrderForm() {
                             id="stampPreview"
                             src={stampPreview}
                             alt="Stamp Preview"
-                            width={170} // Increased width to match container
-                            height={120} // Kept height
+                            width={180} // Static width matching container
+                            height={150} // Static height matching container
                             className="object-contain w-full h-full" // Use object-contain to fit image within bounds
                             unoptimized // Good for Data URIs
                             priority // Prioritize loading the stamp image
@@ -538,4 +548,3 @@ export default function AdOrderForm() {
     </div>
   );
 }
-

@@ -155,10 +155,12 @@ body {
     }
     .stamp-container { /* Specifically remove border for stamp container */
         border: none !important;
-        max-width: 170px !important; /* Updated print width */
-        max-height: 120px !important;
-        width: 170px !important; /* Force width */
-        height: 120px !important; /* Force height */
+        max-width: 180px !important; /* Updated print width */
+        max-height: 150px !important; /* Updated print height */
+        width: 180px !important; /* Force width */
+        height: 150px !important; /* Force height */
+        background-color: white !important; /* Ensure white background for print */
+         overflow: hidden !important; /* Ensure content fits */
     }
      .vertical-label {
         background-color: black !important;
@@ -188,5 +190,49 @@ body {
          opacity: 0 !important;
       }
 
+       table {
+        page-break-inside: auto;
+      }
+      tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+      }
+      thead {
+        display: table-header-group;
+      }
+      tfoot {
+        display: table-footer-group;
+      }
+       /* Ensure inputs keep their values when printing */
+      input[type="text"], textarea {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      /* Explicitly set font for print */
+      body, input, textarea, button, select, table, th, td {
+        font-family: Arial, sans-serif !important;
+        font-weight: bold !important; /* Ensure boldness prints */
+        font-size: 14px !important; /* Ensure consistent font size */
+      }
+
+      /* Ensure Date Picker Button content prints */
+      #orderDate span {
+        display: inline !important;
+      }
+      #orderDate svg {
+         display: inline !important; /* Or none if you want to hide the icon */
+      }
+       /* Ensure the image prints correctly */
+      #stampPreview {
+        display: block !important; /* Ensure it's treated as a block element */
+        max-width: 100% !important; /* Ensure it doesn't exceed container */
+        max-height: 100% !important;
+        width: 180px !important; /* Explicit width for print */
+        height: 150px !important; /* Explicit height for print */
+        object-fit: contain !important; /* Scale down if needed, preserve aspect ratio */
+        object-position: center center !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
   }
 }
