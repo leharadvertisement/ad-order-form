@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
-import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon, Download } from 'lucide-react'; // Add Download icon
+import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon, Download } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -118,16 +118,28 @@ export default function AdOrderForm() {
   }, [toast]);
 
   // Update displayDate only when orderDate changes *after* initial load
-  useEffect(() => {
-    if (!isInitialLoadRef.current && orderDate && !isNaN(orderDate.getTime())) {
-      try {
-        setDisplayDate(format(orderDate, "dd.MM.yyyy"));
-      } catch (error) {
-        console.error("Error formatting date:", error);
-         setDisplayDate("Invalid Date");
+   useEffect(() => {
+    if (!isInitialLoadRef.current && isClient && orderDate) {
+      if (!isNaN(orderDate.getTime())) {
+        try {
+          setDisplayDate(format(orderDate, "dd.MM.yyyy"));
+        } catch (error) {
+          console.error("Error formatting date:", error);
+          setDisplayDate("Invalid Date");
+        }
+      } else {
+        // Handle invalid date case if needed, maybe reset to today?
+         const today = new Date();
+         setOrderDate(today); // Optionally reset to today
+         setDisplayDate(format(today, "dd.MM.yyyy"));
       }
+    } else if (!isInitialLoadRef.current && isClient && !orderDate) {
+        // Handle case where date is cleared
+         const today = new Date();
+         setOrderDate(today); // Reset to today if cleared
+         setDisplayDate(format(today, "dd.MM.yyyy"));
     }
-  }, [orderDate]);
+  }, [orderDate, isClient, isInitialLoadRef]);
 
 
   useEffect(() => {
@@ -353,7 +365,7 @@ export default function AdOrderForm() {
       pdf.addImage(imgData, 'PNG', marginLeft, marginTop, imgWidth, imgHeight);
 
       // Download PDF
-      const fileName = `ReleaseOrder_${roNumber || 'Draft'}_${displayDate}.pdf`;
+      const fileName = `ReleaseOrder_${roNumber || 'Draft'}_${displayDate || 'DateNotSet'}.pdf`;
       pdf.save(fileName);
 
       toast({
@@ -430,9 +442,9 @@ export default function AdOrderForm() {
         <Button onClick={handleClearForm} variant="outline">
           <Eraser className="mr-2 h-4 w-4" /> Clear Form & Draft
         </Button>
-        <Button onClick={handleDownloadPdf} variant="default">
+         <Button onClick={handleDownloadPdf} variant="default">
            <Download className="mr-2 h-4 w-4" /> Download PDF
-        </Button>
+         </Button>
       </div>
 
       {/* Printable Area */}
@@ -504,6 +516,7 @@ export default function AdOrderForm() {
                            if (date instanceof Date && !isNaN(date.getTime())) {
                                setOrderDate(date);
                            } else {
+                               // Handle invalid date selection, maybe set to undefined or today
                                const today = new Date();
                                setOrderDate(today);
                            }
@@ -658,9 +671,9 @@ export default function AdOrderForm() {
           </div>
 
           {/* Notes & Stamp Container */}
-           <div className="notes-stamp-container flex gap-3 mb-5 items-start">
+           <div className="notes-stamp-container relative flex gap-3 mb-5 items-start print-border rounded p-2 border border-black min-h-[150px]">
                {/* Notes Section */}
-               <div className="notes-container flex-1 print-border rounded p-2 border border-black min-h-[150px]">
+               <div className="notes-content flex-1 pr-[190px]"> {/* Added padding to avoid overlap */}
                  <p className="font-bold mb-1 note-title-underline">Note:</p>
                 <ol className="list-decimal list-inside text-sm space-y-1 pt-1 pl-4">
                   <li>Space reserved vide our letter No.</li>
@@ -670,10 +683,10 @@ export default function AdOrderForm() {
                 </ol>
               </div>
 
-               {/* Stamp Area */}
+               {/* Stamp Area - Positioned absolutely within the notes container */}
                <div
                   id="stampContainerElement"
-                  className="stamp-container w-[180px] h-[150px] flex items-center justify-center cursor-pointer overflow-hidden group relative border-none" // Added border-none
+                  className="stamp-container absolute top-2 right-2 w-[180px] h-[142px] flex items-center justify-center cursor-pointer overflow-hidden group" // Removed border-none, adjusted height slightly
                   onClick={triggerStampUpload}
                   onMouseEnter={triggerStampUpload}
                >
@@ -693,7 +706,7 @@ export default function AdOrderForm() {
                               alt="Stamp Preview"
                               width={180} // Explicit width
                               height={150} // Explicit height
-                              style={{ objectFit: 'contain' }} // Ensure the image fits within the bounds
+                              style={{ objectFit: 'contain', width: '100%', height: '100%' }} // Use contain and 100%
                             />
                             {/* Hover effect */}
                             <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity no-print">
@@ -713,7 +726,7 @@ export default function AdOrderForm() {
                           alt="Stamp"
                           width={180}
                           height={150}
-                          style={{ objectFit: 'contain'}}
+                          style={{ objectFit: 'contain', width: '100%', height: '100%' }}
                         />
                      </div>
                    )}
