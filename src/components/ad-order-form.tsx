@@ -32,7 +32,6 @@ interface FormData {
   matter: string;
   scheduleRows: ScheduleRow[];
   stampPreview: string | null;
-  noteInput: string;
   roNumber: string;
   orderDate: string | null;
   clientName: string;
@@ -51,7 +50,6 @@ export default function AdOrderForm() {
     { id: Date.now(), keyNo: '', publication: '', edition: '', size: '', scheduledDate: '', position: '' },
   ]);
   const [stampPreview, setStampPreview] = useState<string | null>(null);
-  const [noteInput, setNoteInput] = useState('');
   const [roNumber, setRoNumber] = useState('');
   // Initialize orderDate to undefined to prevent hydration mismatch
   const [orderDate, setOrderDate] = useState<Date | undefined>(undefined);
@@ -84,7 +82,6 @@ export default function AdOrderForm() {
           : [{ id: Date.now(), keyNo: '', publication: '', edition: '', size: '', scheduledDate: '', position: '' }];
         setScheduleRows(loadedRows);
         setStampPreview(parsedData.stampPreview || null);
-        setNoteInput(parsedData.noteInput || '');
         setRoNumber(parsedData.roNumber || '');
         // Load saved date or default to today if null/invalid
         const savedDate = parsedData.orderDate ? new Date(parsedData.orderDate) : new Date();
@@ -139,7 +136,6 @@ export default function AdOrderForm() {
           matter,
           scheduleRows,
           stampPreview,
-          noteInput,
           roNumber,
           orderDate: orderDate && !isNaN(orderDate.getTime()) ? orderDate.toISOString() : null, // Save valid date
           clientName,
@@ -160,7 +156,7 @@ export default function AdOrderForm() {
       }
     };
     // Add new state variables to dependency array
-  }, [caption, packageName, matter, scheduleRows, stampPreview, noteInput, roNumber, orderDate, clientName, advertisementManagerLine1, advertisementManagerLine2, isClient]);
+  }, [caption, packageName, matter, scheduleRows, stampPreview, roNumber, orderDate, clientName, advertisementManagerLine1, advertisementManagerLine2, isClient]);
 
 
   // --- Form Handlers ---
@@ -234,7 +230,6 @@ export default function AdOrderForm() {
     setMatter('');
     setScheduleRows([{ id: Date.now(), keyNo: '', publication: '', edition: '', size: '', scheduledDate: '', position: '' }]);
     setStampPreview(null);
-    setNoteInput('');
     setRoNumber('');
     setOrderDate(new Date()); // Reset date to today
     setClientName('');
@@ -262,7 +257,7 @@ export default function AdOrderForm() {
 
 
   // Use state for the formatted date string to display
-  const [displayDate, setDisplayDate] = useState<string>('');
+  const [displayDate, setDisplayDate] = useState<string>('Loading...'); // Initialize with placeholder
 
   // Effect to update the display date when orderDate changes or on initial load
   useEffect(() => {
@@ -290,10 +285,8 @@ export default function AdOrderForm() {
 
     if (isClient) {
       updateFormattedDate();
-    } else {
-       // Ensure a default value or placeholder is set during SSR/initial render
-       setDisplayDate("Loading...");
     }
+     // No 'else' needed here as initial state is 'Loading...'
 
   }, [orderDate, isClient]); // Depend on orderDate and isClient
 
@@ -357,12 +350,8 @@ export default function AdOrderForm() {
                              id="orderDate"
                          >
                              <CalendarIcon className="mr-2 h-4 w-4" />
-                             {/* Render based on client-side readiness */}
-                              {isClient ? (
-                                <span>{displayDate}</span>
-                              ) : (
-                                <span>Loading...</span> // Server/Initial Render Placeholder
-                              )}
+                             {/* Display date or placeholder */}
+                             <span>{displayDate}</span>
                          </Button>
                          </PopoverTrigger>
                          <PopoverContent className="w-auto p-0 no-print">
@@ -513,17 +502,17 @@ export default function AdOrderForm() {
           </div>
 
           {/* Notes & Stamp */}
-           <div className="relative print-border rounded p-2 pr-[200px] border border-black min-h-[170px]"> {/* Ensured border visibility */}
+           <div className="relative print-border rounded p-2 pr-[200px] border border-black min-h-[170px] pb-1"> {/* Added pb-1 for bottom padding */}
             <p className="font-bold mb-1 border-b border-black inline-block">Note:</p>
             <ol className="list-decimal list-inside text-sm space-y-1 pt-1">
-              <li>Space reserved vide our letter No. <Input type="text" value={noteInput} onChange={(e) => setNoteInput(e.target.value)} className="inline-block w-24 h-5 p-0 border-0 border-b border-black rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none font-bold" /></li>
+              <li>Space reserved vide our letter No.</li>
               <li>No two advertisements of the same client should appear in the same issue.</li>
               <li>Please quote R.O. No. in all your bills and letters.</li>
               <li>Please send two voucher copies of good reproduction within 3 days of publishing.</li>
             </ol>
              {/* Stamp Area */}
              <div
-                className="stamp-container absolute top-2 right-2 w-[180px] h-[150px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden group border-none" /* Removed border */
+                className="stamp-container absolute top-2 right-2 w-[180px] h-[150px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden group" /* Removed border-none */
                 onClick={triggerStampUpload}
              >
                  <Input
