@@ -124,7 +124,7 @@ body {
 
 
   /* Custom styles for print and potential export (like Word .doc) */
-  @media print, screen { /* Apply base styles to screen as well for consistency */
+  @media print {
     /* Apply bold font globally within the printable area for consistency */
     #printable-area, #printable-area * {
        font-family: Arial, sans-serif !important;
@@ -286,17 +286,17 @@ body {
         border: none !important; /* Ensure no border on the image itself */
       }
 
-      /* Layout Containers for Word */
-      .address-container { display: table !important; width: 100% !important; border-spacing: 10px 0 !important; margin-bottom: 20px !important; }
-      .address-box, .ro-date-client-container { display: table-cell !important; width: 48% !important; vertical-align: top !important; padding: 8px !important; }
+      /* Layout Containers for Print/Word */
+      .address-container { display: flex !important; justify-content: space-between !important; gap: 10px !important; margin-bottom: 20px !important; }
+      .address-box, .ro-date-client-container { width: 48% !important; border: 1px solid black !important; padding: 8px !important; vertical-align: top !important; }
       .address-box p { margin: 0 !important; padding: 0 !important; font-size: 12px !important; line-height: 1.4 !important; }
 
       .ro-date-client-container .field-row { display: flex !important; align-items: baseline !important; margin-bottom: 8px !important; }
       .ro-date-client-container label { width: 80px !important; flex-shrink: 0 !important; margin-right: 5px !important; }
 
-      .heading-package-container { display: table !important; width: 100% !important; border-spacing: 10px 0 !important; margin-bottom: 20px !important; }
-      .heading-caption-box { display: table-cell !important; width: 68% !important; vertical-align: top !important; padding: 8px !important; }
-      .package-box { display: table-cell !important; width: 30% !important; vertical-align: top !important; padding: 8px !important; }
+      .heading-package-container { display: flex !important; gap: 10px !important; margin-bottom: 20px !important; }
+      .heading-caption-box { flex: 1 !important; border: 2px solid black !important; padding: 8px !important; vertical-align: top !important; }
+      .package-box { width: 30% !important; border: 2px solid black !important; padding: 8px !important; vertical-align: top !important; }
       .heading-caption-box label, .package-box label { display: block !important; margin-bottom: 4px !important; }
 
 
@@ -319,10 +319,8 @@ body {
        .billing-address-box p {
          margin: 0 !important; padding: 0 !important; font-size: 12px !important; line-height: 1.4 !important;
        }
-
-       /* Remove overlay spans if they were added for PDF */
-      .pdf-value-overlay {
-         display: none !important;
-      }
+        .advertisement-manager-section { border: 1px solid black !important; padding: 8px !important; margin-bottom: 20px !important; }
+        .advertisement-manager-section p { margin-top: 10px !important; }
   }
+
 }

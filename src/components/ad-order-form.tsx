@@ -9,16 +9,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
-import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon, FileText } from 'lucide-react'; // Changed Download to FileText icon
+import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon, FileText } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-// Removed PDF generation libraries
-// import jsPDF from 'jspdf';
-// import html2canvas from 'html2canvas';
 
 
 interface ScheduleRow {
@@ -68,11 +65,11 @@ export default function AdOrderForm() {
   const isInitialLoadRef = useRef(true);
   const [isClient, setIsClient] = useState(false);
 
-  const [displayDate, setDisplayDate] = useState<string>(''); // Initialize as empty string
+  const [displayDate, setDisplayDate] = useState<string>(''); // State to hold formatted date string
 
 
   useEffect(() => {
-    setIsClient(true); // Set client flag
+    setIsClient(true); // Set client flag after mount
     try {
       const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (savedData) {
@@ -90,19 +87,26 @@ export default function AdOrderForm() {
         // Check if savedDate is valid before setting
         if (savedDate && !isNaN(savedDate.getTime())) {
             setOrderDate(savedDate);
+            setDisplayDate(format(savedDate, "dd.MM.yyyy")); // Also set display date
         } else {
-           setOrderDate(new Date()); // Default to today if no valid date saved
+           const today = new Date();
+           setOrderDate(today); // Default to today if no valid date saved
+           setDisplayDate(format(today, "dd.MM.yyyy")); // Set display date for today
         }
         setClientName(parsedData.clientName || '');
         setAdvertisementManagerLine1(parsedData.advertisementManagerLine1 || '');
         setAdvertisementManagerLine2(parsedData.advertisementManagerLine2 || '');
       } else {
         // No saved data, default date to today
-        setOrderDate(new Date());
+        const today = new Date();
+        setOrderDate(today);
+        setDisplayDate(format(today, "dd.MM.yyyy")); // Set display date for today
       }
     } catch (error) {
       console.error("Failed to load data from localStorage:", error);
-       setOrderDate(new Date()); // Default to today on error
+       const today = new Date();
+       setOrderDate(today); // Default to today on error
+       setDisplayDate(format(today, "dd.MM.yyyy")); // Set display date for today
       toast({
         title: "Recovery Failed",
         description: "Could not recover previous draft data.",
@@ -111,33 +115,19 @@ export default function AdOrderForm() {
     } finally {
       isInitialLoadRef.current = false;
     }
-  }, [toast]);
+  }, [toast]); // Removed orderDate from dependencies to avoid infinite loops
 
-  // Format date whenever orderDate or isClient changes
+  // Update displayDate only when orderDate changes *after* initial load
   useEffect(() => {
-    if (!isClient) return; // Only run on client
-    let dateToFormat: Date | undefined = orderDate;
-    if (!dateToFormat || isNaN(dateToFormat.getTime())) {
-        // If orderDate is somehow invalid or undefined after load, default to today
-        dateToFormat = new Date();
-        if (!isInitialLoadRef.current) { // Only setOrderDate if it's NOT initial load phase to avoid loop
-           setOrderDate(dateToFormat);
-        }
+    if (!isInitialLoadRef.current && orderDate && !isNaN(orderDate.getTime())) {
+      try {
+        setDisplayDate(format(orderDate, "dd.MM.yyyy"));
+      } catch (error) {
+        console.error("Error formatting date:", error);
+         setDisplayDate("Invalid Date");
+      }
     }
-     try {
-       // Format date as dd.MM.yyyy
-       setDisplayDate(format(dateToFormat, "dd.MM.yyyy"));
-     } catch (error) {
-       console.error("Error formatting date:", error);
-       const today = new Date(); // Fallback to today if formatting fails
-       try {
-          setDisplayDate(format(today, "dd.MM.yyyy"));
-       } catch (formatError) {
-          console.error("Error formatting fallback date:", formatError);
-          setDisplayDate("Invalid Date"); // Ultimate fallback
-       }
-     }
-  }, [orderDate, isClient]);
+  }, [orderDate]);
 
 
   useEffect(() => {
@@ -316,26 +306,26 @@ export default function AdOrderForm() {
                     const img = document.createElement('img');
                     img.src = validBase64;
                     img.alt = 'Stamp';
-                    // Apply precise styles for Word rendering
-                    img.style.width = '180px';
-                    img.style.height = '150px';
-                    img.style.objectFit = 'contain';
+                    // Apply precise styles for Word rendering - STATIC SIZE
+                    img.style.width = '180px'; // Fixed width
+                    img.style.height = '150px'; // Fixed height
+                    img.style.objectFit = 'contain'; // Ensure image fits without distortion
                     img.style.display = 'block'; // Crucial for Word
                     img.id = 'stampPreview'; // Keep ID if needed
                     stampContainerClone.appendChild(img);
                 }
-                 // Apply container styles directly for Word
+                 // Apply container styles directly for Word - NO BORDER
                 (stampContainerClone as HTMLElement).style.position = 'absolute';
                 (stampContainerClone as HTMLElement).style.top = '10px';
                 (stampContainerClone as HTMLElement).style.right = '10px';
-                (stampContainerClone as HTMLElement).style.width = '180px';
-                (stampContainerClone as HTMLElement).style.height = '150px';
+                (stampContainerClone as HTMLElement).style.width = '180px'; // Match image width
+                (stampContainerClone as HTMLElement).style.height = '150px'; // Match image height
                 (stampContainerClone as HTMLElement).style.display = 'flex';
                 (stampContainerClone as HTMLElement).style.alignItems = 'center';
                 (stampContainerClone as HTMLElement).style.justifyContent = 'center';
                 (stampContainerClone as HTMLElement).style.overflow = 'hidden';
                 (stampContainerClone as HTMLElement).style.border = 'none'; // Ensure no border on container
-                 (stampContainerClone as HTMLElement).style.backgroundColor = 'white'; // Explicit background
+                (stampContainerClone as HTMLElement).style.backgroundColor = 'white'; // Explicit background
 
             }
 
@@ -382,7 +372,7 @@ export default function AdOrderForm() {
                     .notes-container { border: 1px solid black !important; /* Standard border */ padding: 10px 200px 10px 10px !important; /* Keep padding */ margin-top: 20px; position: relative; min-height: 170px !important; }
                      /* Stamp container styling (already inline, this is fallback) */
                      .stamp-container { position: absolute; top: 10px; right: 10px; width: 180px; height: 150px; background: white; display: flex; align-items: center; justify-content: center; overflow: hidden; border: none !important; }
-                     #stampPreview { max-width: 100%; max-height: 100%; object-fit: contain; display: block; } /* Ensure image displays */
+                     #stampPreview { width: 180px; height: 150px; object-fit: contain; display: block; } /* Ensure image displays */
 
                     ol { margin-top: 10px; font-size: 14px !important; padding-left: 40px !important; /* Word needs more padding */ list-style-position: outside !important; }
                     li { margin-bottom: 5px; /* Spacing for list items */ }
@@ -572,7 +562,7 @@ export default function AdOrderForm() {
               </div>
               {/* Date */}
                <div className="field-row flex items-center popover-trigger-container"> {/* Container for replacement */}
-                <Label htmlFor="orderDate" className="w-20 text-sm shrink-0">Date:</Label>
+                <Label htmlFor="orderDateTrigger" className="w-20 text-sm shrink-0">Date:</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -581,14 +571,14 @@ export default function AdOrderForm() {
                         "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none",
                         !orderDate && "text-muted-foreground"
                       )}
-                      id="orderDateTrigger" // Changed ID to avoid conflict with label's htmlFor
+                      id="orderDateTrigger"
                     >
-                      <CalendarIcon className="mr-2 h-4 w-4 no-print" /> {/* Hide icon on print/export */}
-                      {/* Display formatted date, ensure it updates */}
+                      <CalendarIcon className="mr-2 h-4 w-4 no-print" />
+                      {/* Display formatted date from state */}
                       <span>{displayDate || "Pick a date"}</span>
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 no-print"> {/* Hide popover on print/export */}
+                  <PopoverContent className="w-auto p-0 no-print">
                     <Calendar
                       mode="single"
                       selected={orderDate}
@@ -597,7 +587,7 @@ export default function AdOrderForm() {
                                setOrderDate(date);
                            } else {
                                const today = new Date();
-                               setOrderDate(today);
+                               setOrderDate(today); // Fallback to today if invalid date selected
                            }
                       }}
                       initialFocus
@@ -752,9 +742,9 @@ export default function AdOrderForm() {
           </div>
 
           {/* Notes & Stamp */}
-           <div className="notes-container relative print-border rounded p-2 pr-[200px] border border-black min-h-[170px] pb-1"> {/* Ensure class for targeting */}
+           <div className="notes-container relative print-border rounded p-2 pr-[200px] border border-black min-h-[170px] pb-1">
              <p className="font-bold mb-1 note-title-underline">Note:</p>
-            <ol className="list-decimal list-inside text-sm space-y-1 pt-1 pl-4"> {/* Added left padding */}
+            <ol className="list-decimal list-inside text-sm space-y-1 pt-1 pl-4">
               <li>Space reserved vide our letter No.</li>
               <li>No two advertisements of the same client should appear in the same issue.</li>
               <li>Please quote R.O. No. in all your bills and letters.</li>
@@ -762,10 +752,10 @@ export default function AdOrderForm() {
             </ol>
              {/* Stamp Area - No border, positioned absolutely */}
              <div
-                className="stamp-container absolute top-2 right-2 w-[180px] h-[150px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden group print-stamp-container border-none" // Explicitly no border
+                className="stamp-container absolute top-2 right-2 w-[180px] h-[150px] bg-white flex items-center justify-center cursor-pointer overflow-hidden group print-stamp-container border-none" // No border, ensure visibility for interaction
                 onClick={triggerStampUpload}
                 onMouseEnter={triggerStampUpload}
-                id="stampContainerElement" // Added ID for precise targeting
+                id="stampContainerElement"
              >
                  <Input
                     type="file"
@@ -777,12 +767,11 @@ export default function AdOrderForm() {
                     />
                  {stampPreview ? (
                      <div className="relative w-full h-full flex items-center justify-center">
-                         {/* Use img tag for better control in static rendering */}
                          <img
                             id="stampPreview"
                             src={stampPreview}
                             alt="Stamp Preview"
-                            style={{ objectFit: 'contain', width: '180px', height: '150px', display: 'block' }} // Use style for precise sizing
+                            style={{ objectFit: 'contain', width: '180px', height: '150px', display: 'block' }} // Static dimensions
                           />
                           {/* Hover effect - Only show when stampPreview exists */}
                           <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity no-print">
