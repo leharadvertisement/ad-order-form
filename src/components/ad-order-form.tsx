@@ -333,7 +333,8 @@ export default function AdOrderForm() {
                              disabled
                          >
                              <CalendarIcon className="mr-2 h-4 w-4" />
-                             <span>{format(new Date(), "dd.MM.yyyy")}</span> {/* Display today's date formatted */}
+                             {/* Display today's date formatted, avoids hydration mismatch */}
+                             <span>{format(new Date(), "dd.MM.yyyy")}</span>
                          </Button>
                      )}
                  </div>
@@ -478,7 +479,7 @@ export default function AdOrderForm() {
           <div className="relative print-border border-2 border-black rounded p-2 pr-[130px]">
             <p className="font-bold mb-1">Note:</p>
             <ol className="list-decimal list-inside text-sm space-y-1">
-              <li>Space reserved vide our letter No. <Input type="text" value={noteInput} onChange={(e) => setNoteInput(e.target.value)} className="inline-block w-24 h-5 p-0 border-0 border-b border-black rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none font-bold" /></li>
+              <li>Space reserved vide our letter No. <Input type="text" value={noteInput} onChange={(e) => setNoteInput(e.target.value)} className="inline-block w-24 h-5 p-0 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none font-bold" /></li>
               <li>No two advertisements of the same client should appear in the same issue.</li>
               <li>Please quote R.O. No. in all your bills and letters.</li>
               <li>Please send two voucher copies of good reproduction within 3 days of publishing.</li>
@@ -500,7 +501,7 @@ export default function AdOrderForm() {
                             src={stampPreview}
                             alt="Stamp Preview"
                             layout="fill"
-                            objectFit="cover" // Changed from 'contain' to 'cover' for better filling
+                            objectFit="contain" // Changed back to 'contain'
                             objectPosition="center" // Center the image within the container
                             className="p-0" // Ensure no padding interferes
                             unoptimized // Prevents Next.js image optimization from interfering with layout="fill"
