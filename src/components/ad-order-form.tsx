@@ -299,7 +299,7 @@ export default function AdOrderForm() {
                  <div className="flex items-center">
                     <Label htmlFor="orderDate" className="w-20 text-sm shrink-0">Date:</Label>
                      {/* Conditionally render based on client-side mount */}
-                     {isClient && (
+                     {isClient ? (
                          <Popover>
                              <PopoverTrigger asChild>
                              <Button
@@ -323,9 +323,7 @@ export default function AdOrderForm() {
                              />
                              </PopoverContent>
                          </Popover>
-                     )}
-                     {/* Render placeholder or default value on server/initial load */}
-                     {!isClient && (
+                     ) : (
                          <Button
                              variant={"outline"}
                              className={cn(
@@ -335,7 +333,7 @@ export default function AdOrderForm() {
                              disabled
                          >
                              <CalendarIcon className="mr-2 h-4 w-4" />
-                             <span>Loading date...</span>
+                             <span>{format(new Date(), "dd.MM.yyyy")}</span> {/* Display today's date formatted */}
                          </Button>
                      )}
                  </div>
@@ -354,8 +352,27 @@ export default function AdOrderForm() {
             </div>
           </div>
 
+          {/* Advertisement Manager Section - MOVED HERE */}
+            <div className="print-border border-2 border-black rounded p-2 mb-5">
+                <Label className="block mb-1">The Advertisement Manager</Label>
+                <Input
+                    type="text"
+                    placeholder="Line 1"
+                    className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto mb-1"
+                    value={advertisementManagerLine1}
+                    onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
+                />
+                <Input
+                    type="text"
+                    placeholder="Line 2"
+                    className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                    value={advertisementManagerLine2}
+                    onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
+                />
+                 <p className="text-sm mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p> {/* Added text line */}
+            </div>
 
-          {/* Caption & Package */}
+          {/* Caption & Package - MOVED HERE */}
           <div className="flex gap-3 mb-5">
             <div className="flex-1 print-border border-2 border-black rounded p-2">
               <Label htmlFor="caption" className="block mb-1">Heading/Caption:</Label>
@@ -380,26 +397,6 @@ export default function AdOrderForm() {
               />
             </div>
           </div>
-
-          {/* Advertisement Manager Section */}
-            <div className="print-border border-2 border-black rounded p-2 mb-5">
-                <Label className="block mb-1">The Advertisement Manager</Label>
-                <Input
-                    type="text"
-                    placeholder="Line 1"
-                    className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto mb-1"
-                    value={advertisementManagerLine1}
-                    onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
-                />
-                <Input
-                    type="text"
-                    placeholder="Line 2"
-                    className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                    value={advertisementManagerLine2}
-                    onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
-                />
-                 <p className="text-sm mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p> {/* Added text line */}
-            </div>
 
 
           {/* Schedule Table */}
@@ -497,15 +494,16 @@ export default function AdOrderForm() {
                     id="stampFile"
                     />
                  {stampPreview ? (
-                     <div className="relative w-full h-full"> {/* Added relative container */}
+                     <div className="relative w-[100px] h-[100px]"> {/* Static size container */}
                          <Image
                             id="stampPreview"
                             src={stampPreview}
                             alt="Stamp Preview"
                             layout="fill"
-                            objectFit="cover" // Changed from 'contain' to 'cover'
+                            objectFit="cover" // Changed from 'contain' to 'cover' for better filling
                             objectPosition="center" // Center the image within the container
                             className="p-0" // Ensure no padding interferes
+                            unoptimized // Prevents Next.js image optimization from interfering with layout="fill"
                           />
                      </div>
                 ) : (
