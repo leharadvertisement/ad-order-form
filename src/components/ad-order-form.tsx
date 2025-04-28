@@ -349,9 +349,9 @@ export default function AdOrderForm() {
                         id="stampPreview"
                         src={stampPreview}
                         alt="Stamp Preview"
-                        width={100}
-                        height={100}
-                        className="object-contain max-w-[100px] max-h-[100px]"
+                        layout="fill" // Use layout fill to make it responsive
+                        objectFit="contain" // Ensure the image fits within the container without distortion
+                        className="w-full h-full" // Make the image element fill the container
                       />
                 ) : (
                      <Label htmlFor="stampFile" className="text-center text-xs text-muted-foreground cursor-pointer p-1">Click to Upload Stamp</Label>
