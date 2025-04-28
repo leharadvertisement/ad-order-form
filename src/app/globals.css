@@ -153,14 +153,9 @@ body {
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
-    .stamp-container { /* Specifically remove border for stamp container */
+    /* Specific style to remove border from stamp container during print */
+    .print-stamp-container {
         border: none !important;
-        max-width: 180px !important; /* Updated print width */
-        max-height: 150px !important; /* Updated print height */
-        width: 180px !important; /* Force width */
-        height: 150px !important; /* Force height */
-        background-color: white !important; /* Ensure white background for print */
-         overflow: hidden !important; /* Ensure content fits */
     }
      .vertical-label {
         background-color: black !important;

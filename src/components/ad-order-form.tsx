@@ -84,9 +84,11 @@ export default function AdOrderForm() {
         setStampPreview(parsedData.stampPreview || null);
         setRoNumber(parsedData.roNumber || '');
         // Load saved date or default to today if null/invalid
-        const savedDate = parsedData.orderDate ? new Date(parsedData.orderDate) : new Date();
-        // Check if the loaded date is valid, otherwise default to today
-        setOrderDate(isNaN(savedDate.getTime()) ? new Date() : savedDate);
+        const savedDate = parsedData.orderDate ? new Date(parsedData.orderDate) : undefined; // Load as potentially undefined
+        // Only set date if it's valid, otherwise let the isClient effect handle it
+        if (savedDate && !isNaN(savedDate.getTime())) {
+             setOrderDate(savedDate);
+        }
         setClientName(parsedData.clientName || '');
         setAdvertisementManagerLine1(parsedData.advertisementManagerLine1 || ''); // Load Adv Manager Line 1
         setAdvertisementManagerLine2(parsedData.advertisementManagerLine2 || ''); // Load Adv Manager Line 2
@@ -95,18 +97,9 @@ export default function AdOrderForm() {
         //   title: "Draft Recovered",
         //   description: "Previously entered form data has been loaded.",
         // });
-      } else {
-        // If no saved data, ensure date is today's date
-         if (typeof window !== 'undefined') { // Ensure this runs only on client
-          setOrderDate(new Date());
-        }
       }
     } catch (error) {
       console.error("Failed to load data from localStorage:", error);
-      // Default to today's date on error as well
-       if (typeof window !== 'undefined') { // Ensure this runs only on client
-        setOrderDate(new Date());
-      }
       toast({
         title: "Recovery Failed",
         description: "Could not recover previous draft data. Please check console for errors.",
@@ -117,10 +110,18 @@ export default function AdOrderForm() {
     }
   }, [toast]); // Runs only once on client after mount
 
+   // Set initial date to today only on the client after mount, if not recovered
+   useEffect(() => {
+    if (isClient && orderDate === undefined) {
+      setOrderDate(new Date());
+    }
+  }, [isClient, orderDate]);
+
+
   // Save data to localStorage with debounce
   useEffect(() => {
-    // Skip saving during initial load until recovery logic finishes
-    if (isInitialLoadRef.current || !isClient) { // Don't save if not client or initial load pending
+    // Skip saving during initial load until recovery logic finishes AND isClient is true
+    if (isInitialLoadRef.current || !isClient) {
       return;
     }
 
@@ -221,6 +222,7 @@ export default function AdOrderForm() {
   }, []);
 
   const handlePrint = useCallback(() => {
+    // Use window.print() which allows printing or saving as PDF
     window.print();
   }, []);
 
@@ -257,43 +259,42 @@ export default function AdOrderForm() {
 
 
   // Use state for the formatted date string to display
-  const [displayDate, setDisplayDate] = useState<string>('Loading...'); // Initialize with placeholder
+  const [displayDate, setDisplayDate] = useState<string>('Loading date...'); // Initialize with placeholder
 
-  // Effect to update the display date when orderDate changes or on initial load
+  // Effect to update the display date when orderDate changes or on initial client load
   useEffect(() => {
-     // This function now runs only on the client
-    const updateFormattedDate = () => {
-        let dateToFormat: Date | undefined = orderDate;
+    if (!isClient) return; // Don't run on server
 
-        // If orderDate is invalid or null/undefined, use today's date
-        if (!orderDate || isNaN(orderDate.getTime())) {
-            dateToFormat = new Date();
-             // Optionally update the state if it was invalid, but be careful with loops
-             // setOrderDate(dateToFormat); // Uncomment cautiously
-        }
+    let dateToFormat: Date | undefined = orderDate;
 
-        if (dateToFormat) {
-             try {
-                 setDisplayDate(format(dateToFormat, "dd.MM.yyyy"));
-             } catch (error) {
-                 console.error("Error formatting date:", error);
-                 // Fallback to today's date if formatting fails
-                 const today = new Date();
-                 setDisplayDate(format(today, "dd.MM.yyyy"));
-                 // setOrderDate(today); // Attempt to fix state
-             }
-        } else {
-             // Should theoretically not happen if isClient is true due to above logic
-             setDisplayDate("Loading..."); // Fallback for safety
-        }
-    };
-
-    if (isClient) {
-        updateFormattedDate();
+    // If orderDate is still undefined or invalid after potential recovery, use today's date
+    if (!dateToFormat || isNaN(dateToFormat.getTime())) {
+        dateToFormat = new Date();
+        // No need to setOrderDate here, it's handled by the recovery/initialization logic
     }
-     // No 'else' needed here as initial state is 'Loading...'
 
-  }, [orderDate, isClient]); // Depend on orderDate and isClient
+    try {
+        // Format the valid date
+        setDisplayDate(format(dateToFormat, "dd.MM.yyyy"));
+    } catch (error) {
+        console.error("Error formatting date:", error);
+        // Fallback to today's date formatted if error occurs
+        const today = new Date();
+        try {
+             setDisplayDate(format(today, "dd.MM.yyyy"));
+        } catch (formatError) {
+             console.error("Error formatting fallback date:", formatError);
+             setDisplayDate("Invalid Date"); // Fallback display text
+        }
+    }
+
+  }, [orderDate, isClient]); // Depend on orderDate and isClient state
+
+
+  // Render null or a placeholder on the server until client mounts
+  if (!isClient) {
+      return null; // Or a loading skeleton
+  }
 
 
   return (
@@ -302,8 +303,8 @@ export default function AdOrderForm() {
             <Button onClick={handleClearForm} variant="outline">
               <Eraser className="mr-2 h-4 w-4" /> Clear Form & Draft
             </Button>
-            <Button onClick={handlePrint}> {/* This button triggers print */}
-              Print Release Order
+            <Button onClick={handlePrint}> {/* Updated Button Text */}
+              Print / Save as PDF
             </Button>
         </div>
 
@@ -448,22 +449,22 @@ export default function AdOrderForm() {
                 {scheduleRows.map((row) => (
                   <TableRow key={row.id}>
                     <TableCell className="print-border-thin border border-black p-0 print-table-cell">
-                      <Input type="text" value={row.keyNo} onChange={(e) => handleScheduleChange(row.id, 'keyNo', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/> {/* Increased py */}
+                      <Input type="text" value={row.keyNo} onChange={(e) => handleScheduleChange(row.id, 'keyNo', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell">
-                      <Input type="text" value={row.publication} onChange={(e) => handleScheduleChange(row.id, 'publication', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/> {/* Increased py */}
+                      <Input type="text" value={row.publication} onChange={(e) => handleScheduleChange(row.id, 'publication', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell">
-                      <Input type="text" value={row.edition} onChange={(e) => handleScheduleChange(row.id, 'edition', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/> {/* Increased py */}
+                      <Input type="text" value={row.edition} onChange={(e) => handleScheduleChange(row.id, 'edition', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell">
-                      <Input type="text" value={row.size} onChange={(e) => handleScheduleChange(row.id, 'size', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/> {/* Increased py */}
+                      <Input type="text" value={row.size} onChange={(e) => handleScheduleChange(row.id, 'size', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell">
-                      <Input type="text" value={row.scheduledDate} onChange={(e) => handleScheduleChange(row.id, 'scheduledDate', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/> {/* Increased py */}
+                      <Input type="text" value={row.scheduledDate} onChange={(e) => handleScheduleChange(row.id, 'scheduledDate', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell">
-                      <Input type="text" value={row.position} onChange={(e) => handleScheduleChange(row.id, 'position', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/> {/* Increased py */}
+                      <Input type="text" value={row.position} onChange={(e) => handleScheduleChange(row.id, 'position', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -496,7 +497,7 @@ export default function AdOrderForm() {
 
           {/* Billing Info */}
           <div className="print-border rounded p-2 mb-5 border border-black">
-            <p className="font-bold mb-1 border-b-2 border-black inline-block">Forward all bills with relevant voucher copies to:</p>
+             <p className="font-bold mb-1 border-b-2 border-black inline-block pb-px">Forward all bills with relevant voucher copies to:</p>
             <p className="text-sm leading-tight pt-1">
               D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
               Alaknanda Commercial Complex,<br />
@@ -507,8 +508,8 @@ export default function AdOrderForm() {
           </div>
 
           {/* Notes & Stamp */}
-           <div className="relative print-border rounded p-2 pr-[200px] border border-black min-h-[170px] pb-1"> {/* Added pb-1 for bottom padding */}
-            <p className="font-bold mb-1 border-b-2 border-black inline-block">Note:</p>
+           <div className="relative print-border rounded p-2 pr-[200px] border border-black min-h-[170px] pb-1">
+             <p className="font-bold mb-1 border-b-2 border-black inline-block pb-px">Note:</p>
             <ol className="list-decimal list-inside text-sm space-y-1 pt-1">
               <li>Space reserved vide our letter No.</li>
               <li>No two advertisements of the same client should appear in the same issue.</li>
@@ -517,7 +518,7 @@ export default function AdOrderForm() {
             </ol>
              {/* Stamp Area */}
              <div
-                className="stamp-container absolute top-2 right-2 w-[180px] h-[150px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden group border-none"
+                className="stamp-container absolute top-2 right-2 w-[180px] h-[150px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden group border-none print-stamp-container"
                 onClick={triggerStampUpload}
              >
                  <Input
@@ -534,12 +535,12 @@ export default function AdOrderForm() {
                             id="stampPreview"
                             src={stampPreview}
                             alt="Stamp Preview"
-                            width={180} // Static width
-                            height={150} // Static height
-                            style={{ objectFit: 'contain' }} // Ensure image fits within bounds
-                            className="max-w-full max-h-full" // Ensure image respects container bounds
-                            unoptimized // Good for Data URIs
-                            priority // Prioritize loading the stamp image
+                            width={180}
+                            height={150}
+                            style={{ objectFit: 'contain', width: '180px', height: '150px' }}
+                            className="max-w-full max-h-full"
+                            unoptimized
+                            priority
                           />
                           {/* Hover effect - Only show when stampPreview exists */}
                           <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity no-print">
@@ -558,5 +559,3 @@ export default function AdOrderForm() {
     </div>
   );
 }
-
-    
