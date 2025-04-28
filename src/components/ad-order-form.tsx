@@ -34,9 +34,11 @@ interface FormData {
   scheduleRows: ScheduleRow[];
   stampPreview: string | null;
   noteInput: string;
-  roNumber: string; // Added
-  orderDate: string | null; // Changed to string | null to store date string
-  clientName: string; // Added
+  roNumber: string;
+  orderDate: string | null;
+  clientName: string;
+  advertisementManagerLine1: string; // Added for Advertisement Manager
+  advertisementManagerLine2: string; // Added for Advertisement Manager
 }
 
 const LOCAL_STORAGE_KEY = 'adOrderFormData';
@@ -51,9 +53,12 @@ export default function AdOrderForm() {
   ]);
   const [stampPreview, setStampPreview] = useState<string | null>(null);
   const [noteInput, setNoteInput] = useState('');
-  const [roNumber, setRoNumber] = useState(''); // State for R.O.No.LN
-  const [orderDate, setOrderDate] = useState<Date | undefined>(undefined); // State for Date
-  const [clientName, setClientName] = useState(''); // State for Client
+  const [roNumber, setRoNumber] = useState('');
+  const [orderDate, setOrderDate] = useState<Date | undefined>(undefined);
+  const [clientName, setClientName] = useState('');
+  const [advertisementManagerLine1, setAdvertisementManagerLine1] = useState(''); // State for Adv Manager Line 1
+  const [advertisementManagerLine2, setAdvertisementManagerLine2] = useState(''); // State for Adv Manager Line 2
+
 
   const stampFileRef = useRef<HTMLInputElement>(null);
   const printableAreaRef = useRef<HTMLDivElement>(null);
@@ -76,10 +81,11 @@ export default function AdOrderForm() {
         setScheduleRows(loadedRows);
         setStampPreview(parsedData.stampPreview || null);
         setNoteInput(parsedData.noteInput || '');
-        setRoNumber(parsedData.roNumber || ''); // Load R.O.No.LN
-        // Parse the stored date string back into a Date object
+        setRoNumber(parsedData.roNumber || '');
         setOrderDate(parsedData.orderDate ? new Date(parsedData.orderDate) : undefined);
-        setClientName(parsedData.clientName || ''); // Load Client Name
+        setClientName(parsedData.clientName || '');
+        setAdvertisementManagerLine1(parsedData.advertisementManagerLine1 || ''); // Load Adv Manager Line 1
+        setAdvertisementManagerLine2(parsedData.advertisementManagerLine2 || ''); // Load Adv Manager Line 2
         toast({
           title: "Draft Recovered",
           description: "Previously entered form data has been loaded.",
@@ -117,9 +123,10 @@ export default function AdOrderForm() {
           stampPreview,
           noteInput,
           roNumber,
-          // Convert Date object to ISO string for storage, or null if undefined
           orderDate: orderDate ? orderDate.toISOString() : null,
           clientName,
+          advertisementManagerLine1, // Save Adv Manager Line 1
+          advertisementManagerLine2, // Save Adv Manager Line 2
         };
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToSave));
         // console.log("Form data saved to localStorage");
@@ -135,7 +142,7 @@ export default function AdOrderForm() {
       }
     };
     // Add new state variables to dependency array
-  }, [caption, packageName, matter, scheduleRows, stampPreview, noteInput, roNumber, orderDate, clientName]);
+  }, [caption, packageName, matter, scheduleRows, stampPreview, noteInput, roNumber, orderDate, clientName, advertisementManagerLine1, advertisementManagerLine2]);
 
 
   // --- Form Handlers ---
@@ -205,9 +212,11 @@ export default function AdOrderForm() {
     setScheduleRows([{ id: Date.now(), keyNo: '', publication: '', edition: '', size: '', scheduledDate: '', position: '' }]);
     setStampPreview(null);
     setNoteInput('');
-    setRoNumber(''); // Clear R.O.No.LN
-    setOrderDate(undefined); // Clear Date
-    setClientName(''); // Clear Client Name
+    setRoNumber('');
+    setOrderDate(undefined);
+    setClientName('');
+    setAdvertisementManagerLine1(''); // Clear Adv Manager Line 1
+    setAdvertisementManagerLine2(''); // Clear Adv Manager Line 2
     if (stampFileRef.current) {
         stampFileRef.current.value = '';
     }
@@ -325,7 +334,7 @@ export default function AdOrderForm() {
                 id="caption"
                 type="text"
                 placeholder="Enter caption here"
-                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto" // Ensure input height is auto
+                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
                 value={caption}
                 onChange={(e) => setCaption(e.target.value)}
               />
@@ -336,12 +345,31 @@ export default function AdOrderForm() {
                 id="package"
                 type="text"
                 placeholder="Enter package name"
-                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto" // Ensure input height is auto
+                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
                 value={packageName}
                 onChange={(e) => setPackageName(e.target.value)}
               />
             </div>
           </div>
+
+          {/* Advertisement Manager Section */}
+            <div className="print-border border-2 border-black rounded p-2 mb-5">
+                <Label className="block mb-1">The Advertisement Manager</Label>
+                <Input
+                    type="text"
+                    placeholder="Line 1"
+                    className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto mb-1"
+                    value={advertisementManagerLine1}
+                    onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
+                />
+                <Input
+                    type="text"
+                    placeholder="Line 2"
+                    className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                    value={advertisementManagerLine2}
+                    onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
+                />
+            </div>
 
           {/* Schedule Table */}
           <div className="mb-5">
@@ -443,8 +471,9 @@ export default function AdOrderForm() {
                         src={stampPreview}
                         alt="Stamp Preview"
                         layout="fill"
-                        objectFit="contain" // Changed back to contain for better aspect ratio fit
-                        className="p-1"
+                        objectFit="cover" // Ensure image covers the container
+                        objectPosition="center" // Center the image
+                        className="p-0" // Remove padding if any
                       />
                 ) : (
                      <Label htmlFor="stampFile" className="text-center text-xs text-muted-foreground cursor-pointer p-1">Click to Upload Stamp</Label>
@@ -456,3 +485,4 @@ export default function AdOrderForm() {
     </div>
   );
 }
+
