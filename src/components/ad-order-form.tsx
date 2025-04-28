@@ -88,7 +88,9 @@ export default function AdOrderForm() {
         setNoteInput(parsedData.noteInput || '');
         setRoNumber(parsedData.roNumber || '');
         // Load saved date or default to today if null/invalid
-        setOrderDate(parsedData.orderDate ? new Date(parsedData.orderDate) : new Date());
+        const savedDate = parsedData.orderDate ? new Date(parsedData.orderDate) : new Date();
+        // Check if the loaded date is valid, otherwise default to today
+        setOrderDate(isNaN(savedDate.getTime()) ? new Date() : savedDate);
         setClientName(parsedData.clientName || '');
         setAdvertisementManagerLine1(parsedData.advertisementManagerLine1 || ''); // Load Adv Manager Line 1
         setAdvertisementManagerLine2(parsedData.advertisementManagerLine2 || ''); // Load Adv Manager Line 2
@@ -117,7 +119,7 @@ export default function AdOrderForm() {
   // Save data to localStorage with debounce
   useEffect(() => {
     // Skip saving during initial load until recovery logic finishes
-    if (isInitialLoadRef.current) {
+    if (isInitialLoadRef.current || !isClient) { // Don't save if not client or initial load pending
       return;
     }
 
@@ -135,7 +137,7 @@ export default function AdOrderForm() {
           stampPreview,
           noteInput,
           roNumber,
-          orderDate: orderDate ? orderDate.toISOString() : null,
+          orderDate: orderDate && !isNaN(orderDate.getTime()) ? orderDate.toISOString() : null, // Save valid date
           clientName,
           advertisementManagerLine1, // Save Adv Manager Line 1
           advertisementManagerLine2, // Save Adv Manager Line 2
@@ -154,7 +156,7 @@ export default function AdOrderForm() {
       }
     };
     // Add new state variables to dependency array
-  }, [caption, packageName, matter, scheduleRows, stampPreview, noteInput, roNumber, orderDate, clientName, advertisementManagerLine1, advertisementManagerLine2]);
+  }, [caption, packageName, matter, scheduleRows, stampPreview, noteInput, roNumber, orderDate, clientName, advertisementManagerLine1, advertisementManagerLine2, isClient]);
 
 
   // --- Form Handlers ---
@@ -261,7 +263,7 @@ export default function AdOrderForm() {
             </Button>
         </div>
 
-      <Card id="printable-area" ref={printableAreaRef} className="w-full print-border-heavy rounded-none shadow-none p-5">
+      <Card id="printable-area" ref={printableAreaRef} className="w-full print-border-heavy rounded-none shadow-none p-5 border-2 border-black"> {/* Added border-2 border-black */}
         <CardContent className="p-0">
           {/* Header */}
           <div className="text-center bg-black text-white p-1 rounded mb-5 header-title">
@@ -271,7 +273,7 @@ export default function AdOrderForm() {
            {/* Address Boxes */}
           <div className="flex justify-between gap-3 mb-5">
             {/* Left Address Box */}
-            <div className="w-[48%] print-border rounded p-2">
+            <div className="w-[48%] print-border rounded p-2 border border-black"> {/* Ensured border */}
                 <p className="text-sm leading-tight">
                     Lehar Advertising Agency Pvt. Ltd.<br />
                     D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
@@ -282,7 +284,7 @@ export default function AdOrderForm() {
                 </p>
             </div>
             {/* Right Address Box */}
-            <div className="w-[48%] print-border rounded p-2 space-y-2">
+            <div className="w-[48%] print-border rounded p-2 space-y-2 border border-black"> {/* Ensured border */}
                  {/* R.O. No. LN */}
                  <div className="flex items-center">
                      <Label htmlFor="roNumber" className="w-20 text-sm shrink-0">R.O.No.LN:</Label>
@@ -311,7 +313,8 @@ export default function AdOrderForm() {
                                  id="orderDate"
                              >
                                  <CalendarIcon className="mr-2 h-4 w-4" />
-                                 {orderDate ? format(orderDate, "dd.MM.yyyy") : <span>Pick a date</span>}
+                                 {/* Ensure orderDate is valid before formatting */}
+                                 {orderDate && !isNaN(orderDate.getTime()) ? format(orderDate, "dd.MM.yyyy") : <span>Pick a date</span>}
                              </Button>
                              </PopoverTrigger>
                              <PopoverContent className="w-auto p-0 no-print">
@@ -336,7 +339,7 @@ export default function AdOrderForm() {
                              {/* Display a placeholder or server-rendered date safely */}
                              <span suppressHydrationWarning>
                                 {/* Render a non-changing value on the server */}
-                                {typeof window === 'undefined' ? format(new Date(), "dd.MM.yyyy") : (orderDate ? format(orderDate, "dd.MM.yyyy") : "Pick a date")}
+                                {typeof window === 'undefined' ? format(new Date(), "dd.MM.yyyy") : "Loading..."}
                              </span>
                          </Button>
                      )}
@@ -356,8 +359,8 @@ export default function AdOrderForm() {
             </div>
           </div>
 
-          {/* Advertisement Manager Section - MOVED HERE */}
-            <div className="print-border rounded p-2 mb-5">
+          {/* Advertisement Manager Section */}
+            <div className="print-border rounded p-2 mb-5 border border-black"> {/* Ensured border */}
                 <Label className="block mb-1">The Advertisement Manager</Label>
                 <Input
                     type="text"
@@ -376,9 +379,9 @@ export default function AdOrderForm() {
                  <p className="text-sm mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p> {/* Added text line */}
             </div>
 
-          {/* Caption & Package - MOVED HERE */}
+          {/* Caption & Package */}
           <div className="flex gap-3 mb-5">
-            <div className="flex-1 print-border rounded p-2">
+            <div className="flex-1 print-border rounded p-2 border-2 border-black"> {/* Added border-2 border-black */}
               <Label htmlFor="caption" className="block mb-1">Heading/Caption:</Label>
               <Input
                 id="caption"
@@ -389,7 +392,7 @@ export default function AdOrderForm() {
                 onChange={(e) => setCaption(e.target.value)}
               />
             </div>
-            <div className="w-[30%] print-border rounded p-2">
+            <div className="w-[30%] print-border rounded p-2 border-2 border-black"> {/* Added border-2 border-black */}
               <Label htmlFor="package" className="block mb-1">Package:</Label>
               <Input
                 id="package"
@@ -405,7 +408,7 @@ export default function AdOrderForm() {
 
           {/* Schedule Table */}
           <div className="mb-5">
-            <Table className="print-border">
+            <Table className="print-border border border-black"> {/* Ensured border */}
               <TableHeader className="bg-secondary print-table-header">
                 <TableRow>
                   <TableHead className="w-[10%] print-border-thin border border-black p-1.5 text-sm font-bold">Key No.</TableHead>
@@ -452,7 +455,7 @@ export default function AdOrderForm() {
           </div>
 
           {/* Matter Section */}
-          <div className="flex h-[150px] print-border rounded mb-5 overflow-hidden">
+          <div className="flex h-[150px] print-border rounded mb-5 overflow-hidden border border-black"> {/* Ensured border */}
             <div className="vertical-label bg-black text-white flex items-center justify-center p-1" style={{ writingMode: 'vertical-lr', textOrientation: 'mixed' }}>
               <span className="text-base font-bold transform rotate-180">MATTER</span>
             </div>
@@ -467,7 +470,7 @@ export default function AdOrderForm() {
           </div>
 
           {/* Billing Info */}
-          <div className="print-border rounded p-2 mb-5">
+          <div className="print-border rounded p-2 mb-5 border border-black"> {/* Ensured border */}
             <p className="font-bold mb-1">Forward all bills with relevant voucher copies to:</p>
             <p className="text-sm leading-tight">
               D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
@@ -479,16 +482,16 @@ export default function AdOrderForm() {
           </div>
 
           {/* Notes & Stamp */}
-          <div className="relative print-border rounded p-2 pr-[130px]">
+          <div className="relative print-border rounded p-2 pr-[130px] border border-black"> {/* Ensured border */}
             <p className="font-bold mb-1">Note:</p>
             <ol className="list-decimal list-inside text-sm space-y-1">
-              <li>Space reserved vide our letter No.<Input type="text" value={noteInput} onChange={(e) => setNoteInput(e.target.value)} className="inline-block w-24 h-5 p-0 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none font-bold" /></li>
+              <li>Space reserved vide our letter No.<Input type="text" value={noteInput} onChange={(e) => setNoteInput(e.target.value)} className="inline-block w-24 h-5 p-0 border-0 border-b border-black rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none font-bold" /></li>
               <li>No two advertisements of the same client should appear in the same issue.</li>
               <li>Please quote R.O. No. in all your bills and letters.</li>
               <li>Please send two voucher copies of good reproduction within 3 days of publishing.</li>
             </ol>
              {/* Stamp Area */}
-            <div className="stamp-container absolute top-2 right-2 w-[100px] h-[100px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden"> {/* Removed print-border-thin */}
+            <div className="stamp-container absolute top-2 right-2 w-[100px] h-[100px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden"> {/* Removed border */}
                 <Input
                     type="file"
                     ref={stampFileRef}
@@ -505,8 +508,8 @@ export default function AdOrderForm() {
                             alt="Stamp Preview"
                             width={100} // Fixed width
                             height={100} // Fixed height
-                            className="object-contain w-full h-full" // Use object-contain and full width/height
-                            unoptimized
+                            className="object-contain w-full h-full" // Use object-contain
+                            unoptimized // Good for Data URIs
                           />
                      </div>
                 ) : (
