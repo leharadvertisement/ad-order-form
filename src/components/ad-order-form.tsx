@@ -473,7 +473,7 @@ export default function AdOrderForm() {
                         src={stampPreview}
                         alt="Stamp Preview"
                         layout="fill"
-                        objectFit="contain" // Changed from cover to contain
+                        objectFit="fill" // Changed from contain to fill
                         objectPosition="center" // Keep centered
                         className="p-0" // Remove padding if any
                       />
@@ -487,3 +487,4 @@ export default function AdOrderForm() {
     </div>
   );
 }
+
