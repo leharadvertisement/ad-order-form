@@ -303,7 +303,7 @@ export default function AdOrderForm() {
             <Button onClick={handleClearForm} variant="outline">
               <Eraser className="mr-2 h-4 w-4" /> Clear Form & Draft
             </Button>
-            <Button onClick={handlePrint}> {/* Updated Button Text */}
+            <Button onClick={handlePrint}>
               Print / Save as PDF
             </Button>
         </div>
@@ -535,9 +535,9 @@ export default function AdOrderForm() {
                             id="stampPreview"
                             src={stampPreview}
                             alt="Stamp Preview"
-                            width={180}
-                            height={150}
-                            style={{ objectFit: 'contain', width: '180px', height: '150px' }}
+                            width={180} // Static width
+                            height={150} // Static height
+                            style={{ objectFit: 'contain', width: '180px', height: '150px' }} // Ensure consistent size
                             className="max-w-full max-h-full"
                             unoptimized
                             priority
