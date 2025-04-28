@@ -29,6 +29,7 @@ interface FormData {
   matter: string;
   scheduleRows: ScheduleRow[];
   stampPreview: string | null;
+  noteInput: string; // Added for the note input
 }
 
 const LOCAL_STORAGE_KEY = 'adOrderFormData';
@@ -42,6 +43,7 @@ export default function AdOrderForm() {
     { id: Date.now(), keyNo: '', publication: '', edition: '', size: '', scheduledDate: '', position: '' },
   ]);
   const [stampPreview, setStampPreview] = useState<string | null>(null);
+  const [noteInput, setNoteInput] = useState(''); // State for the note input
   const stampFileRef = useRef<HTMLInputElement>(null);
   const printableAreaRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -65,8 +67,9 @@ export default function AdOrderForm() {
           : [{ id: Date.now(), keyNo: '', publication: '', edition: '', size: '', scheduledDate: '', position: '' }];
         setScheduleRows(loadedRows);
         setStampPreview(parsedData.stampPreview || null);
+        setNoteInput(parsedData.noteInput || ''); // Load note input
         toast({
-          title: "Draft Recovered", // Changed toast title
+          title: "Draft Recovered",
           description: "Previously entered form data has been loaded.",
         });
       }
@@ -74,7 +77,7 @@ export default function AdOrderForm() {
       console.error("Failed to load data from localStorage:", error);
       toast({
         title: "Recovery Failed",
-        description: "Could not recover previous draft data. Please check console for errors.", // Updated description
+        description: "Could not recover previous draft data. Please check console for errors.",
         variant: "destructive",
       });
     } finally {
@@ -96,7 +99,7 @@ export default function AdOrderForm() {
 
     debounceTimeoutRef.current = setTimeout(() => {
       try {
-        const dataToSave: FormData = { caption, packageName, matter, scheduleRows, stampPreview };
+        const dataToSave: FormData = { caption, packageName, matter, scheduleRows, stampPreview, noteInput }; // Save note input
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToSave));
          // console.log("Form data saved to localStorage"); // Optional: for debugging
       } catch (error) {
@@ -116,7 +119,7 @@ export default function AdOrderForm() {
         clearTimeout(debounceTimeoutRef.current);
       }
     };
-  }, [caption, packageName, matter, scheduleRows, stampPreview]);
+  }, [caption, packageName, matter, scheduleRows, stampPreview, noteInput]); // Include noteInput in dependency array
 
 
   // --- Form Handlers ---
@@ -185,20 +188,21 @@ export default function AdOrderForm() {
     setMatter('');
     setScheduleRows([{ id: Date.now(), keyNo: '', publication: '', edition: '', size: '', scheduledDate: '', position: '' }]);
     setStampPreview(null);
+    setNoteInput(''); // Clear note input
     if (stampFileRef.current) {
         stampFileRef.current.value = ''; // Clear file input visually
     }
     try {
         localStorage.removeItem(LOCAL_STORAGE_KEY);
         toast({
-            title: "Draft Cleared", // Changed toast title
-            description: "Form data and saved draft have been cleared.", // Changed description
+            title: "Draft Cleared",
+            description: "Form data and saved draft have been cleared.",
         });
     } catch (error) {
         console.error("Failed to clear localStorage:", error);
          toast({
             title: "Clear Error",
-            description: "Could not clear stored draft data.", // Changed description
+            description: "Could not clear stored draft data.",
             variant: "destructive",
         });
     }
@@ -223,6 +227,25 @@ export default function AdOrderForm() {
           <div className="text-center bg-black text-white p-1 rounded mb-5 header-title">
             <h1 className="text-2xl m-0 font-bold">RELEASE ORDER</h1>
           </div>
+
+           {/* Address Boxes */}
+          <div className="flex justify-between gap-3 mb-5">
+            <div className="w-[48%] print-border border-2 border-black rounded p-2">
+                <p className="text-sm leading-tight">
+                    Lehar Advertising Agency Pvt. Ltd.<br />
+                    D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
+                    Alaknanda Commercial Complex,<br />
+                    New Delhi-110019<br />
+                    Tel: 49573333, 34, 35, 36<br />
+                    Fax: 26028101
+                </p>
+            </div>
+            <div className="w-[48%] print-border border-2 border-black rounded p-2">
+                 {/* Placeholder for the right address box - can be filled later */}
+                 <p className="text-sm leading-tight text-muted-foreground">[Recipient Address Area]</p>
+            </div>
+          </div>
+
 
           {/* Caption & Package */}
           <div className="flex gap-3 mb-5">
@@ -329,7 +352,7 @@ export default function AdOrderForm() {
           <div className="relative print-border border-2 border-black rounded p-2 pr-[130px]">
             <p className="font-bold mb-1">Note:</p>
             <ol className="list-decimal list-inside text-sm space-y-1">
-              <li>Space reserved vide our letter No. <Input type="text" className="inline-block w-24 h-5 p-0 border-0 border-b border-black rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none font-bold" /></li>
+              <li>Space reserved vide our letter No. <Input type="text" value={noteInput} onChange={(e) => setNoteInput(e.target.value)} className="inline-block w-24 h-5 p-0 border-0 border-b border-black rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none font-bold" /></li>
               <li>No two advertisements of the same client should appear in the same issue.</li>
               <li>Please quote R.O. No. in all your bills and letters.</li>
               <li>Please send two voucher copies of good reproduction within 3 days of publishing.</li>
@@ -350,8 +373,8 @@ export default function AdOrderForm() {
                         src={stampPreview}
                         alt="Stamp Preview"
                         layout="fill" // Use fill to stretch the image within the container
-                        objectFit="contain" // Scale the image to fit while preserving aspect ratio
-                        className="p-1" // Add padding if needed to ensure it doesn't touch edges
+                        objectFit="cover" // Changed from "contain" to "cover"
+                        className="p-1" // Optional padding
                       />
                 ) : (
                      <Label htmlFor="stampFile" className="text-center text-xs text-muted-foreground cursor-pointer p-1">Click to Upload Stamp</Label>
