@@ -286,9 +286,9 @@ export default function AdOrderForm() {
                 <div className="w-[48%] h-24 bg-muted rounded animate-pulse"></div> {/* Left Address placeholder */}
                 <div className="w-[48%] h-24 bg-muted rounded animate-pulse"></div> {/* Right Box placeholder */}
             </div>
-             <div className="h-16 bg-muted rounded animate-pulse"></div> {/* Heading placeholder */}
-             <div className="h-16 bg-muted rounded animate-pulse"></div> {/* Package placeholder */}
-            <div className="h-24 bg-muted rounded animate-pulse"></div> {/* Ad Manager placeholder */}
+             <div className="h-16 bg-muted rounded animate-pulse"></div> {/* Ad Manager placeholder */}
+            <div className="h-16 bg-muted rounded animate-pulse"></div> {/* Heading placeholder */}
+            <div className="h-16 bg-muted rounded animate-pulse"></div> {/* Package placeholder */}
             <div className="h-48 bg-muted rounded animate-pulse"></div> {/* Table placeholder */}
             <div className="h-36 bg-muted rounded animate-pulse"></div> {/* Matter placeholder */}
             <div className="h-24 bg-muted rounded animate-pulse"></div> {/* Billing placeholder */}
@@ -305,8 +305,8 @@ export default function AdOrderForm() {
         <Button onClick={handleClearForm} variant="outline">
           <Eraser className="mr-2 h-4 w-4" /> Clear Form & Draft
         </Button>
-         <Button onClick={handlePrint} variant="default"> {/* Changed from handleDownloadPdf to handlePrint */}
-           <Printer className="mr-2 h-4 w-4" /> Print Release Order {/* Changed icon and text */}
+         <Button onClick={handlePrint} variant="default">
+           <Printer className="mr-2 h-4 w-4" /> Print Release Order
          </Button>
       </div>
 
@@ -405,32 +405,6 @@ export default function AdOrderForm() {
             </div>
           </div>
 
-           {/* Heading & Package Section */}
-             <div className="heading-package-container flex gap-3 mb-5">
-             <div className="heading-caption-box flex-1 print-border-heavy rounded p-2 border-2 border-black">
-              <Label htmlFor="caption" className="block mb-1">Heading/Caption:</Label>
-              <Input
-                id="caption"
-                type="text"
-                placeholder="Enter caption here"
-                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                value={caption}
-                onChange={(e) => setCaption(e.target.value)}
-              />
-            </div>
-             <div className="package-box w-[30%] print-border-heavy rounded p-2 border-2 border-black">
-              <Label htmlFor="package" className="block mb-1">Package:</Label>
-              <Input
-                id="package" // Use unique ID
-                type="text"
-                placeholder="Enter package name"
-                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                value={packageName}
-                onChange={(e) => setPackageName(e.target.value)}
-              />
-            </div>
-          </div>
-
             {/* Advertisement Manager Section */}
            <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
              <Label className="block mb-1">The Advertisement Manager</Label>
@@ -457,9 +431,34 @@ export default function AdOrderForm() {
              <p className="text-sm mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
            </div>
 
+             {/* Heading & Package Section */}
+               <div className="heading-package-container flex gap-3 mb-5">
+               <div className="heading-caption-box flex-1 print-border-heavy rounded p-2 border-2 border-black">
+                <Label htmlFor="caption" className="block mb-1">Heading/Caption:</Label>
+                <Input
+                  id="caption"
+                  type="text"
+                  placeholder="Enter caption here"
+                  className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                  value={caption}
+                  onChange={(e) => setCaption(e.target.value)}
+                />
+              </div>
+               <div className="package-box w-[30%] print-border-heavy rounded p-2 border-2 border-black">
+                <Label htmlFor="package" className="block mb-1">Package:</Label>
+                <Input
+                  id="package" // Use unique ID
+                  type="text"
+                  placeholder="Enter package name"
+                  className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                  value={packageName}
+                  onChange={(e) => setPackageName(e.target.value)}
+                />
+              </div>
+            </div>
 
           {/* Schedule Table */}
-           <div className="mb-5 table-container-print"> {/* Ensure this class is used for print adjustments */}
+           <div className="mb-5 table-container-print">
              <Table className="print-table print-border border border-black">
               <TableHeader className="bg-secondary print-table-header">
                 <TableRow>
@@ -474,23 +473,23 @@ export default function AdOrderForm() {
               <TableBody>
                 {scheduleRows.map((row) => (
                   <TableRow key={row.id}>
-                    {/* Adjusted height using min-h class */}
-                    <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[60px] h-[60px] align-top"> {/* Increased min-h and h */}
+                    {/* Adjusted height using min-h class and h-20 */}
+                    <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[80px] h-[80px] align-top">
                       <Input id={`keyNo-${row.id}`} type="text" value={row.keyNo} onChange={(e) => handleScheduleChange(row.id, 'keyNo', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[60px] h-[60px] align-top"> {/* Increased min-h and h */}
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[80px] h-[80px] align-top">
                       <Input id={`publication-${row.id}`} type="text" value={row.publication} onChange={(e) => handleScheduleChange(row.id, 'publication', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[60px] h-[60px] align-top"> {/* Increased min-h and h */}
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[80px] h-[80px] align-top">
                       <Input id={`edition-${row.id}`} type="text" value={row.edition} onChange={(e) => handleScheduleChange(row.id, 'edition', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[60px] h-[60px] align-top"> {/* Increased min-h and h */}
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[80px] h-[80px] align-top">
                       <Input id={`size-${row.id}`} type="text" value={row.size} onChange={(e) => handleScheduleChange(row.id, 'size', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[60px] h-[60px] align-top"> {/* Increased min-h and h */}
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[80px] h-[80px] align-top">
                       <Input id={`scheduledDate-${row.id}`} type="text" value={row.scheduledDate} onChange={(e) => handleScheduleChange(row.id, 'scheduledDate', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[60px] h-[60px] align-top"> {/* Increased min-h and h */}
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[80px] h-[80px] align-top">
                       <Input id={`position-${row.id}`} type="text" value={row.position} onChange={(e) => handleScheduleChange(row.id, 'position', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
                     </TableCell>
                   </TableRow>
@@ -509,7 +508,7 @@ export default function AdOrderForm() {
 
           {/* Matter Section */}
           <div className="matter-box flex h-[150px] print-border-heavy rounded mb-5 overflow-hidden border-2 border-black">
-             <div className="vertical-label bg-black text-white flex items-center justify-center p-1 w-8"> {/* Adjust width as needed */}
+             <div className="vertical-label bg-black text-white flex items-center justify-center p-1 w-8">
               <span className="text-base font-bold whitespace-nowrap" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)' }}>MATTER</span>
              </div>
             <div className="matter-content flex-1 p-1">
@@ -536,7 +535,7 @@ export default function AdOrderForm() {
           </div>
 
           {/* Notes & Stamp Container */}
-           <div className="notes-stamp-container relative flex gap-3 mb-5 items-start print-border rounded p-2 border border-black min-h-[150px]"> {/* Added print-border */}
+           <div className="notes-stamp-container relative print-border rounded p-2 border border-black min-h-[150px]">
                {/* Notes Section */}
                <div className="notes-content flex-1 pr-[190px]"> {/* Added padding to avoid overlap */}
                  <p className="font-bold mb-1 note-title-underline">Note:</p>
@@ -551,7 +550,7 @@ export default function AdOrderForm() {
                {/* Stamp Area - Positioned absolutely within the notes container */}
                <div
                   id="stampContainerElement"
-                  className="stamp-container absolute top-2 right-2 w-[180px] h-[142px] flex items-center justify-center cursor-pointer overflow-hidden group border-none" // Border removed here
+                  className="stamp-container absolute top-2 right-2 w-[180px] h-[142px] flex items-center justify-center cursor-pointer overflow-hidden group border-none" // Border removed for the container itself
                   onClick={triggerStampUpload}
                   onMouseEnter={triggerStampUpload}
                >
@@ -570,10 +569,10 @@ export default function AdOrderForm() {
                               id="stampPreviewScreen"
                               src={stampPreview}
                               alt="Stamp Preview"
-                              width={180} // Explicit width
-                              height={142} // Explicit height to match container
-                              style={{ objectFit: 'contain', width: '100%', height: '100%' }} // Use contain and 100%
-                              className="block" // Ensure it's block for layout
+                              width={180}
+                              height={142}
+                              style={{ objectFit: 'contain', width: '100%', height: '100%' }}
+                              className="block"
                             />
                             {/* Hover effect */}
                             <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity no-print">
@@ -585,16 +584,16 @@ export default function AdOrderForm() {
                            Click or Hover<br/> to Upload Stamp
                        </Label>
                   )}
-                   {/* Visible Stamp Image for Print (Ensure it respects container bounds) */}
+                   {/* Visible Stamp Image for Print */}
                    {stampPreview && (
                      <div className="absolute inset-0 hidden print-only-block">
                        <Image
                           src={stampPreview}
                           alt="Stamp"
-                          width={180} // Match container width
-                          height={142} // Match container height
+                          width={180}
+                          height={142}
                           style={{ objectFit: 'contain', width: '100%', height: '100%' }}
-                          className="block" // Ensure it's block
+                          className="block"
                         />
                      </div>
                    )}
