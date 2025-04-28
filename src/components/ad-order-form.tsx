@@ -331,7 +331,7 @@ export default function AdOrderForm() {
                         id="roNumber"
                         type="text"
                         placeholder="Enter R.O. No."
-                        className="flex-1 h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
+                        className="flex-1 h-6 border-0 border-b-2 border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
                         value={roNumber}
                         onChange={(e) => setRoNumber(e.target.value)}
                     />
@@ -344,7 +344,7 @@ export default function AdOrderForm() {
                          <Button
                              variant={"outline"}
                              className={cn(
-                             "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none",
+                             "flex-1 justify-start text-left font-bold h-6 border-0 border-b-2 border-black rounded-none px-1 py-0.5 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none",
                              !orderDate && "text-muted-foreground"
                              )}
                              id="orderDate"
@@ -371,7 +371,7 @@ export default function AdOrderForm() {
                         id="clientName"
                         type="text"
                         placeholder="Enter Client Name"
-                        className="flex-1 h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
+                        className="flex-1 h-6 border-0 border-b-2 border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
                         value={clientName}
                         onChange={(e) => setClientName(e.target.value)}
                     />
@@ -385,14 +385,14 @@ export default function AdOrderForm() {
                 <Input
                     type="text"
                     placeholder="Line 1"
-                    className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto mb-1"
+                    className="w-full border-0 border-b-2 border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto mb-1"
                     value={advertisementManagerLine1}
                     onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
                 />
                 <Input
                     type="text"
                     placeholder="Line 2"
-                    className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                    className="w-full border-0 border-b-2 border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
                     value={advertisementManagerLine2}
                     onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
                 />
@@ -407,7 +407,7 @@ export default function AdOrderForm() {
                 id="caption"
                 type="text"
                 placeholder="Enter caption here"
-                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                className="w-full border-0 border-b-2 border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
                 value={caption}
                 onChange={(e) => setCaption(e.target.value)}
               />
@@ -418,7 +418,7 @@ export default function AdOrderForm() {
                 id="package"
                 type="text"
                 placeholder="Enter package name"
-                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                className="w-full border-0 border-b-2 border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
                 value={packageName}
                 onChange={(e) => setPackageName(e.target.value)}
               />
@@ -491,7 +491,7 @@ export default function AdOrderForm() {
 
           {/* Billing Info */}
           <div className="print-border rounded p-2 mb-5 border border-black">
-            <p className="font-bold mb-1 border-b border-black inline-block">Forward all bills with relevant voucher copies to:</p>
+            <p className="font-bold mb-1 border-b-2 border-black inline-block">Forward all bills with relevant voucher copies to:</p>
             <p className="text-sm leading-tight pt-1">
               D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
               Alaknanda Commercial Complex,<br />
@@ -503,7 +503,7 @@ export default function AdOrderForm() {
 
           {/* Notes & Stamp */}
            <div className="relative print-border rounded p-2 pr-[200px] border border-black min-h-[170px] pb-1"> {/* Added pb-1 for bottom padding */}
-            <p className="font-bold mb-1 border-b border-black inline-block">Note:</p>
+            <p className="font-bold mb-1 border-b-2 border-black inline-block">Note:</p>
             <ol className="list-decimal list-inside text-sm space-y-1 pt-1">
               <li>Space reserved vide our letter No.</li>
               <li>No two advertisements of the same client should appear in the same issue.</li>
@@ -512,7 +512,7 @@ export default function AdOrderForm() {
             </ol>
              {/* Stamp Area */}
              <div
-                className="stamp-container absolute top-2 right-2 w-[180px] h-[150px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden group" /* Removed border-none */
+                className="stamp-container absolute top-2 right-2 w-[180px] h-[150px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden group"
                 onClick={triggerStampUpload}
              >
                  <Input
@@ -531,7 +531,7 @@ export default function AdOrderForm() {
                             alt="Stamp Preview"
                             width={180} // Explicit width
                             height={150} // Explicit height
-                            style={{ objectFit: 'contain', width: '100%', height: '100%' }} // Use contain and ensure it fills the container
+                            style={{ objectFit: 'contain', width: '180px', height: '150px' }} // Force static size
                             unoptimized // Good for Data URIs
                             priority // Prioritize loading the stamp image
                           />
