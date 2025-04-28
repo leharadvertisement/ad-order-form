@@ -9,9 +9,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
-import { PlusCircle, Trash2, Eraser } from 'lucide-react'; // Added Eraser icon
+import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils'; // Import cn utility
 
 interface ScheduleRow {
   id: number;
@@ -29,7 +33,10 @@ interface FormData {
   matter: string;
   scheduleRows: ScheduleRow[];
   stampPreview: string | null;
-  noteInput: string; // Added for the note input
+  noteInput: string;
+  roNumber: string; // Added
+  orderDate: string | null; // Changed to string | null to store date string
+  clientName: string; // Added
 }
 
 const LOCAL_STORAGE_KEY = 'adOrderFormData';
@@ -43,16 +50,18 @@ export default function AdOrderForm() {
     { id: Date.now(), keyNo: '', publication: '', edition: '', size: '', scheduledDate: '', position: '' },
   ]);
   const [stampPreview, setStampPreview] = useState<string | null>(null);
-  const [noteInput, setNoteInput] = useState(''); // State for the note input
+  const [noteInput, setNoteInput] = useState('');
+  const [roNumber, setRoNumber] = useState(''); // State for R.O.No.LN
+  const [orderDate, setOrderDate] = useState<Date | undefined>(undefined); // State for Date
+  const [clientName, setClientName] = useState(''); // State for Client
+
   const stampFileRef = useRef<HTMLInputElement>(null);
   const printableAreaRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const isInitialLoadRef = useRef(true); // Ref to track initial load
+  const isInitialLoadRef = useRef(true);
 
   // --- Data Recovery Logic ---
-
-  // Load data from localStorage on mount
   useEffect(() => {
     try {
       const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -61,13 +70,16 @@ export default function AdOrderForm() {
         setCaption(parsedData.caption || '');
         setPackageName(parsedData.packageName || '');
         setMatter(parsedData.matter || '');
-        // Ensure scheduleRows is an array and has at least one row
         const loadedRows = Array.isArray(parsedData.scheduleRows) && parsedData.scheduleRows.length > 0
           ? parsedData.scheduleRows
           : [{ id: Date.now(), keyNo: '', publication: '', edition: '', size: '', scheduledDate: '', position: '' }];
         setScheduleRows(loadedRows);
         setStampPreview(parsedData.stampPreview || null);
-        setNoteInput(parsedData.noteInput || ''); // Load note input
+        setNoteInput(parsedData.noteInput || '');
+        setRoNumber(parsedData.roNumber || ''); // Load R.O.No.LN
+        // Parse the stored date string back into a Date object
+        setOrderDate(parsedData.orderDate ? new Date(parsedData.orderDate) : undefined);
+        setClientName(parsedData.clientName || ''); // Load Client Name
         toast({
           title: "Draft Recovered",
           description: "Previously entered form data has been loaded.",
@@ -81,14 +93,12 @@ export default function AdOrderForm() {
         variant: "destructive",
       });
     } finally {
-       isInitialLoadRef.current = false; // Mark initial load as complete
+      isInitialLoadRef.current = false;
     }
-  }, [toast]); // Only run on mount
-
+  }, [toast]);
 
   // Save data to localStorage with debounce
   useEffect(() => {
-    // Skip saving during the initial load before data is potentially recovered
     if (isInitialLoadRef.current) {
       return;
     }
@@ -99,27 +109,33 @@ export default function AdOrderForm() {
 
     debounceTimeoutRef.current = setTimeout(() => {
       try {
-        const dataToSave: FormData = { caption, packageName, matter, scheduleRows, stampPreview, noteInput }; // Save note input
+        const dataToSave: FormData = {
+          caption,
+          packageName,
+          matter,
+          scheduleRows,
+          stampPreview,
+          noteInput,
+          roNumber,
+          // Convert Date object to ISO string for storage, or null if undefined
+          orderDate: orderDate ? orderDate.toISOString() : null,
+          clientName,
+        };
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToSave));
-         // console.log("Form data saved to localStorage"); // Optional: for debugging
+        // console.log("Form data saved to localStorage");
       } catch (error) {
         console.error("Failed to save data to localStorage:", error);
-        // Optionally notify user, but might be too noisy
-        // toast({
-        //   title: "Save Failed",
-        //   description: "Could not save form progress automatically.",
-        //   variant: "destructive",
-        // });
+        // Optionally notify user
       }
     }, DEBOUNCE_DELAY);
 
-    // Cleanup function to clear timeout if component unmounts
     return () => {
       if (debounceTimeoutRef.current) {
         clearTimeout(debounceTimeoutRef.current);
       }
     };
-  }, [caption, packageName, matter, scheduleRows, stampPreview, noteInput]); // Include noteInput in dependency array
+    // Add new state variables to dependency array
+  }, [caption, packageName, matter, scheduleRows, stampPreview, noteInput, roNumber, orderDate, clientName]);
 
 
   // --- Form Handlers ---
@@ -155,8 +171,8 @@ export default function AdOrderForm() {
       const reader = new FileReader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
-        setStampPreview(result); // Update state first
-         toast({
+        setStampPreview(result);
+        toast({
             title: "Stamp Uploaded",
             description: "Stamp image successfully uploaded.",
          });
@@ -188,9 +204,12 @@ export default function AdOrderForm() {
     setMatter('');
     setScheduleRows([{ id: Date.now(), keyNo: '', publication: '', edition: '', size: '', scheduledDate: '', position: '' }]);
     setStampPreview(null);
-    setNoteInput(''); // Clear note input
+    setNoteInput('');
+    setRoNumber(''); // Clear R.O.No.LN
+    setOrderDate(undefined); // Clear Date
+    setClientName(''); // Clear Client Name
     if (stampFileRef.current) {
-        stampFileRef.current.value = ''; // Clear file input visually
+        stampFileRef.current.value = '';
     }
     try {
         localStorage.removeItem(LOCAL_STORAGE_KEY);
@@ -230,6 +249,7 @@ export default function AdOrderForm() {
 
            {/* Address Boxes */}
           <div className="flex justify-between gap-3 mb-5">
+            {/* Left Address Box */}
             <div className="w-[48%] print-border border-2 border-black rounded p-2">
                 <p className="text-sm leading-tight">
                     Lehar Advertising Agency Pvt. Ltd.<br />
@@ -240,9 +260,59 @@ export default function AdOrderForm() {
                     Fax: 26028101
                 </p>
             </div>
-            <div className="w-[48%] print-border border-2 border-black rounded p-2">
-                 {/* Placeholder for the right address box - can be filled later */}
-                 <p className="text-sm leading-tight text-muted-foreground">[Recipient Address Area]</p>
+            {/* Right Address Box */}
+            <div className="w-[48%] print-border border-2 border-black rounded p-2 space-y-2">
+                 {/* R.O. No. LN */}
+                 <div className="flex items-center">
+                     <Label htmlFor="roNumber" className="w-20 text-sm shrink-0">R.O.No.LN:</Label>
+                     <Input
+                        id="roNumber"
+                        type="text"
+                        placeholder="Enter R.O. No."
+                        className="flex-1 h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
+                        value={roNumber}
+                        onChange={(e) => setRoNumber(e.target.value)}
+                    />
+                 </div>
+                 {/* Date */}
+                 <div className="flex items-center">
+                    <Label htmlFor="orderDate" className="w-20 text-sm shrink-0">Date:</Label>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                        <Button
+                            variant={"outline"}
+                            className={cn(
+                            "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none",
+                            !orderDate && "text-muted-foreground"
+                            )}
+                            id="orderDate"
+                        >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {orderDate ? format(orderDate, "PPP") : <span>Pick a date</span>}
+                        </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 no-print">
+                        <Calendar
+                            mode="single"
+                            selected={orderDate}
+                            onSelect={setOrderDate}
+                            initialFocus
+                        />
+                        </PopoverContent>
+                    </Popover>
+                 </div>
+                  {/* Client */}
+                 <div className="flex items-center">
+                     <Label htmlFor="clientName" className="w-20 text-sm shrink-0">Client:</Label>
+                     <Input
+                        id="clientName"
+                        type="text"
+                        placeholder="Enter Client Name"
+                        className="flex-1 h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
+                        value={clientName}
+                        onChange={(e) => setClientName(e.target.value)}
+                    />
+                 </div>
             </div>
           </div>
 
@@ -255,7 +325,7 @@ export default function AdOrderForm() {
                 id="caption"
                 type="text"
                 placeholder="Enter caption here"
-                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
+                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto" // Ensure input height is auto
                 value={caption}
                 onChange={(e) => setCaption(e.target.value)}
               />
@@ -266,7 +336,7 @@ export default function AdOrderForm() {
                 id="package"
                 type="text"
                 placeholder="Enter package name"
-                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
+                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto" // Ensure input height is auto
                 value={packageName}
                 onChange={(e) => setPackageName(e.target.value)}
               />
@@ -372,9 +442,9 @@ export default function AdOrderForm() {
                         id="stampPreview"
                         src={stampPreview}
                         alt="Stamp Preview"
-                        layout="fill" // Use fill to stretch the image within the container
-                        objectFit="cover" // Changed from "contain" to "cover"
-                        className="p-1" // Optional padding
+                        layout="fill"
+                        objectFit="contain" // Changed back to contain for better aspect ratio fit
+                        className="p-1"
                       />
                 ) : (
                      <Label htmlFor="stampFile" className="text-center text-xs text-muted-foreground cursor-pointer p-1">Click to Upload Stamp</Label>
@@ -386,4 +456,3 @@ export default function AdOrderForm() {
     </div>
   );
 }
-
