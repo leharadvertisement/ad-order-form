@@ -488,17 +488,17 @@ export default function AdOrderForm() {
           </div>
 
           {/* Notes & Stamp */}
-           <div className="relative print-border rounded p-2 pr-[170px] border border-black"> {/* Adjusted right padding for wider stamp */}
+           <div className="relative print-border rounded p-2 pr-[190px] border border-black"> {/* Adjusted right padding for wider stamp */}
             <p className="font-bold mb-1">Note:</p>
             <ol className="list-decimal list-inside text-sm space-y-1">
-              <li>Space reserved vide our letter No.<Input type="text" value={noteInput} onChange={(e) => setNoteInput(e.target.value)} className="inline-block w-24 h-5 p-0 border-0 border-b border-black rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none font-bold" /></li>
+              <li>Space reserved vide our letter No. <Input type="text" value={noteInput} onChange={(e) => setNoteInput(e.target.value)} className="inline-block w-24 h-5 p-0 border-0 border-b border-black rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none font-bold" /></li>
               <li>No two advertisements of the same client should appear in the same issue.</li>
               <li>Please quote R.O. No. in all your bills and letters.</li>
               <li>Please send two voucher copies of good reproduction within 3 days of publishing.</li>
             </ol>
              {/* Stamp Area - Increased size, click triggers upload */}
             <div
-                className="stamp-container absolute top-2 right-2 w-[150px] h-[120px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden border-none" /* Increased width, kept height */
+                className="stamp-container absolute top-2 right-2 w-[170px] h-[120px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden border-none group" /* Increased width, kept height, add group */
                 onClick={triggerStampUpload} /* Trigger upload on container click */
              >
                 <Input
@@ -515,12 +515,16 @@ export default function AdOrderForm() {
                             id="stampPreview"
                             src={stampPreview}
                             alt="Stamp Preview"
-                            width={150} // Increased width to match container
+                            width={170} // Increased width to match container
                             height={120} // Kept height
                             className="object-contain w-full h-full" // Use object-contain to fit image within bounds
                             unoptimized // Good for Data URIs
                             priority // Prioritize loading the stamp image
                           />
+                         {/* Hover effect - Only show when stampPreview exists */}
+                          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity no-print">
+                            <span className="text-white text-xs font-bold">Click to Change</span>
+                          </div>
                      </div>
                 ) : (
                      <Label htmlFor="stampFile" className="text-center text-xs text-muted-foreground cursor-pointer p-1 no-print group-hover:opacity-75 transition-opacity">

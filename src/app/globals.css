@@ -155,10 +155,10 @@ body {
     }
     .stamp-container { /* Specifically remove border for stamp container */
         border: none !important;
-        max-width: 100px !important;
-        max-height: 100px !important;
-        width: 100px !important; /* Force width */
-        height: 100px !important; /* Force height */
+        max-width: 170px !important; /* Updated print width */
+        max-height: 120px !important;
+        width: 170px !important; /* Force width */
+        height: 120px !important; /* Force height */
     }
      .vertical-label {
         background-color: black !important;
@@ -180,5 +180,13 @@ body {
       .print-table-cell {
         border: 1px solid black !important;
       }
+       /* Hide hover effect on print */
+      .group-hover\:opacity-100 {
+        opacity: 1 !important; /* Ensure image is visible */
+      }
+      .group:hover .group-hover\:opacity-100 { /* Target hover state explicitly */
+         opacity: 0 !important;
+      }
+
   }
 }
