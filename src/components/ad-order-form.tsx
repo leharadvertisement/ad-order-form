@@ -66,9 +66,13 @@ export default function AdOrderForm() {
   const { toast } = useToast();
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isInitialLoadRef = useRef(true);
+  const [isClient, setIsClient] = useState(false); // State to track client-side mounting
 
   // --- Data Recovery Logic ---
   useEffect(() => {
+    // Indicate client-side has mounted
+    setIsClient(true);
+
     try {
       const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (savedData) {
@@ -294,29 +298,46 @@ export default function AdOrderForm() {
                  {/* Date */}
                  <div className="flex items-center">
                     <Label htmlFor="orderDate" className="w-20 text-sm shrink-0">Date:</Label>
-                    <Popover>
-                        <PopoverTrigger asChild>
-                        <Button
-                            variant={"outline"}
-                            className={cn(
-                            "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none",
-                            !orderDate && "text-muted-foreground"
-                            )}
-                            id="orderDate"
-                        >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {orderDate ? format(orderDate, "dd.MM.yyyy") : <span>Pick a date</span>}
-                        </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 no-print">
-                        <Calendar
-                            mode="single"
-                            selected={orderDate}
-                            onSelect={setOrderDate}
-                            initialFocus
-                        />
-                        </PopoverContent>
-                    </Popover>
+                     {/* Conditionally render based on client-side mount */}
+                     {isClient && (
+                         <Popover>
+                             <PopoverTrigger asChild>
+                             <Button
+                                 variant={"outline"}
+                                 className={cn(
+                                 "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none",
+                                 !orderDate && "text-muted-foreground"
+                                 )}
+                                 id="orderDate"
+                             >
+                                 <CalendarIcon className="mr-2 h-4 w-4" />
+                                 {orderDate ? format(orderDate, "dd.MM.yyyy") : <span>Pick a date</span>}
+                             </Button>
+                             </PopoverTrigger>
+                             <PopoverContent className="w-auto p-0 no-print">
+                             <Calendar
+                                 mode="single"
+                                 selected={orderDate}
+                                 onSelect={setOrderDate}
+                                 initialFocus
+                             />
+                             </PopoverContent>
+                         </Popover>
+                     )}
+                     {/* Render placeholder or default value on server/initial load */}
+                     {!isClient && (
+                         <Button
+                             variant={"outline"}
+                             className={cn(
+                             "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none text-muted-foreground"
+                             )}
+                             id="orderDate"
+                             disabled
+                         >
+                             <CalendarIcon className="mr-2 h-4 w-4" />
+                             <span>Loading date...</span>
+                         </Button>
+                     )}
                  </div>
                   {/* Client */}
                  <div className="flex items-center">
@@ -482,10 +503,9 @@ export default function AdOrderForm() {
                             src={stampPreview}
                             alt="Stamp Preview"
                             layout="fill"
-                            objectFit="contain" // Ensure the image fits within the container without cropping
+                            objectFit="cover" // Changed from 'contain' to 'cover'
                             objectPosition="center" // Center the image within the container
                             className="p-0" // Ensure no padding interferes
-                            unoptimized // Added to potentially help with hydration if next/image optimizations cause issues, review if needed
                           />
                      </div>
                 ) : (
@@ -498,4 +518,3 @@ export default function AdOrderForm() {
     </div>
   );
 }
-
