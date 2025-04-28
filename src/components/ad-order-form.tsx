@@ -9,15 +9,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
-import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon } from 'lucide-react'; // Removed FileDown
+import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon } from 'lucide-react'; // Removed FileDown icon
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-// Removed jsPDF and html2canvas imports
-
+// Removed html-docx-js and saveAs imports
 
 interface ScheduleRow {
   id: number;
@@ -60,7 +59,7 @@ export default function AdOrderForm() {
   const [advertisementManagerLine2, setAdvertisementManagerLine2] = useState('');
 
   const stampFileRef = useRef<HTMLInputElement>(null);
-  // Removed printableAreaRef
+  const printableAreaRef = useRef<HTMLDivElement>(null); // Ref for the printable area
   const { toast } = useToast();
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isInitialLoadRef = useRef(true);
@@ -219,7 +218,7 @@ export default function AdOrderForm() {
     stampFileRef.current?.click();
   }, []);
 
-  // Removed handleDownloadPdf and related logic
+  // Removed handleDownloadWordDoc function
 
   const handleClearForm = useCallback(() => {
     setCaption('');
@@ -267,11 +266,11 @@ export default function AdOrderForm() {
         <Button onClick={handleClearForm} variant="outline">
           <Eraser className="mr-2 h-4 w-4" /> Clear Form & Draft
         </Button>
-         {/* PDF Download Button removed */}
+         {/* Download Word Doc Button removed */}
       </div>
 
       {/* Printable Area */}
-      <Card id="printable-area" className="w-full print-border-heavy rounded-none shadow-none p-5 border-2 border-black"> {/* Removed ref */}
+      <Card id="printable-area" ref={printableAreaRef} className="w-full print-border-heavy rounded-none shadow-none p-5 border-2 border-black"> {/* Added ref */}
         <CardContent className="p-0">
           {/* Header */}
           <div className="text-center bg-black text-white p-1 mb-5 header-title">
@@ -316,12 +315,21 @@ export default function AdOrderForm() {
                         "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print",
                         !orderDate && "text-muted-foreground"
                       )}
-                      id="orderDateTrigger"
+                      id="orderDateTrigger" // Ensure ID is unique if needed elsewhere, or use date state directly
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                       <span>{isClient ? displayDate : "Loading..."}</span>
+                       <span>{isClient ? displayDate : "Loading..."}</span> {/* Use displayDate state */}
                     </Button>
                   </PopoverTrigger>
+                   {/* Display Date for Print/Static view */}
+                  <span className={cn(
+                      "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none print-only hidden", // Hidden on screen, visible on print
+                        !orderDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                       <span>{isClient ? displayDate : "Loading..."}</span> {/* Use displayDate state */}
+                    </span>
                   <PopoverContent className="w-auto p-0 no-print">
                     <Calendar
                       mode="single"
@@ -354,7 +362,7 @@ export default function AdOrderForm() {
             </div>
           </div>
 
-            {/* Advertisement Manager Section */}
+          {/* Advertisement Manager Section */}
           <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
             <Label className="block mb-1">The Advertisement Manager</Label>
              <div className="relative mb-1">
@@ -483,7 +491,7 @@ export default function AdOrderForm() {
           </div>
 
           {/* Notes & Stamp Container */}
-           <div className="notes-stamp-container flex gap-3 mb-5 items-start"> {/* Changed from mb-5 */}
+           <div className="notes-stamp-container flex gap-3 mb-5 items-start">
                {/* Notes Section */}
                <div className="notes-container flex-1 print-border rounded p-2 border border-black min-h-[150px]">
                  <p className="font-bold mb-1 note-title-underline">Note:</p>
@@ -498,7 +506,7 @@ export default function AdOrderForm() {
                {/* Stamp Area */}
                <div
                   id="stampContainerElement"
-                  className="stamp-container w-[180px] h-[150px] bg-transparent flex items-center justify-center cursor-pointer overflow-hidden group no-print relative" // Added relative positioning
+                  className="stamp-container w-[180px] h-[150px] flex items-center justify-center cursor-pointer overflow-hidden group relative" // Removed bg-transparent, added overflow-hidden
                   onClick={triggerStampUpload}
                   onMouseEnter={triggerStampUpload}
                >
@@ -516,9 +524,9 @@ export default function AdOrderForm() {
                               id="stampPreviewScreen"
                               src={stampPreview}
                               alt="Stamp Preview"
-                              width={180}
-                              height={150}
-                              style={{ objectFit: 'contain', maxWidth: '100%', maxHeight: '100%' }} // Use contain and max sizes
+                              width={180} // Explicit width
+                              height={150} // Explicit height
+                              style={{ objectFit: 'contain' }} // Ensure the image fits within the bounds
                             />
                             {/* Hover effect */}
                             <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity no-print">
@@ -530,8 +538,19 @@ export default function AdOrderForm() {
                            Click or Hover<br/> to Upload Stamp
                        </Label>
                   )}
+                   {/* Visible Stamp Image for Print */}
+                   {stampPreview && (
+                     <div className="absolute inset-0 hidden print-only-block">
+                       <Image
+                          src={stampPreview}
+                          alt="Stamp"
+                          width={180}
+                          height={150}
+                          style={{ objectFit: 'contain'}}
+                        />
+                     </div>
+                   )}
               </div>
-              {/* Removed print-stamp-container */}
             </div>
         </CardContent>
       </Card>

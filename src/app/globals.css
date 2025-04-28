@@ -122,6 +122,138 @@ body {
       @apply border-b-2 border-black inline-block pb-px mb-1; /* Adjusted margin */
    }
 
-   /* Removed all @media print styles */
+   /* Print specific styles */
+   @media print {
+      .no-print {
+          display: none !important;
+      }
+      .print-only-block { /* Use for block elements */
+        display: block !important;
+      }
+      .print-only-inline-block { /* Use for inline-block elements */
+        display: inline-block !important;
+      }
+      .print-only { /* Default to inline for spans etc. */
+        display: inline !important;
+      }
+
+      body {
+        font-size: 10pt; /* Adjust base font size for print */
+        -webkit-print-color-adjust: exact; /* Ensure background colors print */
+        print-color-adjust: exact;
+      }
+
+      .print-border-heavy {
+        border-width: 2px !important;
+        border-color: black !important;
+      }
+
+       .print-border {
+        border-width: 1px !important;
+        border-color: black !important;
+      }
+
+       .print-border-thin {
+        border-width: 1px !important;
+        border-color: black !important;
+      }
+
+       /* Ensure table borders are visible */
+      .print-table, .print-table th, .print-table td {
+        border: 1px solid black !important;
+        border-collapse: collapse !important; /* Ensure borders are solid */
+      }
+
+      .print-table th, .print-table td {
+        padding: 4px !important; /* Adjust padding for print */
+        font-size: 9pt !important; /* Smaller font for table content */
+      }
+
+      .print-table-header {
+        background-color: #e5e7eb !important; /* Match secondary background */
+         -webkit-print-color-adjust: exact; /* Force background color printing */
+        print-color-adjust: exact;
+      }
+
+       .print-table-cell {
+           height: auto !important; /* Let content determine height */
+           padding-top: 6px !important; /* Adjust padding */
+           padding-bottom: 6px !important;
+           vertical-align: middle; /* Center text vertically */
+       }
+
+        /* Adjust header title size for print */
+       .header-title h1 {
+          font-size: 16pt !important;
+       }
+
+       /* Ensure input values are printed */
+       input, textarea {
+           border: none !important; /* Remove input borders */
+           background-color: transparent !important;
+           font-size: inherit !important; /* Inherit font size */
+           padding: 0 !important; /* Remove padding */
+           box-shadow: none !important;
+           font-weight: bold !important; /* Keep bold style */
+            -webkit-print-color-adjust: exact; /* Ensure text prints */
+           print-color-adjust: exact;
+       }
+       input[type="text"]::placeholder, textarea::placeholder {
+          color: transparent !important; /* Hide placeholders when printing */
+       }
+
+
+       .matter-box .vertical-label {
+         background-color: black !important;
+         color: white !important;
+         -webkit-print-color-adjust: exact; /* Force background color printing */
+         print-color-adjust: exact;
+       }
+       .matter-box .vertical-label span {
+          font-size: 12pt !important;
+       }
+       .matter-box textarea {
+          font-size: 9pt !important;
+          min-height: 130px !important; /* Adjust matter textarea height slightly */
+       }
+
+        /* Stamp area for print - ensure it doesn't take interactive space */
+       .stamp-container {
+          border: none !important;
+          background: none !important;
+          cursor: default !important;
+       }
+        /* Ensure the print-only stamp image container is visible */
+        .print-only-block {
+         display: block !important;
+        }
+       #stampPreviewScreen {
+          display: none !important; /* Hide the screen version */
+       }
+
+      /* Remove margins/paddings that might cause layout issues */
+       .mb-5 { margin-bottom: 1rem !important; }
+       .p-5 { padding: 1rem !important; }
+       .p-2 { padding: 0.5rem !important; }
+       .p-1 { padding: 0.25rem !important; }
+       .mt-2 { margin-top: 0.5rem !important; }
+
+
+       /* Force page breaks if needed (less ideal for this layout) */
+       /* Add .print-page-break-before or .print-page-break-after to elements */
+       .print-page-break-before { page-break-before: always; }
+       .print-page-break-after { page-break-after: always; }
+
+        /* Adjust Popover Trigger display for print */
+       .popover-trigger-container .print-only {
+           display: inline-block !important; /* Ensure the print version is displayed */
+           border-bottom: 1px solid black !important; /* Add underline for print */
+           padding-bottom: 1px;
+           margin-left: -2px; /* Adjust alignment slightly */
+        }
+        .popover-trigger-container .no-print {
+           display: none !important; /* Hide the interactive button */
+        }
+   }
 
 } /* End @layer base */
