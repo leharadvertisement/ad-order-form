@@ -261,7 +261,7 @@ export default function AdOrderForm() {
             </Button>
         </div>
 
-      <Card id="printable-area" ref={printableAreaRef} className="w-full print-border-heavy border-4 border-black rounded-none shadow-none p-5">
+      <Card id="printable-area" ref={printableAreaRef} className="w-full print-border-heavy rounded-none shadow-none p-5">
         <CardContent className="p-0">
           {/* Header */}
           <div className="text-center bg-black text-white p-1 rounded mb-5 header-title">
@@ -271,7 +271,7 @@ export default function AdOrderForm() {
            {/* Address Boxes */}
           <div className="flex justify-between gap-3 mb-5">
             {/* Left Address Box */}
-            <div className="w-[48%] print-border border-2 border-black rounded p-2">
+            <div className="w-[48%] print-border rounded p-2"> {/* Removed border-2 border-black */}
                 <p className="text-sm leading-tight">
                     Lehar Advertising Agency Pvt. Ltd.<br />
                     D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
@@ -282,7 +282,7 @@ export default function AdOrderForm() {
                 </p>
             </div>
             {/* Right Address Box */}
-            <div className="w-[48%] print-border border-2 border-black rounded p-2 space-y-2">
+            <div className="w-[48%] print-border rounded p-2 space-y-2"> {/* Removed border-2 border-black */}
                  {/* R.O. No. LN */}
                  <div className="flex items-center">
                      <Label htmlFor="roNumber" className="w-20 text-sm shrink-0">R.O.No.LN:</Label>
@@ -334,7 +334,7 @@ export default function AdOrderForm() {
                          >
                              <CalendarIcon className="mr-2 h-4 w-4" />
                              {/* Display today's date formatted, avoids hydration mismatch */}
-                             <span>{format(new Date(), "dd.MM.yyyy")}</span>
+                             <span suppressHydrationWarning>{format(new Date(), "dd.MM.yyyy")}</span> {/* Use suppressHydrationWarning here */}
                          </Button>
                      )}
                  </div>
@@ -354,7 +354,7 @@ export default function AdOrderForm() {
           </div>
 
           {/* Advertisement Manager Section - MOVED HERE */}
-            <div className="print-border border-2 border-black rounded p-2 mb-5">
+            <div className="print-border rounded p-2 mb-5"> {/* Removed border-2 border-black */}
                 <Label className="block mb-1">The Advertisement Manager</Label>
                 <Input
                     type="text"
@@ -375,7 +375,7 @@ export default function AdOrderForm() {
 
           {/* Caption & Package - MOVED HERE */}
           <div className="flex gap-3 mb-5">
-            <div className="flex-1 print-border border-2 border-black rounded p-2">
+            <div className="flex-1 print-border rounded p-2"> {/* Removed border-2 border-black */}
               <Label htmlFor="caption" className="block mb-1">Heading/Caption:</Label>
               <Input
                 id="caption"
@@ -386,7 +386,7 @@ export default function AdOrderForm() {
                 onChange={(e) => setCaption(e.target.value)}
               />
             </div>
-            <div className="w-[30%] print-border border-2 border-black rounded p-2">
+            <div className="w-[30%] print-border rounded p-2"> {/* Removed border-2 border-black */}
               <Label htmlFor="package" className="block mb-1">Package:</Label>
               <Input
                 id="package"
@@ -402,7 +402,7 @@ export default function AdOrderForm() {
 
           {/* Schedule Table */}
           <div className="mb-5">
-            <Table className="print-border border-2 border-black">
+            <Table className="print-border"> {/* Removed border-2 border-black */}
               <TableHeader className="bg-secondary">
                 <TableRow>
                   <TableHead className="w-[10%] print-border-thin border border-black p-1.5 text-sm font-bold">Key No.</TableHead>
@@ -449,7 +449,7 @@ export default function AdOrderForm() {
           </div>
 
           {/* Matter Section */}
-          <div className="flex h-[150px] print-border border-2 border-black rounded mb-5 overflow-hidden">
+          <div className="flex h-[150px] print-border rounded mb-5 overflow-hidden"> {/* Removed border-2 border-black */}
             <div className="vertical-label bg-black text-white flex items-center justify-center p-1" style={{ writingMode: 'vertical-lr', textOrientation: 'mixed' }}>
               <span className="text-base font-bold transform rotate-180">MATTER</span>
             </div>
@@ -464,7 +464,7 @@ export default function AdOrderForm() {
           </div>
 
           {/* Billing Info */}
-          <div className="print-border border-2 border-black rounded p-2 mb-5">
+          <div className="print-border rounded p-2 mb-5"> {/* Removed border-2 border-black */}
             <p className="font-bold mb-1">Forward all bills with relevant voucher copies to:</p>
             <p className="text-sm leading-tight">
               D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
@@ -476,7 +476,7 @@ export default function AdOrderForm() {
           </div>
 
           {/* Notes & Stamp */}
-          <div className="relative print-border border-2 border-black rounded p-2 pr-[130px]">
+          <div className="relative print-border rounded p-2 pr-[130px]"> {/* Removed border-2 border-black */}
             <p className="font-bold mb-1">Note:</p>
             <ol className="list-decimal list-inside text-sm space-y-1">
               <li>Space reserved vide our letter No. <Input type="text" value={noteInput} onChange={(e) => setNoteInput(e.target.value)} className="inline-block w-24 h-5 p-0 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none font-bold" /></li>
@@ -485,7 +485,7 @@ export default function AdOrderForm() {
               <li>Please send two voucher copies of good reproduction within 3 days of publishing.</li>
             </ol>
              {/* Stamp Area */}
-            <div className="stamp-container absolute top-2 right-2 w-[100px] h-[100px] print-border-thin border border-black rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden" onClick={triggerStampUpload}>
+            <div className="stamp-container absolute top-2 right-2 w-[100px] h-[100px] print-border-thin rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden"> {/* Removed border border-black */}
                 <Input
                     type="file"
                     ref={stampFileRef}
@@ -495,16 +495,16 @@ export default function AdOrderForm() {
                     id="stampFile"
                     />
                  {stampPreview ? (
-                     <div className="relative w-[100px] h-[100px]"> {/* Static size container */}
+                     <div className="relative w-full h-full"> {/* Use full width/height container */}
                          <Image
                             id="stampPreview"
                             src={stampPreview}
                             alt="Stamp Preview"
-                            layout="fill"
-                            objectFit="contain" // Changed back to 'contain'
-                            objectPosition="center" // Center the image within the container
-                            className="p-0" // Ensure no padding interferes
-                            unoptimized // Prevents Next.js image optimization from interfering with layout="fill"
+                            width={100} // Specify width
+                            height={100} // Specify height
+                            objectFit="contain" // Ensure the image fits without distortion
+                            className="p-0"
+                            unoptimized
                           />
                      </div>
                 ) : (

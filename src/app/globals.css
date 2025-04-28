@@ -106,12 +106,14 @@ body {
 }
 
 @layer base {
-  * {
+  /* Default border style - removed */
+  /* * {
     @apply border-border;
-  }
+  } */
   body {
     @apply bg-background text-foreground;
   }
+
   /* Custom styles for print */
   @media print {
     .no-print {
@@ -128,14 +130,17 @@ body {
      /* Ensure borders print correctly */
     .print-border {
       border-width: 2px !important;
+      border-style: solid !important; /* Ensure border style is solid */
       border-color: black !important;
     }
     .print-border-thin {
       border-width: 1px !important;
+      border-style: solid !important; /* Ensure border style is solid */
       border-color: black !important;
     }
      .print-border-heavy {
       border-width: 4px !important;
+      border-style: solid !important; /* Ensure border style is solid */
       border-color: black !important;
     }
     input, textarea {
@@ -143,14 +148,16 @@ body {
        -webkit-print-color-adjust: exact;
        print-color-adjust: exact;
     }
-     th {
-      background-color: #f0f0f0 !important; /* Ensure header background prints */
+     th, .table-header-print { /* Apply background to table headers and specific class */
+      background-color: #f0f0f0 !important;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
     .stamp-container img {
        max-width: 100px !important;
        max-height: 100px !important;
+       width: 100px !important; /* Force width */
+       height: 100px !important; /* Force height */
     }
      .vertical-label {
         background-color: black !important;
@@ -163,6 +170,14 @@ body {
         color: white !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
+      }
+     /* Add a class to ensure TableHeader gets printed borders */
+     .print-table-header th {
+        border: 1px solid black !important;
+     }
+      /* Ensure TableCells print borders */
+      .print-table-cell {
+        border: 1px solid black !important;
       }
   }
 }
