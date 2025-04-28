@@ -333,8 +333,11 @@ export default function AdOrderForm() {
                              disabled
                          >
                              <CalendarIcon className="mr-2 h-4 w-4" />
-                             {/* Display today's date formatted, avoids hydration mismatch */}
-                             <span suppressHydrationWarning>{format(new Date(), "dd.MM.yyyy")}</span> {/* Use suppressHydrationWarning here */}
+                             {/* Display a placeholder or server-rendered date safely */}
+                             <span suppressHydrationWarning>
+                                {/* Render a non-changing value on the server */}
+                                {typeof window === 'undefined' ? format(new Date(), "dd.MM.yyyy") : (orderDate ? format(orderDate, "dd.MM.yyyy") : "Pick a date")}
+                             </span>
                          </Button>
                      )}
                  </div>
@@ -485,7 +488,7 @@ export default function AdOrderForm() {
               <li>Please send two voucher copies of good reproduction within 3 days of publishing.</li>
             </ol>
              {/* Stamp Area */}
-            <div className="stamp-container absolute top-2 right-2 w-[100px] h-[100px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden"> {/* Removed print-border-thin */}
+            <div className="stamp-container absolute top-2 right-2 w-[100px] h-[100px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden print-border-thin"> {/* Restored print-border-thin */}
                 <Input
                     type="file"
                     ref={stampFileRef}
