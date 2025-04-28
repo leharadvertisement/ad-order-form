@@ -475,15 +475,17 @@ export default function AdOrderForm() {
                     id="stampFile"
                     />
                  {stampPreview ? (
-                     <Image
-                        id="stampPreview"
-                        src={stampPreview}
-                        alt="Stamp Preview"
-                        layout="fill"
-                        objectFit="contain" // Changed from cover to contain
-                        objectPosition="center" // Ensure it's centered
-                        className="p-0" // Ensure no padding interferes
-                      />
+                     <div className="relative w-full h-full"> {/* Added relative container */}
+                         <Image
+                            id="stampPreview"
+                            src={stampPreview}
+                            alt="Stamp Preview"
+                            layout="fill"
+                            objectFit="contain" // Ensure the image fits within the container without cropping
+                            objectPosition="center" // Center the image within the container
+                            className="p-0" // Ensure no padding interferes
+                          />
+                     </div>
                 ) : (
                      <Label htmlFor="stampFile" className="text-center text-xs text-muted-foreground cursor-pointer p-1">Click to Upload Stamp</Label>
                 )}
@@ -494,3 +496,4 @@ export default function AdOrderForm() {
     </div>
   );
 }
+
