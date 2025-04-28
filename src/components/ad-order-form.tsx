@@ -282,6 +282,9 @@ export default function AdOrderForm() {
 
     if (isClient) {
       updateFormattedDate();
+    } else {
+       // Ensure a default value or placeholder is set during SSR/initial render
+       setDisplayDate("Loading...");
     }
 
   }, [orderDate, isClient]); // Depend on orderDate and isClient
@@ -350,7 +353,7 @@ export default function AdOrderForm() {
                               {isClient ? (
                                 <span>{displayDate}</span>
                               ) : (
-                                <span>Loading...</span> // Render placeholder on server
+                                <span>Loading...</span> // Render placeholder on server/initial load
                               )}
                          </Button>
                          </PopoverTrigger>
@@ -502,17 +505,17 @@ export default function AdOrderForm() {
           </div>
 
           {/* Notes & Stamp */}
-           <div className="relative print-border rounded p-2 pr-[200px] border border-black min-h-[170px]"> {/* Added min-height */}
+           <div className="relative print-border rounded p-2 pr-[200px] border border-black min-h-[170px]"> {/* Ensured border visibility */}
             <p className="font-bold mb-1">Note:</p>
             <ol className="list-decimal list-inside text-sm space-y-1">
-              <li>Space reserved vide our letter No.&nbsp;<Input type="text" value={noteInput} onChange={(e) => setNoteInput(e.target.value)} className="inline-block w-24 h-5 p-0 border-0 border-b border-black rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none font-bold" /></li>
+              <li>Space reserved vide our letter No.<Input type="text" value={noteInput} onChange={(e) => setNoteInput(e.target.value)} className="inline-block w-24 h-5 p-0 border-0 border-b border-black rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none font-bold" /></li>
               <li>No two advertisements of the same client should appear in the same issue.</li>
               <li>Please quote R.O. No. in all your bills and letters.</li>
               <li>Please send two voucher copies of good reproduction within 3 days of publishing.</li>
             </ol>
              {/* Stamp Area */}
              <div
-                className="stamp-container absolute top-2 right-2 w-[180px] h-[150px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden group border border-black print:border-none" /* Added border */
+                className="stamp-container absolute top-2 right-2 w-[180px] h-[150px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden group border-none" /* Removed border */
                 onClick={triggerStampUpload}
              >
                  <Input
@@ -529,9 +532,9 @@ export default function AdOrderForm() {
                             id="stampPreview"
                             src={stampPreview}
                             alt="Stamp Preview"
-                            width={180} // Explicit width
-                            height={150} // Explicit height
-                            style={{ objectFit: 'contain', maxWidth: '100%', maxHeight: '100%' }} // Use inline style for object-fit
+                            width={180} // Keep width
+                            height={150} // Keep height
+                            style={{ objectFit: 'contain', width: '100%', height: '100%' }} // Changed to contain, width/height 100%
                             unoptimized // Good for Data URIs
                             priority // Prioritize loading the stamp image
                           />
