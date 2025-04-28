@@ -9,15 +9,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
-import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon, Download } from 'lucide-react'; // Re-added Download icon
+import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon, FileText } from 'lucide-react'; // Changed Download to FileText icon
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+// Removed PDF generation libraries
+// import jsPDF from 'jspdf';
+// import html2canvas from 'html2canvas';
 
 
 interface ScheduleRow {
@@ -124,6 +125,7 @@ export default function AdOrderForm() {
         }
     }
      try {
+       // Format date as dd.MM.yyyy
        setDisplayDate(format(dateToFormat, "dd.MM.yyyy"));
      } catch (error) {
        console.error("Error formatting date:", error);
@@ -229,170 +231,185 @@ export default function AdOrderForm() {
     stampFileRef.current?.click();
   }, []);
 
-  // --- PDF Download Logic ---
-  const handleDownloadPdf = useCallback(async () => {
+  // --- Word Document Download Logic (Basic HTML Export) ---
+  const handleDownloadDoc = useCallback(() => {
      if (!printableAreaRef.current) {
             toast({
                 title: 'Error',
-                description: 'Cannot find the form area to generate PDF.',
+                description: 'Cannot find the form area to generate document.',
                 variant: 'destructive',
             });
             return;
         }
 
-        // Temporarily hide non-printable elements before capturing
-        const nonPrintElements = printableAreaRef.current.querySelectorAll('.no-print');
-        nonPrintElements.forEach(el => (el as HTMLElement).style.visibility = 'hidden'); // Use visibility hidden
+       try {
+            // Clone the printable area to avoid modifying the live DOM
+            const printableElement = printableAreaRef.current.cloneNode(true) as HTMLElement;
 
-        try {
-            const canvas = await html2canvas(printableAreaRef.current, {
-                scale: 2, // Increase scale for better quality
-                useCORS: true, // Important for external images like the stamp
-                logging: false, // Disable logging for cleaner console
-                onclone: (document) => {
-                     // Ensure styles are applied correctly in the cloned document
-                    const style = document.createElement('style');
-                    // Inject global CSS and print styles directly
-                    style.innerHTML = `
-                        @import url('https://fonts.googleapis.com/css2?family=Arial:wght@700&display=swap');
-                        body { font-family: Arial, sans-serif !important; font-weight: bold !important; font-size: 14px !important; -webkit-print-color-adjust: exact; print-color-adjust: exact;}
-                        .print-border { border: 1px solid black !important; }
-                        .print-border-thin { border: 1px solid black !important; }
-                        .print-border-heavy { border: 2px solid black !important; }
-                        .print-table-header th { border: 1px solid black !important; background-color: #f0f0f0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                        .print-table-cell { border: 1px solid black !important; padding: 8px !important; /* Ensure padding for cell content */}
-                        .vertical-label { background-color: black !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                        .header-title { background-color: black !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                        input, textarea { border: none !important; border-bottom: 1px solid black !important; font-family: Arial, sans-serif !important; font-weight: bold !important; font-size: 14px !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; background: transparent !important; color: black !important; -webkit-text-fill-color: black !important; }
-                        /* Ensure input values are rendered - Added technique */
-                         input[type="text"]::placeholder, textarea::placeholder { color: transparent !important; } /* Hide placeholder for PDF */
+            // Remove non-printable elements from the clone
+            const nonPrintElements = printableElement.querySelectorAll('.no-print');
+            nonPrintElements.forEach(el => el.remove());
 
-                         /* Attempt to render input/textarea values using overlay spans */
-                          ${Array.from(printableAreaRef.current?.querySelectorAll('input[type="text"], textarea') || []).map((el, index) => {
-                            const input = el as HTMLInputElement | HTMLTextAreaElement;
-                            const value = input.value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/\n/g, '<br>'); // Escape HTML chars & handle newlines
-                            const id = input.id || `pdf-el-${index}`;
-                            input.setAttribute('data-pdf-id', id); // Use a data attribute to track
-
-                             // Style the input itself to be transparent but keep layout
-                            return `#${id} { color: transparent !important; -webkit-text-fill-color: transparent !important; background: transparent !important; border: none !important; border-bottom: 1px solid black !important; position: relative; }
-                            /* Add a span after the input to display the value */
-                            #${id} + span.pdf-value-overlay { content: "${value}"; display: block; position: absolute; top: 0; left: 0; width: 100%; height: 100%; white-space: pre-wrap; word-wrap: break-word; font-family: Arial, sans-serif !important; font-weight: bold !important; font-size: 14px !important; color: black !important; -webkit-text-fill-color: black !important; padding: ${input.tagName === 'TEXTAREA' ? '1px' : '0.125rem 0.25rem'}; pointer-events: none; border: none !important; background: transparent !important; box-sizing: border-box; line-height: 1.6; /* Adjust line-height to match input/textarea */ }
-                           `;
-                          }).join('\n')}
-
-
-                         /* Ensure stamp image prints correctly */
-                         #stampPreview { display: block !important; width: 180px !important; height: 150px !important; object-fit: contain !important; object-position: center center !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                         .stamp-container { border: none !important; } /* Hide stamp container border */
-                         /* Hide non-printable elements for PDF generation */
-                         .no-print { display: none !important; }
-                    `;
-                    document.head.appendChild(style);
-
-                    // Add overlay spans after each input/textarea in the cloned document
-                    const inputElements = document.querySelectorAll('input[type="text"][data-pdf-id], textarea[data-pdf-id]');
-                    inputElements.forEach(input => {
-                       const overlay = document.createElement('span');
-                       overlay.className = 'pdf-value-overlay';
-                       overlay.innerHTML = (input as HTMLInputElement | HTMLTextAreaElement).value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/\n/g, '<br>');
-                       input.parentNode?.insertBefore(overlay, input.nextSibling);
-                       // Ensure the parent has relative positioning if needed for absolute positioning of the overlay
-                       (input.parentNode as HTMLElement).style.position = 'relative';
-                     });
+            // --- Capture Input Values (Crucial for HTML Export) ---
+            // For inputs: copy value to a 'value' attribute (Word might read this)
+            const inputs = printableElement.querySelectorAll('input[type="text"], textarea');
+            inputs.forEach(el => {
+                const input = el as HTMLInputElement | HTMLTextAreaElement;
+                // Set value attribute for simple inputs
+                if (input.tagName === 'INPUT') {
+                    input.setAttribute('value', input.value);
+                }
+                 // For textareas, replace the element with a div containing the text
+                 // This often renders better in Word's HTML import
+                 else if (input.tagName === 'TEXTAREA') {
+                    const div = document.createElement('div');
+                    // Preserve whitespace and newlines
+                    div.style.whiteSpace = 'pre-wrap';
+                    div.style.wordWrap = 'break-word';
+                    div.style.minHeight = input.style.height || '80px'; // Try to keep height
+                    div.style.width = '100%';
+                    div.textContent = input.value;
+                    // Copy relevant classes for styling if needed
+                    div.className = input.className.replace('focus-visible:ring-0 focus-visible:ring-offset-0', ''); // Remove focus styles
+                    div.style.border = 'none'; // Remove textarea border
+                    div.style.fontFamily = 'Arial, sans-serif'; // Ensure font
+                    div.style.fontWeight = 'bold';
+                    div.style.fontSize = '14px';
+                    input.parentNode?.replaceChild(div, input);
                 }
             });
 
-            const imgData = canvas.toDataURL('image/png');
-            const pdf = new jsPDF({
-                orientation: 'portrait',
-                unit: 'mm',
-                format: 'a4', // Standard A4 size
-            });
+            // Handle Date Picker Button - Replace with static text
+             const dateButton = printableElement.querySelector('#orderDate span');
+             if (dateButton) {
+                 const dateText = dateButton.textContent;
+                 const dateSpan = document.createElement('span');
+                 dateSpan.textContent = dateText;
+                 dateSpan.style.fontFamily = 'Arial, sans-serif';
+                 dateSpan.style.fontWeight = 'bold';
+                 dateSpan.style.fontSize = '14px';
+                  // Replace the button with the span
+                  const parent = dateButton.closest('.popover-trigger-container'); // Assuming a container helps
+                  if (parent) {
+                     parent.innerHTML = ''; // Clear existing button content
+                     parent.appendChild(dateSpan);
+                     parent.style.borderBottom = '1px solid black'; // Add underline style
+                     parent.style.padding = '1px 0';
+                  } else {
+                     // Fallback if no specific container
+                      const originalButton = printableElement.querySelector('#orderDate');
+                      originalButton?.parentNode?.replaceChild(dateSpan, originalButton);
+                  }
 
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = pdf.internal.pageSize.getHeight();
-            const imgProps = pdf.getImageProperties(imgData);
-            const pageMargin = 5; // Add margin mm
-            const availableWidth = pdfWidth - (pageMargin * 2);
-            const availableHeight = pdfHeight - (pageMargin * 2);
+             }
 
-            const imgRatio = imgProps.width / imgProps.height;
-            let imgWidth = availableWidth;
-            let imgHeight = imgWidth / imgRatio;
+            // Get the modified HTML
+            let htmlContent = printableElement.innerHTML;
 
-            // If calculated height exceeds available height, fit to height instead
-             if (imgHeight > availableHeight) {
-                imgHeight = availableHeight;
-                imgWidth = imgHeight * imgRatio;
-            }
-
-            // Center the image on the page
-             const xPos = pageMargin; // Start from left margin
-             const yPos = pageMargin; // Start from top margin
-
-
-             // Check if content exceeds one page (based on canvas size vs A4) - this is approximate
-            const contentHeightInMm = (canvas.height * 25.4) / (96 * 2); // Convert canvas px (at scale 2) to mm (assuming 96 DPI)
-            const numPages = Math.ceil(contentHeightInMm / availableHeight);
-
-            if (numPages <= 1) {
-                pdf.addImage(imgData, 'PNG', xPos, yPos, imgWidth, imgHeight);
-            } else {
-                // Split image across pages if needed (basic vertical split)
-                let currentY = 0;
-                const pageCanvasHeight = (availableHeight * 96 * 2) / 25.4; // Convert A4 height back to scaled canvas pixels
-
-                for (let i = 0; i < numPages; i++) {
-                    const sourceY = currentY;
-                    const sourceHeight = Math.min(pageCanvasHeight, canvas.height - sourceY);
-
-                    const pageCanvas = document.createElement('canvas');
-                    pageCanvas.width = canvas.width;
-                    pageCanvas.height = sourceHeight;
-                    const pageCtx = pageCanvas.getContext('2d');
-                    if (!pageCtx) continue; // Skip if context is null
-
-                    pageCtx?.drawImage(canvas, 0, sourceY, canvas.width, sourceHeight, 0, 0, canvas.width, sourceHeight);
-
-                    const pageImgData = pageCanvas.toDataURL('image/png');
-                    const pageImgProps = pdf.getImageProperties(pageImgData);
-                    const pageImgRatio = pageImgProps.width / pageImgProps.height;
-                    let pageImgWidth = availableWidth;
-                    let pageImgHeight = pageImgWidth / pageImgRatio;
-
-                    if (pageImgHeight > availableHeight) {
-                       pageImgHeight = availableHeight;
-                       pageImgWidth = pageImgHeight * pageImgRatio;
-                    }
-                     const pageXPos = pageMargin; // Start from left margin
-                     const pageYPos = pageMargin; // Start from top margin
-
-                    if (i > 0) pdf.addPage();
-                    pdf.addImage(pageImgData, 'PNG', pageXPos, pageYPos, pageImgWidth, pageImgHeight);
-                    currentY += sourceHeight;
-                }
-            }
+            // Basic CSS for Word (inline styles are more reliable)
+            // Note: Complex CSS (like Tailwind classes) might not translate well.
+            const styles = `
+                <style>
+                    body { font-family: Arial, sans-serif; font-weight: bold; font-size: 14px; }
+                    table { border-collapse: collapse; width: 100%; border: 2px solid black; margin-top: 20px; }
+                    th, td { border: 1px solid black; padding: 6px; font-size: 14px; vertical-align: top; } /* Added vertical-align */
+                    th { background-color: #f0f0f0; font-weight: bold; }
+                    .print-border { border: 1px solid black !important; }
+                    .print-border-heavy { border: 2px solid black !important; }
+                    .header-title { background-color: black !important; color: white !important; padding: 4px; text-align: center; }
+                    .vertical-label { writing-mode: vertical-lr; text-orientation: mixed; background: black; color: white; padding: 4px; font-size: 16px; text-align: center; vertical-align: middle; }
+                    .matter-box { display: flex; height: 150px; border: 2px solid black; margin-top: 20px; border-radius: 4px; overflow: hidden; }
+                    .matter-content { flex: 1; padding: 4px; }
+                    .notes-container { border: 2px solid black; padding: 10px 200px 10px 10px; border-radius: 4px; margin-top: 20px; position: relative; min-height: 170px; } /* Increased right padding */
+                    .stamp-container { position: absolute; top: 10px; right: 10px; width: 180px; height: 150px; background: white; display: flex; align-items: center; justify-content: center; overflow: hidden; } /* Removed border */
+                    #stampPreview { max-width: 100%; max-height: 100%; object-fit: contain; display: block; } /* Ensure image displays */
+                    ol { margin-top: 10px; font-size: 14px; padding-left: 20px; } /* Ensure list padding */
+                    .underline-black { border-bottom: 2px solid black; display: inline-block; padding-bottom: 1px; } /* Class for underlines */
+                     input[type="text"] { border: none; border-bottom: 1px solid black; padding: 4px; font-size: 14px; font-weight: bold; box-sizing: border-box; width: 100%; } /* Style inputs for Word */
+                     /* Ensure input values are visible */
+                     input[value] { color: black !important; -webkit-text-fill-color: black !important; }
 
 
-            pdf.save(`Release_Order_${roNumber || 'NoRO'}_${displayDate}.pdf`);
-             toast({
-                title: 'PDF Downloaded',
-                description: 'The release order has been saved as a PDF.',
-            });
+                     /* Address layout specifically */
+                     .address-box { border: 1px solid black; padding: 8px; margin-bottom: 10px; font-size: 12px; line-height: 1.4; } /* Basic styling for address boxes */
+                     .address-container { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 20px; }
+                     .address-container > div { width: 48%; } /* Approx width for two columns */
 
-        } catch (error) {
-            console.error('Error generating PDF:', error);
+                     /* Specific layout for RO/Date/Client */
+                     .ro-date-client-container { border: 1px solid black; padding: 8px; space-y: 8px; } /* Border and spacing */
+                     .ro-date-client-container .field-row { display: flex; align-items: center; margin-bottom: 5px; } /* Flex layout for label+input */
+                     .ro-date-client-container label { width: 80px; shrink: 0; margin-right: 5px; font-weight: bold; font-size: 14px; }
+                     .ro-date-client-container span, /* For static date */
+                     .ro-date-client-container input { flex-grow: 1; border: none; border-bottom: 1px solid black; font-weight: bold; font-size: 14px; padding: 2px; }
+
+
+                     /* Explicit style for the underline */
+                    .note-title-underline, .billing-title-underline {
+                        border-bottom: 2px solid black;
+                        display: inline-block; /* Necessary for border-bottom to apply correctly */
+                        padding-bottom: 1px; /* Adjust spacing */
+                        margin-bottom: 4px; /* Space below the line */
+                     }
+                </style>
+            `;
+
+
+            // Combine styles and HTML content
+             // Preserve Stamp Image: Embed as Base64 if available
+             let stampImgTag = '';
+             if (stampPreview) {
+                // Ensure the base64 string is valid and complete
+                 const validBase64 = stampPreview.startsWith('data:image') ? stampPreview : `data:image/png;base64,${stampPreview}`; // Add prefix if missing (assuming PNG)
+                 stampImgTag = `<img id="stampPreview" src="${validBase64}" alt="Stamp" style="width: 180px; height: 150px; object-fit: contain; display: block;" />`;
+             }
+
+
+              // Replace the placeholder div with the actual image tag OR remove if no image
+            htmlContent = htmlContent.replace(
+                /<div class="stamp-container.*?<\/div>/s, // Match the whole container
+                `<div class="stamp-container" style="position: absolute; top: 10px; right: 10px; width: 180px; height: 150px; background: white; display: flex; align-items: center; justify-content: center; overflow: hidden;">${stampImgTag || ''}</div>` // Recreate container with image
+             );
+
+
+            const fullHtml = `
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Release Order - ${roNumber || 'NoRO'}</title>
+                    ${styles}
+                </head>
+                <body>
+                    ${htmlContent}
+                </body>
+                </html>
+            `;
+
+            // Create a Blob
+            const blob = new Blob([fullHtml], { type: 'application/msword' }); // Use MIME type for .doc
+
+            // Create a download link
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `Release_Order_${roNumber || 'NoRO'}_${displayDate || 'NoDate'}.doc`; // Set filename with .doc extension
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
             toast({
-                title: 'PDF Generation Failed',
-                description: `Could not generate the PDF. ${error instanceof Error ? error.message : ''}`,
+                title: 'Word Document Downloaded',
+                description: 'The release order has been saved as a .doc file.',
+            });
+
+       } catch (error) {
+         console.error('Error generating Word document:', error);
+            toast({
+                title: 'Word Generation Failed',
+                description: `Could not generate the document. ${error instanceof Error ? error.message : ''}`,
                 variant: 'destructive',
             });
-        } finally {
-             // Show non-printable elements again after capturing
-            nonPrintElements.forEach(el => (el as HTMLElement).style.visibility = 'visible'); // Use visibility visible
         }
-  }, [printableAreaRef, toast, roNumber, displayDate]);
+  }, [printableAreaRef, toast, roNumber, displayDate, stampPreview]); // Include stampPreview in dependencies
 
 
   const handleClearForm = useCallback(() => {
@@ -440,9 +457,9 @@ export default function AdOrderForm() {
         <Button onClick={handleClearForm} variant="outline">
           <Eraser className="mr-2 h-4 w-4" /> Clear Form & Draft
         </Button>
-         {/* PDF Download Button */}
-         <Button onClick={handleDownloadPdf}>
-            <Download className="mr-2 h-4 w-4" /> Download as PDF
+         {/* Word Download Button */}
+         <Button onClick={handleDownloadDoc}>
+            <FileText className="mr-2 h-4 w-4" /> Download as Word (.doc)
          </Button>
       </div>
 
@@ -454,10 +471,10 @@ export default function AdOrderForm() {
             <h1 className="text-2xl m-0 font-bold">RELEASE ORDER</h1>
           </div>
 
-          {/* Address Boxes */}
-          <div className="flex justify-between gap-3 mb-5">
+           {/* Address Boxes Container */}
+           <div className="flex justify-between gap-3 mb-5 address-container">
             {/* Left Address Box */}
-            <div className="w-[48%] print-border rounded p-2 border border-black">
+             <div className="w-[48%] print-border rounded p-2 border border-black address-box">
               <p className="text-sm leading-tight">
                 Lehar Advertising Agency Pvt. Ltd.<br />
                 D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
@@ -467,41 +484,39 @@ export default function AdOrderForm() {
                 Fax: 26028101
               </p>
             </div>
-            {/* Right Address Box */}
-            <div className="w-[48%] print-border rounded p-2 space-y-2 border border-black">
+            {/* Right Box: R.O., Date, Client */}
+             <div className="w-[48%] print-border rounded p-2 space-y-2 border border-black ro-date-client-container">
               {/* R.O. No. LN */}
-              <div className="flex items-center relative">
+               <div className="flex items-center field-row">
                 <Label htmlFor="roNumber" className="w-20 text-sm shrink-0">R.O.No.LN:</Label>
                 <Input
                   id="roNumber"
                   type="text"
                   placeholder="Enter R.O. No."
-                  className="flex-1 h-6 border-0 border-b-2 border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
+                  className="flex-1 h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
                   value={roNumber}
                   onChange={(e) => setRoNumber(e.target.value)}
                 />
-                {/* Overlay span for PDF value */}
-                 <span className="pdf-value-overlay" />
               </div>
               {/* Date */}
-              <div className="flex items-center relative">
+               <div className="flex items-center field-row popover-trigger-container"> {/* Container for replacement */}
                 <Label htmlFor="orderDate" className="w-20 text-sm shrink-0">Date:</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant={"outline"}
                       className={cn(
-                        "flex-1 justify-start text-left font-bold h-6 border-0 border-b-2 border-black rounded-none px-1 py-0.5 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none",
+                        "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none",
                         !orderDate && "text-muted-foreground"
                       )}
                       id="orderDate"
                     >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      <CalendarIcon className="mr-2 h-4 w-4 no-print" /> {/* Hide icon on print/export */}
                       {/* Display formatted date, ensure it updates */}
                       <span>{displayDate || "Pick a date"}</span>
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 no-print">
+                  <PopoverContent className="w-auto p-0 no-print"> {/* Hide popover on print/export */}
                     <Calendar
                       mode="single"
                       selected={orderDate}
@@ -509,7 +524,6 @@ export default function AdOrderForm() {
                            if (date instanceof Date && !isNaN(date.getTime())) {
                                setOrderDate(date);
                            } else {
-                               // Handle case where date is undefined or invalid, maybe set to today?
                                const today = new Date();
                                setOrderDate(today);
                            }
@@ -520,49 +534,44 @@ export default function AdOrderForm() {
                 </Popover>
               </div>
               {/* Client */}
-              <div className="flex items-center relative">
+               <div className="flex items-center field-row">
                 <Label htmlFor="clientName" className="w-20 text-sm shrink-0">Client:</Label>
                 <Input
                   id="clientName"
                   type="text"
                   placeholder="Enter Client Name"
-                  className="flex-1 h-6 border-0 border-b-2 border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
+                  className="flex-1 h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
                   value={clientName}
                   onChange={(e) => setClientName(e.target.value)}
                 />
-                 {/* Overlay span for PDF value */}
-                 <span className="pdf-value-overlay" />
               </div>
             </div>
           </div>
 
+
            {/* Heading & Package Section - Moved before Advertisement Manager */}
           <div className="flex gap-3 mb-5">
-            <div className="flex-1 print-border-heavy rounded p-2 border-2 border-black relative">
+             <div className="flex-1 print-border-heavy rounded p-2 border-2 border-black">
               <Label htmlFor="caption" className="block mb-1">Heading/Caption:</Label>
               <Input
                 id="caption"
                 type="text"
                 placeholder="Enter caption here"
-                className="w-full border-0 border-b-2 border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
                 value={caption}
                 onChange={(e) => setCaption(e.target.value)}
               />
-              {/* Overlay span for PDF value */}
-              <span className="pdf-value-overlay" />
             </div>
-            <div className="w-[30%] print-border-heavy rounded p-2 border-2 border-black relative">
+             <div className="w-[30%] print-border-heavy rounded p-2 border-2 border-black">
               <Label htmlFor="package" className="block mb-1">Package:</Label>
               <Input
                 id="package"
                 type="text"
                 placeholder="Enter package name"
-                className="w-full border-0 border-b-2 border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
                 value={packageName}
                 onChange={(e) => setPackageName(e.target.value)}
               />
-               {/* Overlay span for PDF value */}
-               <span className="pdf-value-overlay" />
             </div>
           </div>
 
@@ -579,8 +588,6 @@ export default function AdOrderForm() {
                 value={advertisementManagerLine1}
                 onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
               />
-               {/* Overlay span for PDF value */}
-               <span className="pdf-value-overlay" />
              </div>
             <div className="relative">
             <Input
@@ -591,8 +598,6 @@ export default function AdOrderForm() {
               value={advertisementManagerLine2}
               onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
             />
-             {/* Overlay span for PDF value */}
-             <span className="pdf-value-overlay" />
              </div>
             <p className="text-sm mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
           </div>
@@ -600,7 +605,6 @@ export default function AdOrderForm() {
 
           {/* Schedule Table */}
           <div className="mb-5">
-             {/* Ensure table has correct classes for PDF rendering */}
             <Table className="print-border border border-black">
               <TableHeader className="bg-secondary print-table-header">
                 <TableRow>
@@ -615,29 +619,23 @@ export default function AdOrderForm() {
               <TableBody>
                 {scheduleRows.map((row) => (
                   <TableRow key={row.id}>
-                    <TableCell className="print-border-thin border border-black p-0 print-table-cell relative">
+                    <TableCell className="print-border-thin border border-black p-0 print-table-cell">
                       <Input id={`keyNo-${row.id}`} type="text" value={row.keyNo} onChange={(e) => handleScheduleChange(row.id, 'keyNo', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
-                       <span className="pdf-value-overlay" />
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell relative">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell">
                       <Input id={`publication-${row.id}`} type="text" value={row.publication} onChange={(e) => handleScheduleChange(row.id, 'publication', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
-                       <span className="pdf-value-overlay" />
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell relative">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell">
                       <Input id={`edition-${row.id}`} type="text" value={row.edition} onChange={(e) => handleScheduleChange(row.id, 'edition', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
-                       <span className="pdf-value-overlay" />
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell relative">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell">
                       <Input id={`size-${row.id}`} type="text" value={row.size} onChange={(e) => handleScheduleChange(row.id, 'size', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
-                       <span className="pdf-value-overlay" />
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell relative">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell">
                       <Input id={`scheduledDate-${row.id}`} type="text" value={row.scheduledDate} onChange={(e) => handleScheduleChange(row.id, 'scheduledDate', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
-                       <span className="pdf-value-overlay" />
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell relative">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell">
                       <Input id={`position-${row.id}`} type="text" value={row.position} onChange={(e) => handleScheduleChange(row.id, 'position', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
-                       <span className="pdf-value-overlay" />
                     </TableCell>
                   </TableRow>
                 ))}
@@ -654,11 +652,11 @@ export default function AdOrderForm() {
           </div>
 
           {/* Matter Section */}
-          <div className="flex h-[150px] print-border rounded mb-5 overflow-hidden border border-black">
+          <div className="flex h-[150px] print-border-heavy rounded mb-5 overflow-hidden border-2 border-black matter-box">
             <div className="vertical-label bg-black text-white flex items-center justify-center p-1" style={{ writingMode: 'vertical-lr', textOrientation: 'mixed' }}>
               <span className="text-base font-bold transform rotate-180">MATTER</span>
             </div>
-            <div className="flex-1 p-1 relative">
+            <div className="flex-1 p-1 matter-content">
               <Textarea
                 id="matterArea"
                 placeholder="Enter matter here..."
@@ -666,14 +664,12 @@ export default function AdOrderForm() {
                 value={matter}
                 onChange={(e) => setMatter(e.target.value)}
               />
-              {/* Overlay span for PDF value */}
-              <span className="pdf-value-overlay" />
             </div>
           </div>
 
           {/* Billing Info */}
-          <div className="print-border rounded p-2 mb-5 border border-black">
-             <p className="font-bold mb-1 border-b-2 border-black inline-block pb-px">Forward all bills with relevant voucher copies to:</p>
+           <div className="print-border rounded p-2 mb-5 border border-black">
+             <p className="font-bold mb-1 billing-title-underline">Forward all bills with relevant voucher copies to:</p>
             <p className="text-sm leading-tight pt-1">
               D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
               Alaknanda Commercial Complex,<br />
@@ -684,17 +680,17 @@ export default function AdOrderForm() {
           </div>
 
           {/* Notes & Stamp */}
-           <div className="relative print-border rounded p-2 pr-[200px] border border-black min-h-[170px] pb-1">
-             <p className="font-bold mb-1 border-b-2 border-black inline-block pb-px">Note:</p>
+           <div className="relative print-border rounded p-2 pr-[200px] border border-black min-h-[170px] pb-1 notes-container"> {/* Ensure class for targeting */}
+             <p className="font-bold mb-1 note-title-underline">Note:</p>
             <ol className="list-decimal list-inside text-sm space-y-1 pt-1">
-               <li>Space reserved vide our letter No.</li>
+              <li>Space reserved vide our letter No.</li>
               <li>No two advertisements of the same client should appear in the same issue.</li>
               <li>Please quote R.O. No. in all your bills and letters.</li>
               <li>Please send two voucher copies of good reproduction within 3 days of publishing.</li>
             </ol>
              {/* Stamp Area - No border, positioned absolutely */}
              <div
-                className="stamp-container absolute top-2 right-2 w-[180px] h-[150px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden group print-stamp-container" // Removed border classes
+                className="stamp-container absolute top-2 right-2 w-[180px] h-[150px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden group print-stamp-container" // Kept class for potential print styles
                 onClick={triggerStampUpload}
                 onMouseEnter={triggerStampUpload}
              >
@@ -736,3 +732,5 @@ export default function AdOrderForm() {
     </div>
   );
 }
+
+    

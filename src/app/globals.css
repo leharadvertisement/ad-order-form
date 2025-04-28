@@ -114,7 +114,16 @@ body {
     @apply bg-background text-foreground;
   }
 
-  /* Custom styles for print */
+   /* Underline styles */
+   .underline-black {
+      @apply border-b-2 border-black inline-block pb-px;
+   }
+   .note-title-underline, .billing-title-underline {
+      @apply border-b-2 border-black inline-block pb-px mb-1; /* Adjusted margin */
+   }
+
+
+  /* Custom styles for print and potential export */
   @media print {
     .no-print {
       display: none !important;
@@ -147,6 +156,9 @@ body {
        border-bottom: 1px solid black !important;
        -webkit-print-color-adjust: exact;
        print-color-adjust: exact;
+       background: transparent !important; /* Make background transparent for print */
+       color: black !important; /* Ensure text is black */
+        -webkit-text-fill-color: black !important; /* Override browser defaults */
     }
      th, .table-header-print { /* Apply background to table headers and specific class */
       background-color: #f0f0f0 !important;
@@ -176,6 +188,7 @@ body {
       /* Ensure TableCells print borders */
       .print-table-cell {
         border: 1px solid black !important;
+        padding: 6px !important; /* Ensure consistent padding */
       }
        /* Hide hover effect on print */
       .group-hover\:opacity-100 {
@@ -198,11 +211,17 @@ body {
       tfoot {
         display: table-footer-group;
       }
-       /* Ensure inputs keep their values when printing */
-      input[type="text"], textarea {
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
+       /* Ensure inputs keep their values when printing - often tricky */
+        /* Placeholder might need specific handling if visible */
+       input[type="text"]::placeholder, textarea::placeholder {
+          color: transparent !important; /* Hide placeholder */
+       }
+       /* Attempt to force value rendering */
+       input[type="text"][value], textarea {
+         color: black !important;
+         -webkit-text-fill-color: black !important;
+       }
+
       /* Explicitly set font for print */
       body, input, textarea, button, select, table, th, td {
         font-family: Arial, sans-serif !important;
@@ -210,18 +229,21 @@ body {
         font-size: 14px !important; /* Ensure consistent font size */
       }
 
-      /* Ensure Date Picker Button content prints */
+      /* Ensure Date Picker Button content prints as text */
       #orderDate span {
         display: inline !important;
+        color: black !important; /* Ensure text color */
       }
       #orderDate svg {
-         display: inline !important; /* Or none if you want to hide the icon */
+         display: none !important; /* Hide the icon */
+      }
+      #orderDate {
+         border-bottom: 1px solid black !important; /* Add underline */
+         padding: 1px 0 !important; /* Adjust padding */
       }
        /* Ensure the image prints correctly */
       #stampPreview {
         display: block !important; /* Ensure it's treated as a block element */
-        max-width: 100% !important; /* Ensure it doesn't exceed container */
-        max-height: 100% !important;
         width: 180px !important; /* Explicit width for print */
         height: 150px !important; /* Explicit height for print */
         object-fit: contain !important; /* Scale down if needed, preserve aspect ratio */
@@ -229,5 +251,12 @@ body {
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
+
+      /* Remove overlay spans if they were added for PDF */
+      .pdf-value-overlay {
+         display: none !important;
+      }
   }
 }
+
+    
