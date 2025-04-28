@@ -263,28 +263,33 @@ export default function AdOrderForm() {
   useEffect(() => {
      // This function now runs only on the client
     const updateFormattedDate = () => {
-        if (orderDate && !isNaN(orderDate.getTime())) {
-            try {
-                 setDisplayDate(format(orderDate, "dd.MM.yyyy"));
-            } catch (error) {
+        let dateToFormat: Date | undefined = orderDate;
+
+        // If orderDate is invalid or null/undefined, use today's date
+        if (!orderDate || isNaN(orderDate.getTime())) {
+            dateToFormat = new Date();
+             // Optionally update the state if it was invalid, but be careful with loops
+             // setOrderDate(dateToFormat); // Uncomment cautiously
+        }
+
+        if (dateToFormat) {
+             try {
+                 setDisplayDate(format(dateToFormat, "dd.MM.yyyy"));
+             } catch (error) {
                  console.error("Error formatting date:", error);
-                 // Fallback or handle the error, e.g., display a default string
+                 // Fallback to today's date if formatting fails
                  const today = new Date();
-                 setOrderDate(today); // Attempt to fix the state with a valid date
                  setDisplayDate(format(today, "dd.MM.yyyy"));
-            }
-        } else if (isClient) { // Only set a new Date if on client and date is invalid/null
-             const today = new Date();
-             setOrderDate(today); // Attempt to fix the state
-             setDisplayDate(format(today, "dd.MM.yyyy"));
+                 // setOrderDate(today); // Attempt to fix state
+             }
         } else {
-             // Server-side or before client mount, use a placeholder or empty string
-             setDisplayDate("Loading..."); // Placeholder for SSR
+             // Should theoretically not happen if isClient is true due to above logic
+             setDisplayDate("Loading..."); // Fallback for safety
         }
     };
 
     if (isClient) {
-      updateFormattedDate();
+        updateFormattedDate();
     }
      // No 'else' needed here as initial state is 'Loading...'
 
@@ -297,7 +302,7 @@ export default function AdOrderForm() {
             <Button onClick={handleClearForm} variant="outline">
               <Eraser className="mr-2 h-4 w-4" /> Clear Form & Draft
             </Button>
-            <Button onClick={handlePrint}>
+            <Button onClick={handlePrint}> {/* This button triggers print */}
               Print Release Order
             </Button>
         </div>
@@ -351,7 +356,7 @@ export default function AdOrderForm() {
                          >
                              <CalendarIcon className="mr-2 h-4 w-4" />
                              {/* Display date or placeholder */}
-                              <span>{isClient ? displayDate : 'Loading...'}</span>
+                              <span>{displayDate}</span> {/* Use displayDate state */}
                          </Button>
                          </PopoverTrigger>
                          <PopoverContent className="w-auto p-0 no-print">
@@ -443,22 +448,22 @@ export default function AdOrderForm() {
                 {scheduleRows.map((row) => (
                   <TableRow key={row.id}>
                     <TableCell className="print-border-thin border border-black p-0 print-table-cell">
-                      <Input type="text" value={row.keyNo} onChange={(e) => handleScheduleChange(row.id, 'keyNo', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-2"/>
+                      <Input type="text" value={row.keyNo} onChange={(e) => handleScheduleChange(row.id, 'keyNo', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/> {/* Increased py */}
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell">
-                      <Input type="text" value={row.publication} onChange={(e) => handleScheduleChange(row.id, 'publication', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-2"/>
+                      <Input type="text" value={row.publication} onChange={(e) => handleScheduleChange(row.id, 'publication', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/> {/* Increased py */}
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell">
-                      <Input type="text" value={row.edition} onChange={(e) => handleScheduleChange(row.id, 'edition', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-2"/>
+                      <Input type="text" value={row.edition} onChange={(e) => handleScheduleChange(row.id, 'edition', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/> {/* Increased py */}
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell">
-                      <Input type="text" value={row.size} onChange={(e) => handleScheduleChange(row.id, 'size', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-2"/>
+                      <Input type="text" value={row.size} onChange={(e) => handleScheduleChange(row.id, 'size', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/> {/* Increased py */}
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell">
-                      <Input type="text" value={row.scheduledDate} onChange={(e) => handleScheduleChange(row.id, 'scheduledDate', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-2"/>
+                      <Input type="text" value={row.scheduledDate} onChange={(e) => handleScheduleChange(row.id, 'scheduledDate', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/> {/* Increased py */}
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell">
-                      <Input type="text" value={row.position} onChange={(e) => handleScheduleChange(row.id, 'position', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-2"/>
+                      <Input type="text" value={row.position} onChange={(e) => handleScheduleChange(row.id, 'position', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/> {/* Increased py */}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -512,7 +517,7 @@ export default function AdOrderForm() {
             </ol>
              {/* Stamp Area */}
              <div
-                className="stamp-container absolute top-2 right-2 w-[180px] h-[150px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden group border-none" // Added border-none
+                className="stamp-container absolute top-2 right-2 w-[180px] h-[150px] rounded bg-white flex items-center justify-center cursor-pointer overflow-hidden group border-none"
                 onClick={triggerStampUpload}
              >
                  <Input
@@ -553,3 +558,5 @@ export default function AdOrderForm() {
     </div>
   );
 }
+
+    
