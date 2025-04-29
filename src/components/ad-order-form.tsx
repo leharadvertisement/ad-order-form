@@ -17,6 +17,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 interface ScheduleRow {
   id: number;
@@ -231,7 +233,7 @@ export default function AdOrderForm() {
     stampFileRef.current?.click();
   }, []);
 
-  // Function to trigger the browser's print dialog
+    // Function to trigger the browser's print dialog
   const handlePrint = useCallback(() => {
       toast({
           title: "Preparing Print...",
@@ -242,6 +244,7 @@ export default function AdOrderForm() {
           window.print();
       }, 300);
   }, [toast]);
+
 
   const handleClearForm = useCallback(() => {
     setCaption('');
@@ -357,7 +360,7 @@ export default function AdOrderForm() {
                         "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print",
                         !orderDate && "text-muted-foreground"
                       )}
-                      id="orderDateTrigger"
+                      id="orderDateTrigger" // Use a different ID for the trigger if needed
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                        <span>{displayDate || 'Pick a date'}</span> {/* Ensure fallback text */}
@@ -387,7 +390,7 @@ export default function AdOrderForm() {
                      )}
                    >
                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      <span>{displayDate || 'N/A'}</span> {/* Fallback for print */}
+                      <span id="orderDatePrint">{displayDate || 'N/A'}</span> {/* Ensure fallback text and unique ID for print */}
                    </div>
               </div>
               {/* Client */}
@@ -405,7 +408,7 @@ export default function AdOrderForm() {
             </div>
           </div>
 
-            {/* Advertisement Manager Section */}
+             {/* Advertisement Manager Section */}
            <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
              <Label className="block mb-1">The Advertisement Manager</Label>
               <div className="relative mb-1">
@@ -430,6 +433,7 @@ export default function AdOrderForm() {
               </div>
              <p className="text-sm mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
            </div>
+
 
              {/* Heading & Package Section */}
                <div className="heading-package-container flex gap-3 mb-5">
@@ -569,9 +573,9 @@ export default function AdOrderForm() {
                               id="stampPreviewScreen"
                               src={stampPreview}
                               alt="Stamp Preview"
-                              width={180}
-                              height={142}
-                              style={{ objectFit: 'contain', width: '100%', height: '100%' }}
+                              width={180} // Static width
+                              height={142} // Static height
+                              style={{ objectFit: 'contain' }} // Changed to contain to prevent stretching
                               className="block"
                             />
                             {/* Hover effect */}
@@ -590,9 +594,9 @@ export default function AdOrderForm() {
                        <Image
                           src={stampPreview}
                           alt="Stamp"
-                          width={180}
-                          height={142}
-                          style={{ objectFit: 'contain', width: '100%', height: '100%' }}
+                          width={180} // Static width for print
+                          height={142} // Static height for print
+                          style={{ objectFit: 'contain' }} // Ensure it contains for print
                           className="block"
                         />
                      </div>
@@ -605,3 +609,6 @@ export default function AdOrderForm() {
   );
 }
 
+
+
+    
