@@ -18,7 +18,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
+import jsPDF from 'jspdf'; // Although imported, not used for the print button
 
 interface ScheduleRow {
   id: number;
@@ -241,7 +241,7 @@ export default function AdOrderForm() {
       });
       // Add a small delay to allow the toast to show
       setTimeout(() => {
-          window.print();
+          window.print(); // This triggers the standard browser print functionality
       }, 300);
   }, [toast]);
 
@@ -479,22 +479,22 @@ export default function AdOrderForm() {
                   <TableRow key={row.id}>
                     {/* Adjusted height using min-h class and h-20 */}
                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[80px] h-[80px] align-top">
-                      <Input id={`keyNo-${row.id}`} type="text" value={row.keyNo} onChange={(e) => handleScheduleChange(row.id, 'keyNo', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
+                      <Input id={`keyNo-${row.id}`} type="text" value={row.keyNo} onChange={(e) => handleScheduleChange(row.id, 'keyNo', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3 align-top"/>
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[80px] h-[80px] align-top">
-                      <Input id={`publication-${row.id}`} type="text" value={row.publication} onChange={(e) => handleScheduleChange(row.id, 'publication', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
+                      <Input id={`publication-${row.id}`} type="text" value={row.publication} onChange={(e) => handleScheduleChange(row.id, 'publication', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3 align-top"/>
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[80px] h-[80px] align-top">
-                      <Input id={`edition-${row.id}`} type="text" value={row.edition} onChange={(e) => handleScheduleChange(row.id, 'edition', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
+                      <Input id={`edition-${row.id}`} type="text" value={row.edition} onChange={(e) => handleScheduleChange(row.id, 'edition', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3 align-top"/>
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[80px] h-[80px] align-top">
-                      <Input id={`size-${row.id}`} type="text" value={row.size} onChange={(e) => handleScheduleChange(row.id, 'size', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
+                      <Input id={`size-${row.id}`} type="text" value={row.size} onChange={(e) => handleScheduleChange(row.id, 'size', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3 align-top"/>
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[80px] h-[80px] align-top">
-                      <Input id={`scheduledDate-${row.id}`} type="text" value={row.scheduledDate} onChange={(e) => handleScheduleChange(row.id, 'scheduledDate', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
+                      <Input id={`scheduledDate-${row.id}`} type="text" value={row.scheduledDate} onChange={(e) => handleScheduleChange(row.id, 'scheduledDate', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3 align-top"/>
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[80px] h-[80px] align-top">
-                      <Input id={`position-${row.id}`} type="text" value={row.position} onChange={(e) => handleScheduleChange(row.id, 'position', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3"/>
+                      <Input id={`position-${row.id}`} type="text" value={row.position} onChange={(e) => handleScheduleChange(row.id, 'position', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3 align-top"/>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -554,7 +554,7 @@ export default function AdOrderForm() {
                {/* Stamp Area - Positioned absolutely within the notes container */}
                <div
                   id="stampContainerElement"
-                  className="stamp-container absolute top-2 right-2 w-[180px] h-[142px] flex items-center justify-center cursor-pointer overflow-hidden group border-none" // Border removed for the container itself
+                  className="stamp-container absolute top-2 right-2 w-[180px] h-[142px] flex items-center justify-center cursor-pointer overflow-hidden group" // Removed border-none
                   onClick={triggerStampUpload}
                   onMouseEnter={triggerStampUpload}
                >
@@ -608,7 +608,3 @@ export default function AdOrderForm() {
     </div>
   );
 }
-
-
-
-    
