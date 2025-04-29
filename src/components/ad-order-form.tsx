@@ -233,7 +233,6 @@ export default function AdOrderForm() {
 
   // Function to trigger the browser's print dialog
   const handlePrint = useCallback(() => {
-      // Directly call window.print() to open the print preview dialog
       window.print();
   }, []);
 
@@ -381,8 +380,7 @@ export default function AdOrderForm() {
                        !orderDate && "text-muted-foreground"
                      )}
                    >
-                     <CalendarIcon className="mr-2 h-4 w-4" />
-                      <span id="orderDatePrint">{displayDate || 'N/A'}</span> {/* Ensure fallback text and unique ID for print */}
+                      <span id="orderDatePrint" className="ml-1">{displayDate || 'N/A'}</span> {/* Ensure fallback text and unique ID for print */}
                    </div>
               </div>
               {/* Client */}
@@ -469,24 +467,23 @@ export default function AdOrderForm() {
               <TableBody>
                 {scheduleRows.map((row) => (
                   <TableRow key={row.id}>
-                    {/* Adjusted height using min-h class and h-20 */}
-                    <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[100px] h-[100px] align-top">
-                      <Input id={`keyNo-${row.id}`} type="text" value={row.keyNo} onChange={(e) => handleScheduleChange(row.id, 'keyNo', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3 align-top"/>
+                    <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[120px] align-top">
+                       <Input id={`keyNo-${row.id}`} type="text" value={row.keyNo} onChange={(e) => handleScheduleChange(row.id, 'keyNo', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top"/>
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[100px] h-[100px] align-top">
-                      <Input id={`publication-${row.id}`} type="text" value={row.publication} onChange={(e) => handleScheduleChange(row.id, 'publication', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3 align-top"/>
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[120px] align-top">
+                      <Input id={`publication-${row.id}`} type="text" value={row.publication} onChange={(e) => handleScheduleChange(row.id, 'publication', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top"/>
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[100px] h-[100px] align-top">
-                      <Input id={`edition-${row.id}`} type="text" value={row.edition} onChange={(e) => handleScheduleChange(row.id, 'edition', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3 align-top"/>
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[120px] align-top">
+                      <Input id={`edition-${row.id}`} type="text" value={row.edition} onChange={(e) => handleScheduleChange(row.id, 'edition', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top"/>
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[100px] h-[100px] align-top">
-                      <Input id={`size-${row.id}`} type="text" value={row.size} onChange={(e) => handleScheduleChange(row.id, 'size', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3 align-top"/>
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[120px] align-top">
+                      <Input id={`size-${row.id}`} type="text" value={row.size} onChange={(e) => handleScheduleChange(row.id, 'size', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top"/>
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[100px] h-[100px] align-top">
-                      <Input id={`scheduledDate-${row.id}`} type="text" value={row.scheduledDate} onChange={(e) => handleScheduleChange(row.id, 'scheduledDate', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3 align-top"/>
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[120px] align-top">
+                      <Input id={`scheduledDate-${row.id}`} type="text" value={row.scheduledDate} onChange={(e) => handleScheduleChange(row.id, 'scheduledDate', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top"/>
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[100px] h-[100px] align-top">
-                      <Input id={`position-${row.id}`} type="text" value={row.position} onChange={(e) => handleScheduleChange(row.id, 'position', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3 align-top"/>
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[120px] align-top">
+                      <Input id={`position-${row.id}`} type="text" value={row.position} onChange={(e) => handleScheduleChange(row.id, 'position', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top"/>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -543,10 +540,10 @@ export default function AdOrderForm() {
                 </ol>
               </div>
 
-               {/* Stamp Area - Positioned absolutely within the notes container */}
+               {/* Stamp Area - Positioned absolutely */}
                <div
                   id="stampContainerElement"
-                  className="stamp-container absolute top-2 right-2 w-[180px] h-[142px] flex items-center justify-center cursor-pointer overflow-hidden group" // Removed border-none
+                  className="stamp-container absolute top-2 right-2 w-[180px] h-[142px] flex items-center justify-center cursor-pointer overflow-hidden group no-print"
                   onClick={triggerStampUpload}
                   onMouseEnter={triggerStampUpload}
                >
@@ -567,7 +564,7 @@ export default function AdOrderForm() {
                               alt="Stamp Preview"
                               width={180} // Static width
                               height={142} // Static height
-                              style={{ objectFit: 'contain' }} // Changed to contain to prevent stretching
+                              style={{ objectFit: 'contain' }} // Changed to contain
                               className="block"
                             />
                             {/* Hover effect */}
@@ -580,24 +577,23 @@ export default function AdOrderForm() {
                            Click or Hover<br/> to Upload Stamp
                        </Label>
                   )}
-                   {/* Visible Stamp Image for Print */}
-                   {stampPreview && (
-                     <div className="absolute inset-0 hidden print-only-block">
-                       <Image
-                          src={stampPreview}
-                          alt="Stamp"
-                          width={180} // Static width for print
-                          height={142} // Static height for print
-                          style={{ objectFit: 'contain' }} // Ensure it contains for print
-                          className="block"
-                        />
-                     </div>
-                   )}
               </div>
+               {/* Visible Stamp Image for Print Only */}
+                {stampPreview && (
+                 <div className="stamp-container-print hidden print-only-block">
+                   <Image
+                      src={stampPreview}
+                      alt="Stamp"
+                      width={180}
+                      height={142}
+                      style={{ objectFit: 'contain' }}
+                      className="stamp-print-image"
+                    />
+                 </div>
+               )}
             </div>
         </CardContent>
       </Card>
     </div>
   );
 }
-

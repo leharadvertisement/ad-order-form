@@ -124,6 +124,15 @@ body {
 
    /* Print specific styles */
    @media print {
+      html, body {
+         margin: 0 !important;
+         padding: 0 !important;
+         background: white !important; /* Ensure white background */
+         font-size: 10pt; /* Adjust base font size for print */
+        -webkit-print-color-adjust: exact; /* Ensure background colors print */
+        print-color-adjust: exact;
+       }
+
       .no-print {
           display: none !important;
       }
@@ -137,11 +146,17 @@ body {
         display: inline !important;
       }
 
-      body {
-        font-size: 10pt; /* Adjust base font size for print */
-        -webkit-print-color-adjust: exact; /* Ensure background colors print */
-        print-color-adjust: exact;
+      /* Ensure the printable area takes full width and resets margins/paddings */
+      #printable-area {
+        margin: 0 !important;
+        padding: 0.5cm !important; /* Add slight padding for printer margins */
+        border: 2px solid black !important; /* Ensure heavy border */
+        width: 100% !important;
+        height: auto !important;
+        box-shadow: none !important;
+        page-break-inside: avoid; /* Try to keep the form on one page */
       }
+
 
       .print-border-heavy {
         border-width: 2px !important;
@@ -167,32 +182,35 @@ body {
       .print-table th, .print-table td {
         padding: 4px !important; /* Adjust padding for print */
         font-size: 9pt !important; /* Smaller font for table content */
+        vertical-align: top; /* Align text to top left for print */
       }
 
       .print-table-header {
-        background-color: #e5e7eb !important; /* Match secondary background */
+        background-color: #f0f0f0 !important; /* Match secondary background more closely */
          -webkit-print-color-adjust: exact; /* Force background color printing */
         print-color-adjust: exact;
       }
 
        .print-table-cell {
-           height: auto !important; /* Let content determine height */
+           height: 120px !important; /* Explicit height for print consistency */
            padding-top: 6px !important; /* Adjust padding */
            padding-bottom: 6px !important;
-           vertical-align: middle; /* Center text vertically */
+           vertical-align: top !important; /* Ensure top alignment */
        }
 
-        /* Adjust header title size for print */
+       /* Adjust header title size for print */
        .header-title h1 {
           font-size: 16pt !important;
+          padding: 2px 0 !important; /* Adjust padding */
        }
 
        /* Ensure input values are printed */
        input, textarea {
            border: none !important; /* Remove input borders */
+           border-bottom: 1px solid black !important; /* Keep bottom border */
            background-color: transparent !important;
            font-size: inherit !important; /* Inherit font size */
-           padding: 0 !important; /* Remove padding */
+           padding: 1px !important; /* Minimal padding */
            box-shadow: none !important;
            font-weight: bold !important; /* Keep bold style */
             -webkit-print-color-adjust: exact; /* Ensure text prints */
@@ -201,15 +219,39 @@ body {
            display: block !important; /* Treat as block for layout */
            min-height: 1em; /* Give minimum height */
            white-space: pre-wrap; /* Preserve whitespace and wrap */
+           line-height: 1.2;
        }
        input[type="text"]::placeholder, textarea::placeholder {
           color: transparent !important; /* Hide placeholders when printing */
        }
+       /* Remove bottom border specifically for table inputs */
+       .print-table-cell input {
+           border-bottom: none !important;
+           padding: 6px 4px !important; /* Match cell padding */
+           height: 100% !important; /* Fill cell height */
+       }
+       .print-table-cell textarea { /* If textareas are used in tables */
+            border: none !important;
+            padding: 6px 4px !important;
+            height: 100% !important;
+            vertical-align: top !important;
+       }
 
-
+       .matter-box {
+           border: 2px solid black !important;
+           height: 150px !important; /* Maintain height */
+       }
        .matter-box .vertical-label {
          background-color: black !important;
          color: white !important;
+         writing-mode: vertical-rl;
+         text-orientation: mixed;
+         transform: rotate(180deg);
+         display: flex;
+         align-items: center;
+         justify-content: center;
+         width: 32px; /* Explicit width */
+         padding: 4px 0 !important;
          -webkit-print-color-adjust: exact; /* Force background color printing */
          print-color-adjust: exact;
        }
@@ -218,30 +260,41 @@ body {
        }
        .matter-box textarea {
           font-size: 9pt !important;
-          min-height: 130px !important; /* Adjust matter textarea height slightly */
+          min-height: 140px !important; /* Adjust matter textarea height slightly */
            white-space: pre-wrap !important; /* Ensure textarea content wraps in print */
+           border: none !important; /* Remove border for textarea inside */
+           padding: 4px !important;
        }
 
-        /* Stamp area for print - ensure it doesn't take interactive space */
-       .stamp-container {
-          border: none !important;
-          background: none !important;
-          cursor: default !important;
+       /* Stamp area for print - ensure it doesn't take interactive space */
+       .stamp-container-print {
+          border: none !important; /* No border for the container itself */
+          position: absolute;
+          top: 10px; /* Adjust as per original */
+          right: 10px; /* Adjust as per original */
+          width: 180px; /* Match image width */
+          height: 142px; /* Match image height */
+          overflow: hidden; /* Ensure content fits */
        }
-        /* Ensure the print-only stamp image container is visible */
-        .print-only-block {
-         display: block !important;
-        }
        #stampPreviewScreen {
           display: none !important; /* Hide the screen version */
        }
+       .stamp-print-image {
+          display: block !important; /* Make the print image visible */
+          width: 180px !important;
+          height: 142px !important;
+          object-fit: contain !important;
+       }
 
-      /* Remove margins/paddings that might cause layout issues */
-       .mb-5 { margin-bottom: 1rem !important; }
+
+      /* Force specific margins/paddings for layout control */
+       .mb-5 { margin-bottom: 1rem !important; } /* Approx 16px */
        .p-5 { padding: 1rem !important; }
        .p-2 { padding: 0.5rem !important; }
        .p-1 { padding: 0.25rem !important; }
+       .p-0 { padding: 0 !important; }
        .mt-2 { margin-top: 0.5rem !important; }
+       .gap-3 { gap: 0.75rem !important; }
 
 
        /* Force page breaks if needed (less ideal for this layout) */
@@ -250,12 +303,15 @@ body {
        .print-page-break-after { page-break-after: always; }
 
         /* Adjust Popover Trigger display for print */
-       .popover-trigger-container .print-only {
+       .popover-trigger-container .print-only-inline-block {
            display: inline-block !important; /* Ensure the print version is displayed */
            border-bottom: 1px solid black !important; /* Add underline for print */
-           padding-bottom: 1px;
-           margin-left: -2px; /* Adjust alignment slightly */
+           padding-bottom: 1px !important;
+           margin-left: 0 !important; /* Reset margin */
            font-weight: bold !important; /* Ensure bold */
+           min-height: 1em;
+           line-height: 1.2;
+           vertical-align: middle; /* Align with label */
         }
         .popover-trigger-container .no-print {
            display: none !important; /* Hide the interactive button */
@@ -269,6 +325,16 @@ body {
            word-wrap: break-word; /* Allow long words to break */
            overflow-wrap: break-word;
        }
-   }
+       .notes-stamp-container {
+         border: 1px solid black !important; /* Ensure border prints */
+         min-height: 150px !important; /* Match height */
+         padding: 0.5rem !important; /* Adjust padding */
+         position: relative; /* Needed for absolute positioning of stamp */
+       }
+        .notes-content {
+            padding-right: 190px !important; /* Space for the stamp */
+        }
+
+   } /* End @media print */
 
 } /* End @layer base */
