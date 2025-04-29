@@ -231,7 +231,7 @@ export default function AdOrderForm() {
     stampFileRef.current?.click();
   }, []);
 
-    // Function to trigger the browser's print dialog
+  // Function to trigger the browser's print dialog
   const handlePrint = useCallback(() => {
       // Directly call window.print() to open the print preview dialog
       window.print();
@@ -470,22 +470,22 @@ export default function AdOrderForm() {
                 {scheduleRows.map((row) => (
                   <TableRow key={row.id}>
                     {/* Adjusted height using min-h class and h-20 */}
-                    <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[80px] h-[80px] align-top">
+                    <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[100px] h-[100px] align-top">
                       <Input id={`keyNo-${row.id}`} type="text" value={row.keyNo} onChange={(e) => handleScheduleChange(row.id, 'keyNo', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3 align-top"/>
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[80px] h-[80px] align-top">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[100px] h-[100px] align-top">
                       <Input id={`publication-${row.id}`} type="text" value={row.publication} onChange={(e) => handleScheduleChange(row.id, 'publication', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3 align-top"/>
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[80px] h-[80px] align-top">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[100px] h-[100px] align-top">
                       <Input id={`edition-${row.id}`} type="text" value={row.edition} onChange={(e) => handleScheduleChange(row.id, 'edition', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3 align-top"/>
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[80px] h-[80px] align-top">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[100px] h-[100px] align-top">
                       <Input id={`size-${row.id}`} type="text" value={row.size} onChange={(e) => handleScheduleChange(row.id, 'size', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3 align-top"/>
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[80px] h-[80px] align-top">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[100px] h-[100px] align-top">
                       <Input id={`scheduledDate-${row.id}`} type="text" value={row.scheduledDate} onChange={(e) => handleScheduleChange(row.id, 'scheduledDate', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3 align-top"/>
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[80px] h-[80px] align-top">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell min-h-[100px] h-[100px] align-top">
                       <Input id={`position-${row.id}`} type="text" value={row.position} onChange={(e) => handleScheduleChange(row.id, 'position', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-3 align-top"/>
                     </TableCell>
                   </TableRow>
