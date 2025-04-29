@@ -36,7 +36,7 @@ interface FormData {
   scheduleRows: ScheduleRow[];
   stampPreview: string | null;
   roNumber: string;
-  orderDate: string | null;
+  orderDate: string | null; // Store as ISO string
   clientName: string;
   advertisementManagerLine1: string;
   advertisementManagerLine2: string;
@@ -54,7 +54,7 @@ export default function AdOrderForm() {
   ]);
   const [stampPreview, setStampPreview] = useState<string | null>(null);
   const [roNumber, setRoNumber] = useState('');
-  const [orderDate, setOrderDate] = useState<Date | undefined>(undefined);
+  const [orderDate, setOrderDate] = useState<Date | undefined>(undefined); // Keep as Date object
   const [clientName, setClientName] = useState('');
   const [advertisementManagerLine1, setAdvertisementManagerLine1] = useState('');
   const [advertisementManagerLine2, setAdvertisementManagerLine2] = useState('');
@@ -65,10 +65,11 @@ export default function AdOrderForm() {
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isInitialLoadRef = useRef(true);
   const [isClient, setIsClient] = useState(false);
-  const [displayDate, setDisplayDate] = useState<string>(''); // State to hold formatted date string
+  const [displayDate, setDisplayDate] = useState<string>(''); // State to hold formatted date string for display
 
+  // Effect to load data and set initial client state
   useEffect(() => {
-    setIsClient(true); // Set client flag after mount
+    let initialDate = new Date(); // Default to today
     try {
       const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (savedData) {
@@ -82,66 +83,61 @@ export default function AdOrderForm() {
         setScheduleRows(loadedRows);
         setStampPreview(parsedData.stampPreview || null);
         setRoNumber(parsedData.roNumber || '');
-        const savedDate = parsedData.orderDate ? new Date(parsedData.orderDate) : undefined;
 
-        if (savedDate && !isNaN(savedDate.getTime())) {
-          setOrderDate(savedDate);
-          // Directly format here for initial load consistency
-          setDisplayDate(format(savedDate, "dd.MM.yyyy"));
-        } else {
-           const today = new Date();
-           setOrderDate(today);
-           setDisplayDate(format(today, "dd.MM.yyyy"));
+        // Load and validate date
+        if (parsedData.orderDate) {
+           const savedDateObj = new Date(parsedData.orderDate);
+           if (!isNaN(savedDateObj.getTime())) {
+               initialDate = savedDateObj; // Use saved date if valid
+           }
         }
+
         setClientName(parsedData.clientName || '');
         setAdvertisementManagerLine1(parsedData.advertisementManagerLine1 || '');
         setAdvertisementManagerLine2(parsedData.advertisementManagerLine2 || '');
-      } else {
-        // Set default date to today if no saved data
-        const today = new Date();
-        setOrderDate(today);
-        setDisplayDate(format(today, "dd.MM.yyyy"));
       }
     } catch (error) {
       console.error("Failed to load data from localStorage:", error);
-       // Fallback to today's date on error
-       const today = new Date();
-       setOrderDate(today);
-       setDisplayDate(format(today, "dd.MM.yyyy"));
       toast({
         title: "Recovery Failed",
-        description: "Could not recover previous draft data.",
+        description: "Could not recover previous draft data. Using defaults.",
         variant: "destructive",
       });
     } finally {
+      setOrderDate(initialDate); // Set the Date object state
+      setDisplayDate(format(initialDate, "dd.MM.yyyy")); // Set the initial display string
       isInitialLoadRef.current = false;
+      setIsClient(true); // Mark as client-side ready *after* initial state setup
     }
-  }, [toast]); // Removed displayDate dependency
+  }, [toast]); // Only run once on mount
 
+   // Effect to update displayDate whenever orderDate changes after initial load
    useEffect(() => {
-     // Update display date whenever orderDate changes, ensuring consistency
+     if (!isClient) return; // Don't run on server or initial render before client flag is set
+
      if (orderDate && !isNaN(orderDate.getTime())) {
          try {
              setDisplayDate(format(orderDate, "dd.MM.yyyy"));
          } catch (error) {
              console.error("Error formatting date:", error);
-             setDisplayDate("Invalid Date");
-             // Reset to today if format fails to prevent hydration issues
+             // If formatting fails for some reason, reset to today
              const today = new Date();
-             setOrderDate(today); // Reset the actual date state
+             setOrderDate(today);
              setDisplayDate(format(today, "dd.MM.yyyy"));
          }
-     } else if (!orderDate && isClient) { // Handle case where date is cleared only on client
-         const today = new Date();
-         setOrderDate(today); // Reset to today if cleared or invalid
-         setDisplayDate(format(today, "dd.MM.yyyy"));
+     } else {
+          // Handle cases where orderDate might become undefined or invalid after initial load
+          const today = new Date();
+          setOrderDate(today); // Reset to today
+          setDisplayDate(format(today, "dd.MM.yyyy"));
      }
-   }, [orderDate, isClient]); // Depend only on orderDate and isClient
+   }, [orderDate, isClient]); // Depend on orderDate and isClient flag
 
 
+  // Effect to save data to localStorage (debounced)
   useEffect(() => {
     if (isInitialLoadRef.current || !isClient) {
-      return;
+      return; // Don't save during initial load or if not client-side yet
     }
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
@@ -155,6 +151,7 @@ export default function AdOrderForm() {
           scheduleRows,
           stampPreview,
           roNumber,
+          // Store date as ISO string, handle potential undefined/invalid date
           orderDate: orderDate && !isNaN(orderDate.getTime()) ? orderDate.toISOString() : null,
           clientName,
           advertisementManagerLine1,
@@ -170,6 +167,7 @@ export default function AdOrderForm() {
         clearTimeout(debounceTimeoutRef.current);
       }
     };
+    // Ensure all state dependencies are listed
   }, [caption, packageName, matter, scheduleRows, stampPreview, roNumber, orderDate, clientName, advertisementManagerLine1, advertisementManagerLine2, isClient]);
 
   const addRow = useCallback(() => {
@@ -245,8 +243,8 @@ export default function AdOrderForm() {
     setStampPreview(null);
     setRoNumber('');
     const today = new Date();
-    setOrderDate(today); // Reset date to today
-    setDisplayDate(format(today, "dd.MM.yyyy")); // Update display date immediately
+    setOrderDate(today); // Reset date object state to today
+    // displayDate will update via the useEffect dependency
     setClientName('');
     setAdvertisementManagerLine1('');
     setAdvertisementManagerLine2('');
@@ -267,7 +265,7 @@ export default function AdOrderForm() {
         variant: "destructive",
       });
     }
-  }, [toast]);
+  }, [toast]); // Removed displayDate dependency here, it's handled by useEffect
 
 
   if (!isClient) {
@@ -275,18 +273,9 @@ export default function AdOrderForm() {
     // Basic structure to avoid major layout shifts
     return (
         <div className="max-w-[210mm] mx-auto font-bold p-5 space-y-5">
-            <div className="h-10 bg-muted rounded animate-pulse"></div> {/* Header placeholder */}
-            <div className="flex justify-between gap-3">
-                <div className="w-[48%] h-24 bg-muted rounded animate-pulse"></div> {/* Left Address placeholder */}
-                <div className="w-[48%] h-24 bg-muted rounded animate-pulse"></div> {/* Right Box placeholder */}
-            </div>
-             <div className="h-16 bg-muted rounded animate-pulse"></div> {/* Ad Manager placeholder */}
-            <div className="h-16 bg-muted rounded animate-pulse"></div> {/* Heading placeholder */}
-            <div className="h-16 bg-muted rounded animate-pulse"></div> {/* Package placeholder */}
-            <div className="h-48 bg-muted rounded animate-pulse"></div> {/* Table placeholder */}
-            <div className="h-36 bg-muted rounded animate-pulse"></div> {/* Matter placeholder */}
-            <div className="h-24 bg-muted rounded animate-pulse"></div> {/* Billing placeholder */}
-            <div className="h-36 bg-muted rounded animate-pulse"></div> {/* Notes/Stamp placeholder */}
+            {/* Keep placeholders minimal to avoid introducing new hydration mismatches */}
+             <div className="h-10 bg-muted rounded animate-pulse mb-4"></div> {/* Button placeholder */}
+             <div className="h-[700px] bg-muted rounded animate-pulse"></div> {/* Main form placeholder */}
         </div>
     );
   }
@@ -349,26 +338,26 @@ export default function AdOrderForm() {
                       variant={"outline"}
                       className={cn(
                         "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print",
-                        !orderDate && "text-muted-foreground"
+                        !displayDate && "text-muted-foreground" // Check displayDate for styling
                       )}
-                      id="orderDateTrigger" // Use a different ID for the trigger if needed
+                      id="orderDateTrigger"
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                       <span>{displayDate || 'Pick a date'}</span> {/* Ensure fallback text */}
+                       {/* Always render displayDate derived from state */}
+                       <span>{displayDate || 'Pick a date'}</span>
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0 no-print">
                     <Calendar
                       mode="single"
-                      selected={orderDate}
+                      selected={orderDate} // Use the Date object here
                       onSelect={(date) => {
-                           if (date instanceof Date && !isNaN(date.getTime())) {
-                               setOrderDate(date);
-                           } else {
-                               // Handle invalid date selection, reset to today
-                               const today = new Date();
-                               setOrderDate(today);
-                           }
+                         // Ensure a valid date is selected or default to today
+                         if (date instanceof Date && !isNaN(date.getTime())) {
+                             setOrderDate(date); // Update Date object state
+                         } else {
+                             setOrderDate(new Date()); // Fallback to today if selection is cleared or invalid
+                         }
                       }}
                       initialFocus
                     />
@@ -376,12 +365,13 @@ export default function AdOrderForm() {
                 </Popover>
                  {/* Static Display for Print */}
                  <div className={cn(
-                     "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm shadow-none print-only-inline-block hidden items-center", // Use print-only-inline-block, initially hidden
-                       !orderDate && "text-muted-foreground"
-                     )}
-                   >
-                      <span id="orderDatePrint" className="ml-1">{displayDate || 'N/A'}</span> {/* Ensure fallback text and unique ID for print */}
-                   </div>
+                     "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm shadow-none print-only-inline-block hidden items-center",
+                     !displayDate && "text-muted-foreground" // Check displayDate for styling
+                   )}
+                 >
+                   {/* Always render displayDate derived from state */}
+                   <span id="orderDatePrint" className="ml-1">{displayDate || 'N/A'}</span>
+                 </div>
               </div>
               {/* Client */}
                <div className="field-row flex items-center">
@@ -398,58 +388,57 @@ export default function AdOrderForm() {
             </div>
           </div>
 
-           {/* Advertisement Manager Section */}
-           <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
-             <Label className="block mb-1">The Advertisement Manager</Label>
-              <div className="relative mb-1">
-               <Input
-                 id="adManager1"
-                 type="text"
-                 placeholder="Line 1"
-                 className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                 value={advertisementManagerLine1}
-                 onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
-               />
-              </div>
-             <div className="relative">
-             <Input
-               id="adManager2"
-               type="text"
-               placeholder="Line 2"
-               className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-               value={advertisementManagerLine2}
-               onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
-             />
-              </div>
-             <p className="text-sm mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
-           </div>
-
-
-             {/* Heading & Package Section */}
-               <div className="heading-package-container flex gap-3 mb-5">
-               <div className="heading-caption-box flex-1 print-border-heavy rounded p-2 border-2 border-black">
-                <Label htmlFor="caption" className="block mb-1">Heading/Caption:</Label>
-                <Input
-                  id="caption"
-                  type="text"
-                  placeholder="Enter caption here"
-                  className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                  value={caption}
-                  onChange={(e) => setCaption(e.target.value)}
-                />
-              </div>
-               <div className="package-box w-[30%] print-border-heavy rounded p-2 border-2 border-black">
-                <Label htmlFor="package" className="block mb-1">Package:</Label>
-                <Input
-                  id="package" // Use unique ID
-                  type="text"
-                  placeholder="Enter package name"
-                  className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                  value={packageName}
-                  onChange={(e) => setPackageName(e.target.value)}
-                />
-              </div>
+            {/* Heading & Package Section */}
+            <div className="heading-package-container flex gap-3 mb-5">
+                <div className="heading-caption-box flex-1 print-border-heavy rounded p-2 border-2 border-black">
+                    <Label htmlFor="caption" className="block mb-1">Heading/Caption:</Label>
+                    <Input
+                      id="caption"
+                      type="text"
+                      placeholder="Enter caption here"
+                      className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                      value={caption}
+                      onChange={(e) => setCaption(e.target.value)}
+                    />
+                </div>
+                <div className="package-box w-[30%] print-border-heavy rounded p-2 border-2 border-black">
+                    <Label htmlFor="package" className="block mb-1">Package:</Label>
+                    <Input
+                      id="package" // Use unique ID
+                      type="text"
+                      placeholder="Enter package name"
+                      className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                      value={packageName}
+                      onChange={(e) => setPackageName(e.target.value)}
+                    />
+                </div>
             </div>
+
+             {/* Advertisement Manager Section */}
+             <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
+                 <Label className="block mb-1">The Advertisement Manager</Label>
+                  <div className="relative mb-1">
+                   <Input
+                     id="adManager1"
+                     type="text"
+                     placeholder="Line 1"
+                     className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                     value={advertisementManagerLine1}
+                     onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
+                   />
+                  </div>
+                 <div className="relative">
+                 <Input
+                   id="adManager2"
+                   type="text"
+                   placeholder="Line 2"
+                   className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                   value={advertisementManagerLine2}
+                   onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
+                 />
+                  </div>
+                 <p className="text-sm mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
+               </div>
 
           {/* Schedule Table */}
            <div className="mb-5 table-container-print">
@@ -468,22 +457,58 @@ export default function AdOrderForm() {
                 {scheduleRows.map((row) => (
                   <TableRow key={row.id}>
                     <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[120px] align-top">
-                       <Textarea id={`keyNo-${row.id}`} value={row.keyNo} onChange={(e) => handleScheduleChange(row.id, 'keyNo', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none"/>
+                       <Textarea
+                          id={`keyNo-${row.id}`}
+                          value={row.keyNo}
+                          onChange={(e) => handleScheduleChange(row.id, 'keyNo', e.target.value)}
+                          className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none"
+                          style={{ verticalAlign: 'top' }} // Ensure text starts top-left
+                       />
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[120px] align-top">
-                       <Textarea id={`publication-${row.id}`} value={row.publication} onChange={(e) => handleScheduleChange(row.id, 'publication', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none"/>
+                       <Textarea
+                          id={`publication-${row.id}`}
+                          value={row.publication}
+                          onChange={(e) => handleScheduleChange(row.id, 'publication', e.target.value)}
+                          className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none"
+                           style={{ verticalAlign: 'top' }}
+                        />
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[120px] align-top">
-                       <Textarea id={`edition-${row.id}`} value={row.edition} onChange={(e) => handleScheduleChange(row.id, 'edition', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none"/>
+                       <Textarea
+                          id={`edition-${row.id}`}
+                          value={row.edition}
+                          onChange={(e) => handleScheduleChange(row.id, 'edition', e.target.value)}
+                          className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none"
+                           style={{ verticalAlign: 'top' }}
+                        />
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[120px] align-top">
-                       <Textarea id={`size-${row.id}`} value={row.size} onChange={(e) => handleScheduleChange(row.id, 'size', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none"/>
+                       <Textarea
+                           id={`size-${row.id}`}
+                           value={row.size}
+                           onChange={(e) => handleScheduleChange(row.id, 'size', e.target.value)}
+                           className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none"
+                            style={{ verticalAlign: 'top' }}
+                         />
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[120px] align-top">
-                       <Textarea id={`scheduledDate-${row.id}`} value={row.scheduledDate} onChange={(e) => handleScheduleChange(row.id, 'scheduledDate', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none"/>
+                       <Textarea
+                           id={`scheduledDate-${row.id}`}
+                           value={row.scheduledDate}
+                           onChange={(e) => handleScheduleChange(row.id, 'scheduledDate', e.target.value)}
+                           className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none"
+                           style={{ verticalAlign: 'top' }}
+                       />
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[120px] align-top">
-                       <Textarea id={`position-${row.id}`} value={row.position} onChange={(e) => handleScheduleChange(row.id, 'position', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none"/>
+                       <Textarea
+                          id={`position-${row.id}`}
+                          value={row.position}
+                          onChange={(e) => handleScheduleChange(row.id, 'position', e.target.value)}
+                          className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none"
+                          style={{ verticalAlign: 'top' }}
+                       />
                     </TableCell>
                   </TableRow>
                 ))}
@@ -543,7 +568,7 @@ export default function AdOrderForm() {
                {/* Stamp Area - Positioned absolutely */}
                <div
                   id="stampContainerElement"
-                  className="stamp-container absolute top-2 right-2 w-[180px] h-[142px] flex items-center justify-center cursor-pointer overflow-hidden group border-0" /* Removed border */
+                  className="stamp-container absolute top-2 right-2 w-[180px] h-[142px] flex items-center justify-center cursor-pointer overflow-hidden group border-0" // Ensure no border here
                   onClick={triggerStampUpload}
                   onMouseEnter={triggerStampUpload}
                >
@@ -564,8 +589,8 @@ export default function AdOrderForm() {
                               alt="Stamp Preview"
                               width={180} // Static width
                               height={142} // Static height
-                              style={{ objectFit: 'contain' }}
-                              className="block max-w-full max-h-full" // Use max-w/max-h to fit within bounds
+                              style={{ objectFit: 'contain' }} // Use contain to fit within bounds
+                              className="block max-w-full max-h-full"
                             />
                             {/* Hover effect */}
                             <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity no-print">
