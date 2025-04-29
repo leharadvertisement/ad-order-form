@@ -87,10 +87,15 @@ export default function AdOrderForm() {
         // Load and validate date
         if (parsedData.orderDate) {
            const savedDateObj = new Date(parsedData.orderDate);
+           // Check if the parsed date is valid
            if (!isNaN(savedDateObj.getTime())) {
                initialDate = savedDateObj; // Use saved date if valid
+           } else {
+                // If saved date is invalid, keep initialDate as today (already set)
+                console.warn("Invalid date found in localStorage, defaulting to today.");
            }
         }
+         // If no orderDate in saved data, initialDate remains today (already set)
 
         setClientName(parsedData.clientName || '');
         setAdvertisementManagerLine1(parsedData.advertisementManagerLine1 || '');
@@ -103,9 +108,10 @@ export default function AdOrderForm() {
         description: "Could not recover previous draft data. Using defaults.",
         variant: "destructive",
       });
+       // Keep initialDate as today in case of error
     } finally {
-      setOrderDate(initialDate); // Set the Date object state
-      setDisplayDate(format(initialDate, "dd.MM.yyyy")); // Set the initial display string
+      setOrderDate(initialDate); // Set the Date object state (defaults to today if no valid saved date)
+      // Display date formatting is handled in the next effect, which runs only on client
       isInitialLoadRef.current = false;
       setIsClient(true); // Mark as client-side ready *after* initial state setup
     }
@@ -265,7 +271,7 @@ export default function AdOrderForm() {
         variant: "destructive",
       });
     }
-  }, [toast]); // Removed displayDate dependency here, it's handled by useEffect
+  }, [toast]);
 
 
   if (!isClient) {
@@ -304,7 +310,7 @@ export default function AdOrderForm() {
            {/* Address Boxes Container */}
            <div className="address-container flex justify-between gap-3 mb-5">
             {/* Left Address Box */}
-             <div className="address-box w-[48%] print-border rounded p-2 border border-black">
+             <div className="address-box w-[48%] print-border-heavy rounded p-2 border-2 border-black">
               <p className="text-sm leading-tight">
                 Lehar Advertising Agency Pvt. Ltd.<br />
                 D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
@@ -315,7 +321,7 @@ export default function AdOrderForm() {
               </p>
             </div>
             {/* Right Box: R.O., Date, Client */}
-             <div className="ro-date-client-container w-[48%] print-border rounded p-2 space-y-2 border border-black">
+             <div className="ro-date-client-container w-[48%] print-border-heavy rounded p-2 space-y-2 border-2 border-black">
               {/* R.O. No. LN */}
                <div className="field-row flex items-center">
                 <Label htmlFor="roNumber" className="w-20 text-sm shrink-0">R.O.No.LN:</Label>
@@ -388,6 +394,32 @@ export default function AdOrderForm() {
             </div>
           </div>
 
+             {/* Advertisement Manager Section */}
+             <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
+                 <Label className="block mb-1">The Advertisement Manager</Label>
+                  <div className="relative mb-1">
+                   <Input
+                     id="adManager1"
+                     type="text"
+                     placeholder="Line 1"
+                     className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                     value={advertisementManagerLine1}
+                     onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
+                   />
+                  </div>
+                 <div className="relative">
+                 <Input
+                   id="adManager2"
+                   type="text"
+                   placeholder="Line 2"
+                   className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                   value={advertisementManagerLine2}
+                   onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
+                 />
+                  </div>
+                 <p className="text-sm mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
+               </div>
+
             {/* Heading & Package Section */}
             <div className="heading-package-container flex gap-3 mb-5">
                 <div className="heading-caption-box flex-1 print-border-heavy rounded p-2 border-2 border-black">
@@ -414,31 +446,6 @@ export default function AdOrderForm() {
                 </div>
             </div>
 
-             {/* Advertisement Manager Section */}
-             <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
-                 <Label className="block mb-1">The Advertisement Manager</Label>
-                  <div className="relative mb-1">
-                   <Input
-                     id="adManager1"
-                     type="text"
-                     placeholder="Line 1"
-                     className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                     value={advertisementManagerLine1}
-                     onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
-                   />
-                  </div>
-                 <div className="relative">
-                 <Input
-                   id="adManager2"
-                   type="text"
-                   placeholder="Line 2"
-                   className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                   value={advertisementManagerLine2}
-                   onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
-                 />
-                  </div>
-                 <p className="text-sm mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
-               </div>
 
           {/* Schedule Table */}
            <div className="mb-5 table-container-print">
@@ -536,6 +543,7 @@ export default function AdOrderForm() {
                 className="w-full h-full resize-none border-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none p-1"
                 value={matter}
                 onChange={(e) => setMatter(e.target.value)}
+                style={{ verticalAlign: 'top' }} // Ensure text starts top-left
               />
             </div>
           </div>
@@ -568,7 +576,7 @@ export default function AdOrderForm() {
                {/* Stamp Area - Positioned absolutely */}
                <div
                   id="stampContainerElement"
-                  className="stamp-container absolute top-2 right-2 w-[180px] h-[142px] flex items-center justify-center cursor-pointer overflow-hidden group border-0" // Ensure no border here
+                  className="stamp-container absolute top-2 right-2 w-[180px] h-[142px] flex items-center justify-center cursor-pointer overflow-hidden group border-0" // Ensure no border here for the interactive container
                   onClick={triggerStampUpload}
                   onMouseEnter={triggerStampUpload}
                >
