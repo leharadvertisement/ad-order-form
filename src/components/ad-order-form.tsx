@@ -17,8 +17,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf'; // Although imported, not used for the print button
 
 interface ScheduleRow {
   id: number;
@@ -235,15 +233,9 @@ export default function AdOrderForm() {
 
     // Function to trigger the browser's print dialog
   const handlePrint = useCallback(() => {
-      toast({
-          title: "Preparing Print...",
-          description: "Opening print dialog.",
-      });
-      // Add a small delay to allow the toast to show
-      setTimeout(() => {
-          window.print(); // This triggers the standard browser print functionality
-      }, 300);
-  }, [toast]);
+      // Directly call window.print() to open the print preview dialog
+      window.print();
+  }, []);
 
 
   const handleClearForm = useCallback(() => {
@@ -608,3 +600,4 @@ export default function AdOrderForm() {
     </div>
   );
 }
+
