@@ -86,6 +86,7 @@ export default function AdOrderForm() {
 
         if (savedDate && !isNaN(savedDate.getTime())) {
           setOrderDate(savedDate);
+          // Directly format here for initial load consistency
           setDisplayDate(format(savedDate, "dd.MM.yyyy"));
         } else {
            const today = new Date();
@@ -115,30 +116,27 @@ export default function AdOrderForm() {
     } finally {
       isInitialLoadRef.current = false;
     }
-  }, [toast]);
+  }, [toast]); // Removed displayDate dependency
 
-  // Update displayDate only when orderDate changes *after* initial load
    useEffect(() => {
-    if (!isInitialLoadRef.current && isClient) {
-        if (orderDate && !isNaN(orderDate.getTime())) {
-            try {
-                setDisplayDate(format(orderDate, "dd.MM.yyyy"));
-            } catch (error) {
-                console.error("Error formatting date:", error);
-                setDisplayDate("Invalid Date");
-                 // Optionally reset to today if format fails
-                 const today = new Date();
-                 setOrderDate(today);
-                 setDisplayDate(format(today, "dd.MM.yyyy"));
-            }
-        } else if (!orderDate) {
-            // Handle case where date is cleared or becomes invalid
+     // Update display date whenever orderDate changes, ensuring consistency
+     if (orderDate && !isNaN(orderDate.getTime())) {
+         try {
+             setDisplayDate(format(orderDate, "dd.MM.yyyy"));
+         } catch (error) {
+             console.error("Error formatting date:", error);
+             setDisplayDate("Invalid Date");
+             // Reset to today if format fails to prevent hydration issues
              const today = new Date();
-             setOrderDate(today); // Reset to today if cleared or invalid
+             setOrderDate(today); // Reset the actual date state
              setDisplayDate(format(today, "dd.MM.yyyy"));
-        }
-    }
-  }, [orderDate, isClient]);
+         }
+     } else if (!orderDate && isClient) { // Handle case where date is cleared only on client
+         const today = new Date();
+         setOrderDate(today); // Reset to today if cleared or invalid
+         setDisplayDate(format(today, "dd.MM.yyyy"));
+     }
+   }, [orderDate, isClient]); // Depend only on orderDate and isClient
 
 
   useEffect(() => {
@@ -470,22 +468,22 @@ export default function AdOrderForm() {
                 {scheduleRows.map((row) => (
                   <TableRow key={row.id}>
                     <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[120px] align-top">
-                       <Input id={`keyNo-${row.id}`} type="text" value={row.keyNo} onChange={(e) => handleScheduleChange(row.id, 'keyNo', e.target.value)} className="w-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top"/>
+                       <Textarea id={`keyNo-${row.id}`} value={row.keyNo} onChange={(e) => handleScheduleChange(row.id, 'keyNo', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none"/>
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[120px] align-top">
-                      <Input id={`publication-${row.id}`} type="text" value={row.publication} onChange={(e) => handleScheduleChange(row.id, 'publication', e.target.value)} className="w-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top"/>
+                       <Textarea id={`publication-${row.id}`} value={row.publication} onChange={(e) => handleScheduleChange(row.id, 'publication', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none"/>
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[120px] align-top">
-                      <Input id={`edition-${row.id}`} type="text" value={row.edition} onChange={(e) => handleScheduleChange(row.id, 'edition', e.target.value)} className="w-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top"/>
+                       <Textarea id={`edition-${row.id}`} value={row.edition} onChange={(e) => handleScheduleChange(row.id, 'edition', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none"/>
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[120px] align-top">
-                      <Input id={`size-${row.id}`} type="text" value={row.size} onChange={(e) => handleScheduleChange(row.id, 'size', e.target.value)} className="w-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top"/>
+                       <Textarea id={`size-${row.id}`} value={row.size} onChange={(e) => handleScheduleChange(row.id, 'size', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none"/>
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[120px] align-top">
-                      <Input id={`scheduledDate-${row.id}`} type="text" value={row.scheduledDate} onChange={(e) => handleScheduleChange(row.id, 'scheduledDate', e.target.value)} className="w-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top"/>
+                       <Textarea id={`scheduledDate-${row.id}`} value={row.scheduledDate} onChange={(e) => handleScheduleChange(row.id, 'scheduledDate', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none"/>
                     </TableCell>
                      <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[120px] align-top">
-                      <Input id={`position-${row.id}`} type="text" value={row.position} onChange={(e) => handleScheduleChange(row.id, 'position', e.target.value)} className="w-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top"/>
+                       <Textarea id={`position-${row.id}`} value={row.position} onChange={(e) => handleScheduleChange(row.id, 'position', e.target.value)} className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none"/>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -545,7 +543,7 @@ export default function AdOrderForm() {
                {/* Stamp Area - Positioned absolutely */}
                <div
                   id="stampContainerElement"
-                  className="stamp-container absolute top-2 right-2 w-[180px] h-[142px] flex items-center justify-center cursor-pointer overflow-hidden group"
+                  className="stamp-container absolute top-2 right-2 w-[180px] h-[142px] flex items-center justify-center cursor-pointer overflow-hidden group border-0" /* Removed border */
                   onClick={triggerStampUpload}
                   onMouseEnter={triggerStampUpload}
                >
@@ -566,8 +564,8 @@ export default function AdOrderForm() {
                               alt="Stamp Preview"
                               width={180} // Static width
                               height={142} // Static height
-                              style={{ objectFit: 'contain' }} // Changed to contain
-                              className="block"
+                              style={{ objectFit: 'contain' }}
+                              className="block max-w-full max-h-full" // Use max-w/max-h to fit within bounds
                             />
                             {/* Hover effect */}
                             <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity no-print">
@@ -599,3 +597,4 @@ export default function AdOrderForm() {
     </div>
   );
 }
+
