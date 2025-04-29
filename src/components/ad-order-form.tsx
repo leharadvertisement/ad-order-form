@@ -18,6 +18,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
+
 interface ScheduleRow {
   id: number;
   keyNo: string;
@@ -231,6 +232,7 @@ export default function AdOrderForm() {
     stampFileRef.current?.click();
   }, []);
 
+
   // Function to trigger the browser's print dialog
   const handlePrint = useCallback(() => {
       window.print();
@@ -398,7 +400,7 @@ export default function AdOrderForm() {
             </div>
           </div>
 
-             {/* Advertisement Manager Section */}
+           {/* Advertisement Manager Section */}
            <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
              <Label className="block mb-1">The Advertisement Manager</Label>
               <div className="relative mb-1">
