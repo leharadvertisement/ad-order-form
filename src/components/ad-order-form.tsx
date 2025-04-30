@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
-import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon, Printer, Eye, X } from 'lucide-react';
+import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -319,12 +319,6 @@ export default function AdOrderForm() {
         <Button onClick={handleClearForm} variant="outline">
           <Eraser className="mr-2 h-4 w-4" /> Clear Form & Draft
         </Button>
-         <Button onClick={togglePrintPreview} variant="outline">
-           <Eye className="mr-2 h-4 w-4" /> Preview Print
-         </Button>
-         <Button onClick={handlePrint} variant="default">
-           <Printer className="mr-2 h-4 w-4" /> Print Release Order
-         </Button>
       </div>
 
       {/* Printable Area - Conditionally rendered in preview mode */}
@@ -668,3 +662,4 @@ export default function AdOrderForm() {
     </div>
   );
 }
+
