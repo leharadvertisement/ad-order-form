@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { ChangeEvent } from 'react';
@@ -11,7 +12,7 @@ import {
   TableBody,
   TableCell,
   TableHead,
-  TableHeader, // Added missing import
+  TableHeader,
   TableRow,
 } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
@@ -24,6 +25,8 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { saveAs } from 'file-saver';
+import { Packer, Document, Paragraph, TextRun, AlignmentType, HeadingLevel, ImageRun } from 'docx';
 
 interface ScheduleRow {
   id: number;
@@ -223,78 +226,78 @@ export default function AdOrderForm() {
     // Ensure all state dependencies are listed
   }, [caption, packageName, matter, scheduleRows, stampPreview, roNumber, orderDate, clientName, advertisementManagerLine1, advertisementManagerLine2, isClient]);
 
-  // Apply/remove print preview class to the body
-  useEffect(() => {
-    if (isPreviewing) {
-        document.body.classList.add('print-preview-mode');
-        // Add wrapper for centering preview
-        const wrapper = document.createElement('div');
-        wrapper.id = 'printable-area-wrapper';
-        document.body.appendChild(wrapper);
-        // Move the printable area into the wrapper
-        const printableArea = document.getElementById('pdf-content-area'); // Changed ID
-        if (printableArea) {
-            wrapper.appendChild(printableArea);
-        }
-        // Add close button
-        const closeButton = document.createElement('button');
-        closeButton.id = 'closePreviewButton';
-        closeButton.innerText = 'Close Preview';
-        closeButton.onclick = () => setIsPreviewing(false); // Use state setter
-        document.body.appendChild(closeButton); // Append directly to body, position fixed
-    } else {
-        document.body.classList.remove('print-preview-mode');
-        // Move printable area back and remove wrapper/button
-        const wrapper = document.getElementById('printable-area-wrapper');
-        const printableArea = document.getElementById('pdf-content-area'); // Changed ID
-        const closeButton = document.getElementById('closePreviewButton');
-        if (wrapper && printableArea) {
-            // Find the original container (assuming it's the direct parent of the wrapper)
-             const originalContainer = wrapper.parentNode;
-             if (originalContainer) {
-                 // Insert printableArea back *before* the wrapper (if it still exists)
-                 originalContainer.insertBefore(printableArea, wrapper);
-             } else {
-                // Fallback if parent is not found (less ideal)
-                document.body.appendChild(printableArea);
-             }
-            wrapper.remove();
-        } else if (wrapper) {
-             // If only wrapper exists, remove it
-             wrapper.remove();
-        }
-        if (closeButton) {
-            closeButton.remove();
-        }
-    }
-
-    // Cleanup function
-    return () => {
-        if (document.body.classList.contains('print-preview-mode')) {
+    // Apply/remove print preview class to the body
+    useEffect(() => {
+        if (isPreviewing) {
+            document.body.classList.add('print-preview-mode');
+            // Add wrapper for centering preview
+            const wrapper = document.createElement('div');
+            wrapper.id = 'printable-area-wrapper';
+            document.body.appendChild(wrapper);
+            // Move the printable area into the wrapper
+            const printableArea = document.getElementById('printable-area'); // Use original ID
+            if (printableArea) {
+                wrapper.appendChild(printableArea);
+            }
+            // Add close button
+            const closeButton = document.createElement('button');
+            closeButton.id = 'closePreviewButton';
+            closeButton.innerText = 'Close Preview';
+            closeButton.onclick = () => setIsPreviewing(false); // Use state setter
+            document.body.appendChild(closeButton); // Append directly to body, position fixed
+        } else {
             document.body.classList.remove('print-preview-mode');
+            // Move printable area back and remove wrapper/button
             const wrapper = document.getElementById('printable-area-wrapper');
-            const printableArea = document.getElementById('pdf-content-area'); // Changed ID
-             const closeButton = document.getElementById('closePreviewButton');
-            if (wrapper && printableArea && wrapper.parentNode) {
-                 // On unmount, ensure it's moved back if still in wrapper
+            const printableArea = document.getElementById('printable-area'); // Use original ID
+            const closeButton = document.getElementById('closePreviewButton');
+            if (wrapper && printableArea) {
+                // Find the original container (assuming it's the direct parent of the wrapper)
                  const originalContainer = wrapper.parentNode;
                  if (originalContainer) {
                      // Insert printableArea back *before* the wrapper (if it still exists)
-                    originalContainer.insertBefore(printableArea, wrapper);
+                     originalContainer.insertBefore(printableArea, wrapper);
                  } else {
-                    // Fallback
-                     document.body.appendChild(printableArea);
+                    // Fallback if parent is not found (less ideal)
+                    document.body.appendChild(printableArea);
                  }
                 wrapper.remove();
             } else if (wrapper) {
+                 // If only wrapper exists, remove it
                  wrapper.remove();
             }
-             if (closeButton) {
-                 closeButton.remove();
-             }
+            if (closeButton) {
+                closeButton.remove();
+            }
         }
-    };
-  }, [isPreviewing]);
+
+        // Cleanup function
+        return () => {
+            if (document.body.classList.contains('print-preview-mode')) {
+                document.body.classList.remove('print-preview-mode');
+                const wrapper = document.getElementById('printable-area-wrapper');
+                const printableArea = document.getElementById('printable-area'); // Use original ID
+                 const closeButton = document.getElementById('closePreviewButton');
+                if (wrapper && printableArea && wrapper.parentNode) {
+                     // On unmount, ensure it's moved back if still in wrapper
+                     const originalContainer = wrapper.parentNode;
+                     if (originalContainer) {
+                         // Insert printableArea back *before* the wrapper (if it still exists)
+                        originalContainer.insertBefore(printableArea, wrapper);
+                     } else {
+                        // Fallback
+                         document.body.appendChild(printableArea);
+                     }
+                    wrapper.remove();
+                } else if (wrapper) {
+                     wrapper.remove();
+                }
+                 if (closeButton) {
+                     closeButton.remove();
+                 }
+            }
+        };
+      }, [isPreviewing]);
 
 
   // --- Callback Hooks ---
@@ -391,132 +394,112 @@ export default function AdOrderForm() {
   }, [toast]);
 
  const handleDownloadPdf = useCallback(async () => {
-    if (!formRef.current) return;
+    const printableElement = document.getElementById('printable-area');
+    if (!printableElement) {
+        toast({
+            title: "Error",
+            description: "Printable area not found.",
+            variant: "destructive",
+        });
+        return;
+    }
 
-    setPdfGenerationMode(true); // Enable PDF mode styles
-
-    // Need a slight delay for styles to apply before capturing
-    await new Promise(resolve => setTimeout(resolve, 100));
-
+    // Temporarily apply PDF generation styles
+    document.body.classList.add('pdf-generation-mode');
+    await new Promise(resolve => setTimeout(resolve, 100)); // Allow styles to apply
 
     try {
-        const canvas = await html2canvas(formRef.current, {
-            scale: 2,
+        const canvas = await html2canvas(printableElement, {
+            scale: 2, // Increase resolution
             useCORS: true,
             logging: false,
-            backgroundColor: null, // Ensure transparent background if needed
+            backgroundColor: '#ffffff', // Ensure white background for PDF
             onclone: (documentClone) => {
-                 const clonedContentArea = documentClone.getElementById('pdf-content-area'); // Use the correct ID
-                 if (clonedContentArea) {
-                      // Ensure the top-level container in the clone has the PDF mode class
-                     clonedContentArea.classList.add('pdf-generation-mode');
+                // Ensure cloned elements have correct styles for PDF rendering
+                const clonedPrintableArea = documentClone.getElementById('printable-area');
+                if (!clonedPrintableArea) return;
 
-                      // Find the actual printable card inside the cloned area
-                      const clonedForm = clonedContentArea.querySelector('#printable-area') as HTMLElement | null;
-                      if (clonedForm) {
-                         clonedForm.classList.add('pdf-generation-mode'); // Ensure styles in clone
+                clonedPrintableArea.classList.add('pdf-generation-mode'); // Ensure styles in clone
 
-                         // Re-apply specific print/PDF styles that might be missed
-                         const textareas = clonedForm.querySelectorAll('textarea.pdf-textarea');
-                         textareas.forEach(ta => {
-                             (ta as HTMLElement).style.height = '145px'; // Set height explicitly for canvas
-                             (ta as HTMLElement).style.minHeight = '145px';
-                              (ta as HTMLElement).style.overflow = 'hidden'; // Hide potential scrollbars in canvas
-                              (ta as HTMLElement).style.display = 'block'; // Ensure block display
-                              (ta as HTMLElement).style.verticalAlign = 'top'; // Align text top
-                         });
+                // Explicitly style textareas in the clone for PDF rendering
+                const textareas = clonedPrintableArea.querySelectorAll('textarea');
+                textareas.forEach(ta => {
+                    (ta as HTMLElement).style.height = '145px'; // Explicit height for canvas
+                    (ta as HTMLElement).style.minHeight = '145px';
+                    (ta as HTMLElement).style.overflow = 'hidden';
+                    (ta as HTMLElement).style.display = 'block';
+                    (ta as HTMLElement).style.verticalAlign = 'top';
+                    (ta as HTMLElement).style.border = 'none'; // Ensure no border in PDF capture if needed
+                    (ta as HTMLElement).style.padding = '2pt';
+                });
 
-                         // Ensure vertical matter text in clone
-                          const matterLabelClone = clonedForm.querySelector('.matter-pdf-label');
-                          const matterTextClone = clonedForm.querySelector('.matter-text-pdf-clone');
-                          if (matterLabelClone && matterTextClone) {
-                              (matterLabelClone as HTMLElement).style.display = 'flex'; // Make label visible
-                              (matterLabelClone as HTMLElement).style.visibility = 'visible';
-                              (matterTextClone as HTMLElement).style.writingMode = 'vertical-rl';
-                              (matterTextClone as HTMLElement).style.textOrientation = 'mixed';
-                              (matterTextClone as HTMLElement).style.transform = 'rotate(180deg)';
-                              (matterTextClone as HTMLElement).style.display = 'block';
-                              (matterTextClone as HTMLElement).style.whiteSpace = 'nowrap';
-                          } else if (matterLabelClone) {
-                              // Fallback if only label found - hide it? or log warning?
-                               console.warn("Matter text clone element not found in PDF generation.");
-                          }
-
-
-                         // Ensure stamp image is visible in clone if it exists
-                          const stampImageClone = clonedForm.querySelector('.stamp-print-image');
-                          const stampContainerClone = clonedForm.querySelector('.stamp-container-print');
-                          if (stampImageClone && stampContainerClone) {
-                               (stampContainerClone as HTMLElement).style.display = 'flex'; // Make container visible
-                              (stampContainerClone as HTMLElement).style.visibility = 'visible';
-                              (stampContainerClone as HTMLElement).style.position = 'absolute';
-                              (stampContainerClone as HTMLElement).style.top = '2pt';
-                              (stampContainerClone as HTMLElement).style.right = '2pt';
-                              (stampContainerClone as HTMLElement).style.width = '180px';
-                              (stampContainerClone as HTMLElement).style.height = '142px';
-
-                              // Ensure image itself is displayed correctly
-                                (stampImageClone as HTMLElement).style.display = 'block';
-                                (stampImageClone as HTMLElement).style.maxWidth = '100%';
-                                (stampImageClone as HTMLElement).style.maxHeight = '100%';
-                                (stampImageClone as HTMLElement).style.objectFit = 'contain';
-
-                          }
-
-                         // Hide elements specifically marked for no-print/no-pdf in the clone
-                         const noPrintElementsClone = clonedForm.querySelectorAll('.no-print');
-                         noPrintElementsClone.forEach(el => (el as HTMLElement).style.display = 'none');
-
-                         // Make sure print-only elements ARE visible
-                         const printOnlyElementsClone = clonedForm.querySelectorAll('.print-only-inline-block, .pdf-only-inline-block');
-                         printOnlyElementsClone.forEach(el => (el as HTMLElement).style.display = 'inline-block');
-                         const printOnlyFlexElementsClone = clonedForm.querySelectorAll('.print-only-flex, .pdf-only-flex');
-                         printOnlyFlexElementsClone.forEach(el => (el as HTMLElement).style.display = 'flex');
-
-                         // Force bold font weight on all elements within the cloned form for PDF
-                         const allElements = clonedForm.querySelectorAll('*');
-                         allElements.forEach(el => {
-                            (el as HTMLElement).style.fontWeight = 'bold';
-                            (el as HTMLElement).style.color = 'black'; // Ensure black text
-                             // Force print color adjust for backgrounds and borders
-                             (el as HTMLElement).style.webkitPrintColorAdjust = 'exact';
-                             (el as HTMLElement).style.printColorAdjust = 'exact';
-                             // Ensure black borders
-                             if (window.getComputedStyle(el).borderWidth !== '0px') {
-                                (el as HTMLElement).style.borderColor = 'black';
-                             }
-                         });
-                     } else {
-                        console.error("Cloned printable area card not found during PDF generation.");
-                     }
-                 } else {
-                      console.error("Cloned PDF content area not found during PDF generation.");
+                 // Ensure vertical matter text shows correctly in clone
+                 const matterLabelClone = clonedPrintableArea.querySelector('.matter-pdf-label');
+                 const matterTextClone = clonedPrintableArea.querySelector('.matter-text-pdf-clone');
+                 if (matterLabelClone && matterTextClone) {
+                      (matterLabelClone as HTMLElement).style.display = 'flex';
+                     (matterTextClone as HTMLElement).style.writingMode = 'vertical-rl';
+                     (matterTextClone as HTMLElement).style.textOrientation = 'mixed';
+                     (matterTextClone as HTMLElement).style.transform = 'rotate(180deg)';
+                     (matterTextClone as HTMLElement).style.display = 'block'; // Important
                  }
+
+                 // Ensure stamp is visible in clone
+                  const stampContainerClone = clonedPrintableArea.querySelector('.stamp-container-print');
+                  if (stampContainerClone) {
+                       (stampContainerClone as HTMLElement).style.display = 'flex';
+                       (stampContainerClone as HTMLElement).style.visibility = 'visible';
+                  }
+
+                  // Hide no-print elements in clone
+                  const noPrintElementsClone = clonedPrintableArea.querySelectorAll('.no-print');
+                  noPrintElementsClone.forEach(el => (el as HTMLElement).style.display = 'none');
+
+                  // Make sure print-only elements ARE visible
+                   const printOnlyElementsClone = clonedPrintableArea.querySelectorAll('.print-only-inline-block, .pdf-only-inline-block');
+                   printOnlyElementsClone.forEach(el => (el as HTMLElement).style.display = 'inline-block');
+                   const printOnlyFlexElementsClone = clonedPrintableArea.querySelectorAll('.print-only-flex, .pdf-only-flex');
+                   printOnlyFlexElementsClone.forEach(el => (el as HTMLElement).style.display = 'flex');
+
+                // Force bold font weight and black color on all elements within the cloned form for PDF
+                 const allElements = clonedPrintableArea.querySelectorAll('*');
+                 allElements.forEach(el => {
+                    (el as HTMLElement).style.fontWeight = 'bold';
+                    (el as HTMLElement).style.color = 'black';
+                    // Force print color adjust for backgrounds and borders
+                     (el as HTMLElement).style.webkitPrintColorAdjust = 'exact';
+                     (el as HTMLElement).style.printColorAdjust = 'exact';
+                     // Ensure black borders where applicable
+                     if (window.getComputedStyle(el).borderWidth !== '0px') {
+                        (el as HTMLElement).style.borderColor = 'black';
+                     }
+                 });
             }
         });
 
         const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('p', 'pt', 'a4');
+        const pdf = new jsPDF({
+            orientation: 'p', // portrait
+            unit: 'pt', // points
+            format: 'a4'
+        });
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = pdf.internal.pageSize.getHeight();
-        const margin = 15; // 15pt margin on all sides
+        const margin = 15; // 15pt margin
         const contentWidth = pdfWidth - (margin * 2);
-        //const contentHeight = pdfHeight - (margin * 2); // Max height per page
 
         const imgProps = pdf.getImageProperties(imgData);
-        const imgWidth = contentWidth;
-        const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
-
+        const imgHeight = (imgProps.height * contentWidth) / imgProps.width;
         let heightLeft = imgHeight;
-        let position = margin; // Start drawing below top margin
+        let position = margin;
 
-        pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
-        heightLeft -= (pdfHeight - (margin * 2)); // Subtract usable page height
+        pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
+        heightLeft -= (pdfHeight - (margin * 2));
 
         while (heightLeft > 0) {
-            position = margin - heightLeft; // Negative position for the next part of the image
+            position = margin - heightLeft;
             pdf.addPage();
-            pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+            pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
             heightLeft -= (pdfHeight - (margin * 2));
         }
 
@@ -534,10 +517,8 @@ export default function AdOrderForm() {
             variant: "destructive",
         });
     } finally {
-       // Use a timeout to ensure rendering completes before removing the class
-       setTimeout(() => {
-          setPdfGenerationMode(false); // Disable PDF mode styles
-       }, 100); // Increased delay slightly
+        // Remove PDF generation styles
+         document.body.classList.remove('pdf-generation-mode');
     }
   }, [toast]);
 
@@ -549,7 +530,7 @@ export default function AdOrderForm() {
 
   // --- Main Render ---
   return (
-    <div className={cn("max-w-[210mm] mx-auto font-bold", { 'pdf-generation-mode': pdfGenerationMode })}>
+    <div className={cn("max-w-[210mm] mx-auto font-bold")}>
        {/* Action Buttons - Hidden during preview */}
        {!isPreviewing && (
            <div className="flex justify-end gap-2 mb-4 no-print">
@@ -567,10 +548,10 @@ export default function AdOrderForm() {
 
 
        {/* Printable/PDF Area - Add ref here, Moved ID to this div */}
-       <div id="pdf-content-area" ref={formRef}>
+       <div id="pdf-content-area-placeholder"> {/* Placeholder for structure */}
            {/* Conditional wrapper for print preview centering - only added when isPreviewing is true */}
             {/* The #printable-area is MOVED inside #printable-area-wrapper by the useEffect when isPreviewing */}
-           <Card id="printable-area" className="w-full print-border-heavy rounded-none shadow-none p-5 border-2 border-black pdf-target-card">
+           <Card id="printable-area" ref={formRef} className="w-full print-border-heavy rounded-none shadow-none p-5 border-2 border-black">
                <CardContent className="p-0">
                    {/* Header */}
                    <div className="text-center bg-black text-white p-1 mb-5 header-title">
@@ -733,12 +714,12 @@ export default function AdOrderForm() {
                         <Table className="print-table print-border border border-black pdf-table"> {/* Add pdf-table class */}
                             <TableHeader className="bg-secondary print-table-header">
                                 <TableRow>
-                                    <TableHead className="w-[10%] print-border-thin border border-black p-1.5 text-sm font-bold pdf-th">Key No.</TableHead>
-                                    <TableHead className="w-[25%] print-border-thin border border-black p-1.5 text-sm font-bold pdf-th">Publication(s)</TableHead>
-                                    <TableHead className="w-[15%] print-border-thin border border-black p-1.5 text-sm font-bold pdf-th">Edition(s)</TableHead>
-                                    <TableHead className="w-[15%] print-border-thin border border-black p-1.5 text-sm font-bold pdf-th">Size</TableHead>
-                                    <TableHead className="w-[20%] print-border-thin border border-black p-1.5 text-sm font-bold pdf-th">Scheduled Date(s)</TableHead>
-                                    <TableHead className="w-[15%] print-border-thin border border-black p-1.5 text-sm font-bold pdf-th">Position</TableHead>
+                                    <TableHead className="w-[10%] print-border-thin border border-black p-1.5 text-sm font-bold">Key No.</TableHead>
+                                    <TableHead className="w-[25%] print-border-thin border border-black p-1.5 text-sm font-bold">Publication(s)</TableHead>
+                                    <TableHead className="w-[15%] print-border-thin border border-black p-1.5 text-sm font-bold">Edition(s)</TableHead>
+                                    <TableHead className="w-[15%] print-border-thin border border-black p-1.5 text-sm font-bold">Size</TableHead>
+                                    <TableHead className="w-[20%] print-border-thin border border-black p-1.5 text-sm font-bold">Scheduled Date(s)</TableHead>
+                                    <TableHead className="w-[15%] print-border-thin border border-black p-1.5 text-sm font-bold">Position</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -906,7 +887,8 @@ export default function AdOrderForm() {
                    </div>
                </CardContent>
            </Card>
-       </div> {/* End of pdf-content-area */}
+       </div> {/* End of pdf-content-area-placeholder */}
    </div>
 );
 }
+

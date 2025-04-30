@@ -359,14 +359,39 @@ body {
 
 /* Styles for PDF Generation via html2canvas */
 .pdf-generation-mode {
-  /* Apply base print styles */
-  @media print {
-      /* Base print styles are already applied */
-  }
+  /* Apply base print styles - manually list needed styles */
+  body { @apply m-0 p-0 font-bold; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  .no-print, .popover, .popover-content, button:not(.print-visible-button) { @apply hidden invisible; }
+  #printable-area { @apply w-full max-w-full m-0 p-[10pt] border-[2pt] border-black shadow-none box-border; page-break-inside: avoid; font-weight: bold !important; }
+  #printable-area * { @apply font-bold text-black border-black; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  .print-only-inline-block { @apply inline-block visible; }
+  .print-only-flex { @apply flex visible; }
+  .print-border, .print-border-heavy { border: 1pt solid black !important; }
+  .print-border-heavy { border-width: 2pt !important; }
+  .print-border-thin { border: 0.5pt solid black !important; }
+  input[type="text"], textarea { @apply border-b border-black border-t-0 border-l-0 border-r-0 rounded-none p-0 m-0 bg-transparent shadow-none font-bold text-black; white-space: pre-wrap !important; overflow-wrap: break-word !important; height: auto !important; min-height: 1.2em; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  .table-container-print { page-break-inside: auto; }
+  .print-table { @apply w-full border-collapse border border-black font-bold; }
+  .print-table-header { background-color: #f0f0f0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  .print-table th, .print-table td { @apply border-black p-[2pt] align-top font-bold text-black; border-width: 0.5pt !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; page-break-inside: avoid; }
+  .print-table-cell textarea { @apply h-full min-h-[140px] border-none p-[2pt] font-bold text-black block overflow-hidden; white-space: pre-wrap !important; overflow-wrap: break-word !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  .print-table tr { height: 150px !important; page-break-inside: avoid; }
+  .matter-text-print { writing-mode: vertical-rl !important; text-orientation: mixed !important; transform: rotate(180deg) !important; @apply font-bold text-white bg-black; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  .vertical-label { background-color: black !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; width: 8pt !important; }
+  .matter-content textarea { @apply font-bold text-black; white-space: pre-wrap !important; overflow-wrap: break-word !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  .stamp-container-print { @apply flex visible absolute top-[2pt] right-[2pt] w-[180px] h-[142px] border-none overflow-hidden; }
+  .stamp-print-image { @apply max-w-full max-h-full block; object-fit: contain !important; }
+  .notes-stamp-container { @apply border border-black relative min-h-[150px]; }
+  .note-title-underline, .billing-title-underline { border-bottom: 2pt solid black !important; @apply pb-[1px] mb-[2pt] inline-block border-black; }
+  .address-box p, .billing-address-box p { @apply font-bold text-black; line-height: 1.2 !important; }
+  .ro-date-client-container .field-row label { @apply font-bold text-black; }
+  .ro-date-client-container input { @apply font-bold text-black border-b border-black; }
+  #orderDatePrint { @apply inline-block font-bold text-black; }
+  .header-title { @apply bg-black text-white font-bold p-[2pt] mb-[10pt]; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  .header-title h1 { @apply text-[16pt] m-0 font-bold text-white; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
   /* Additional or overriding styles specifically for PDF rendering */
-  padding: 0 !important; /* Remove outer padding if needed */
-  margin: 0 !important;
-  box-sizing: border-box;
+  @apply p-0 m-0 box-border;
 }
 
 .pdf-generation-mode #printable-area {
@@ -550,10 +575,11 @@ body.print-preview-mode {
   box-sizing: border-box;
 }
 
-body.print-preview-mode > *:not(#printable-area-wrapper) {
-  display: none !important; /* Hide everything except the preview wrapper */
+body.print-preview-mode > *:not(#printable-area-wrapper):not(#closePreviewButton) {
+  display: none !important; /* Hide everything except the preview wrapper and close button */
   visibility: hidden !important;
 }
+
 
 #printable-area-wrapper {
   width: 210mm; /* A4 width */
@@ -567,19 +593,15 @@ body.print-preview-mode > *:not(#printable-area-wrapper) {
 
 /* Apply print styles within the preview wrapper */
 #printable-area-wrapper #printable-area {
-  /* Apply all print styles defined above */
-  @media print {
-    /* Base print styles are already applied */
-  }
-  /* Ensure borders and print styles are visible in preview */
-  border: 2pt solid black !important;
-  box-shadow: none !important;
-  margin: 0 !important;
-  padding: 15pt !important; /* Use same padding as PDF for consistency */
-  width: 100% !important;
-  max-width: 100% !important;
-  font-weight: bold !important;
-  box-sizing: border-box;
+  /* Apply print styles defined above - manually apply key styles */
+   border: 2pt solid black !important;
+   box-shadow: none !important;
+   margin: 0 !important;
+   padding: 15pt !important; /* Use same padding as PDF for consistency */
+   width: 100% !important;
+   max-width: 100% !important;
+   font-weight: bold !important;
+   box-sizing: border-box;
 }
 
 #printable-area-wrapper #printable-area * {
@@ -761,3 +783,4 @@ body.print-preview-mode > *:not(#printable-area-wrapper) {
 #closePreviewButton:hover {
     background-color: #c82333; /* Darker red */
 }
+
