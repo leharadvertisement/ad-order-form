@@ -11,11 +11,11 @@ import {
   TableBody,
   TableCell,
   TableHead,
-  TableHeader,
+  TableHeader, // Added missing import
   TableRow,
 } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
-import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon, FileDown, Eye } from 'lucide-react'; // Added Eye for preview
+import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon, FileDown, Eye } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -96,7 +96,7 @@ export default function AdOrderForm() {
         }
     }
   // Depend only on isClient flag. Date setting logic moved to load effect.
-  }, [isClient]);
+  }, [isClient, orderDate]); // Added orderDate dependency
 
 
   // Effect to load data
@@ -232,7 +232,7 @@ export default function AdOrderForm() {
         wrapper.id = 'printable-area-wrapper';
         document.body.appendChild(wrapper);
         // Move the printable area into the wrapper
-        const printableArea = document.getElementById('pdf-content-area');
+        const printableArea = document.getElementById('pdf-content-area'); // Changed ID
         if (printableArea) {
             wrapper.appendChild(printableArea);
         }
@@ -246,15 +246,22 @@ export default function AdOrderForm() {
         document.body.classList.remove('print-preview-mode');
         // Move printable area back and remove wrapper/button
         const wrapper = document.getElementById('printable-area-wrapper');
-        const printableArea = document.getElementById('pdf-content-area');
+        const printableArea = document.getElementById('pdf-content-area'); // Changed ID
         const closeButton = document.getElementById('closePreviewButton');
         if (wrapper && printableArea) {
             // Find the original container (assuming it's the direct parent of the wrapper)
              const originalContainer = wrapper.parentNode;
              if (originalContainer) {
-                 originalContainer.appendChild(printableArea); // Move it back
+                 // Insert printableArea back *before* the wrapper (if it still exists)
+                 originalContainer.insertBefore(printableArea, wrapper);
+             } else {
+                // Fallback if parent is not found (less ideal)
+                document.body.appendChild(printableArea);
              }
             wrapper.remove();
+        } else if (wrapper) {
+             // If only wrapper exists, remove it
+             wrapper.remove();
         }
         if (closeButton) {
             closeButton.remove();
@@ -266,15 +273,21 @@ export default function AdOrderForm() {
         if (document.body.classList.contains('print-preview-mode')) {
             document.body.classList.remove('print-preview-mode');
             const wrapper = document.getElementById('printable-area-wrapper');
-            const printableArea = document.getElementById('pdf-content-area');
+            const printableArea = document.getElementById('pdf-content-area'); // Changed ID
              const closeButton = document.getElementById('closePreviewButton');
             if (wrapper && printableArea && wrapper.parentNode) {
                  // On unmount, ensure it's moved back if still in wrapper
                  const originalContainer = wrapper.parentNode;
                  if (originalContainer) {
-                    originalContainer.appendChild(printableArea);
+                     // Insert printableArea back *before* the wrapper (if it still exists)
+                    originalContainer.insertBefore(printableArea, wrapper);
+                 } else {
+                    // Fallback
+                     document.body.appendChild(printableArea);
                  }
                 wrapper.remove();
+            } else if (wrapper) {
+                 wrapper.remove();
             }
              if (closeButton) {
                  closeButton.remove();
@@ -391,39 +404,94 @@ export default function AdOrderForm() {
             scale: 2,
             useCORS: true,
             logging: false,
+            backgroundColor: null, // Ensure transparent background if needed
             onclone: (documentClone) => {
-                const clonedForm = documentClone.getElementById('printable-area');
-                if (clonedForm) {
-                    clonedForm.classList.add('pdf-generation-mode'); // Ensure styles in clone
-                    // Re-apply specific print/PDF styles that might be missed
-                    const textareas = clonedForm.querySelectorAll('textarea');
-                    textareas.forEach(ta => {
-                        (ta as HTMLElement).style.height = '145px'; // Set height explicitly for canvas
-                        (ta as HTMLElement).style.minHeight = '145px';
-                         (ta as HTMLElement).style.overflow = 'hidden'; // Hide potential scrollbars in canvas
-                    });
-                     // Ensure vertical matter text in clone
-                    const matterTextClone = clonedForm.querySelector('.matter-text-pdf-clone');
-                    if (matterTextClone) {
-                        (matterTextClone as HTMLElement).style.writingMode = 'vertical-rl';
-                        (matterTextClone as HTMLElement).style.textOrientation = 'mixed';
-                        (matterTextClone as HTMLElement).style.transform = 'rotate(180deg)';
-                        (matterTextClone as HTMLElement).style.display = 'block';
-                        (matterTextClone as HTMLElement).style.whiteSpace = 'nowrap';
-                    }
+                 const clonedContentArea = documentClone.getElementById('pdf-content-area'); // Use the correct ID
+                 if (clonedContentArea) {
+                      // Ensure the top-level container in the clone has the PDF mode class
+                     clonedContentArea.classList.add('pdf-generation-mode');
 
-                    // Ensure stamp image is visible in clone if it exists
-                     const stampImageClone = clonedForm.querySelector('.stamp-print-image');
-                     const stampContainerClone = clonedForm.querySelector('.stamp-container-print');
-                     if (stampImageClone && stampContainerClone) {
-                          (stampContainerClone as HTMLElement).style.display = 'flex'; // Make container visible
-                         (stampContainerClone as HTMLElement).style.visibility = 'visible';
+                      // Find the actual printable card inside the cloned area
+                      const clonedForm = clonedContentArea.querySelector('#printable-area') as HTMLElement | null;
+                      if (clonedForm) {
+                         clonedForm.classList.add('pdf-generation-mode'); // Ensure styles in clone
+
+                         // Re-apply specific print/PDF styles that might be missed
+                         const textareas = clonedForm.querySelectorAll('textarea.pdf-textarea');
+                         textareas.forEach(ta => {
+                             (ta as HTMLElement).style.height = '145px'; // Set height explicitly for canvas
+                             (ta as HTMLElement).style.minHeight = '145px';
+                              (ta as HTMLElement).style.overflow = 'hidden'; // Hide potential scrollbars in canvas
+                              (ta as HTMLElement).style.display = 'block'; // Ensure block display
+                              (ta as HTMLElement).style.verticalAlign = 'top'; // Align text top
+                         });
+
+                         // Ensure vertical matter text in clone
+                          const matterLabelClone = clonedForm.querySelector('.matter-pdf-label');
+                          const matterTextClone = clonedForm.querySelector('.matter-text-pdf-clone');
+                          if (matterLabelClone && matterTextClone) {
+                              (matterLabelClone as HTMLElement).style.display = 'flex'; // Make label visible
+                              (matterLabelClone as HTMLElement).style.visibility = 'visible';
+                              (matterTextClone as HTMLElement).style.writingMode = 'vertical-rl';
+                              (matterTextClone as HTMLElement).style.textOrientation = 'mixed';
+                              (matterTextClone as HTMLElement).style.transform = 'rotate(180deg)';
+                              (matterTextClone as HTMLElement).style.display = 'block';
+                              (matterTextClone as HTMLElement).style.whiteSpace = 'nowrap';
+                          } else if (matterLabelClone) {
+                              // Fallback if only label found - hide it? or log warning?
+                               console.warn("Matter text clone element not found in PDF generation.");
+                          }
+
+
+                         // Ensure stamp image is visible in clone if it exists
+                          const stampImageClone = clonedForm.querySelector('.stamp-print-image');
+                          const stampContainerClone = clonedForm.querySelector('.stamp-container-print');
+                          if (stampImageClone && stampContainerClone) {
+                               (stampContainerClone as HTMLElement).style.display = 'flex'; // Make container visible
+                              (stampContainerClone as HTMLElement).style.visibility = 'visible';
+                              (stampContainerClone as HTMLElement).style.position = 'absolute';
+                              (stampContainerClone as HTMLElement).style.top = '2pt';
+                              (stampContainerClone as HTMLElement).style.right = '2pt';
+                              (stampContainerClone as HTMLElement).style.width = '180px';
+                              (stampContainerClone as HTMLElement).style.height = '142px';
+
+                              // Ensure image itself is displayed correctly
+                                (stampImageClone as HTMLElement).style.display = 'block';
+                                (stampImageClone as HTMLElement).style.maxWidth = '100%';
+                                (stampImageClone as HTMLElement).style.maxHeight = '100%';
+                                (stampImageClone as HTMLElement).style.objectFit = 'contain';
+
+                          }
+
+                         // Hide elements specifically marked for no-print/no-pdf in the clone
+                         const noPrintElementsClone = clonedForm.querySelectorAll('.no-print');
+                         noPrintElementsClone.forEach(el => (el as HTMLElement).style.display = 'none');
+
+                         // Make sure print-only elements ARE visible
+                         const printOnlyElementsClone = clonedForm.querySelectorAll('.print-only-inline-block, .pdf-only-inline-block');
+                         printOnlyElementsClone.forEach(el => (el as HTMLElement).style.display = 'inline-block');
+                         const printOnlyFlexElementsClone = clonedForm.querySelectorAll('.print-only-flex, .pdf-only-flex');
+                         printOnlyFlexElementsClone.forEach(el => (el as HTMLElement).style.display = 'flex');
+
+                         // Force bold font weight on all elements within the cloned form for PDF
+                         const allElements = clonedForm.querySelectorAll('*');
+                         allElements.forEach(el => {
+                            (el as HTMLElement).style.fontWeight = 'bold';
+                            (el as HTMLElement).style.color = 'black'; // Ensure black text
+                             // Force print color adjust for backgrounds and borders
+                             (el as HTMLElement).style.webkitPrintColorAdjust = 'exact';
+                             (el as HTMLElement).style.printColorAdjust = 'exact';
+                             // Ensure black borders
+                             if (window.getComputedStyle(el).borderWidth !== '0px') {
+                                (el as HTMLElement).style.borderColor = 'black';
+                             }
+                         });
+                     } else {
+                        console.error("Cloned printable area card not found during PDF generation.");
                      }
-
-                      // Hide elements specifically marked for no-print/no-pdf in the clone
-                     const noPrintElementsClone = clonedForm.querySelectorAll('.no-print');
-                     noPrintElementsClone.forEach(el => (el as HTMLElement).style.display = 'none');
-                }
+                 } else {
+                      console.error("Cloned PDF content area not found during PDF generation.");
+                 }
             }
         });
 
@@ -431,21 +499,25 @@ export default function AdOrderForm() {
         const pdf = new jsPDF('p', 'pt', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = pdf.internal.pageSize.getHeight();
+        const margin = 15; // 15pt margin on all sides
+        const contentWidth = pdfWidth - (margin * 2);
+        //const contentHeight = pdfHeight - (margin * 2); // Max height per page
+
         const imgProps = pdf.getImageProperties(imgData);
-        const imgWidth = pdfWidth - 30; // Add some margin (15pt each side)
+        const imgWidth = contentWidth;
         const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
 
         let heightLeft = imgHeight;
-        let position = 15; // Top margin
+        let position = margin; // Start drawing below top margin
 
-        pdf.addImage(imgData, 'PNG', 15, position, imgWidth, imgHeight); // Add left margin
-        heightLeft -= (pdfHeight - 30); // Account for top/bottom margins
+        pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+        heightLeft -= (pdfHeight - (margin * 2)); // Subtract usable page height
 
         while (heightLeft > 0) {
-            position = heightLeft - imgHeight + 15; // Adjust position for next page, add margin
+            position = margin - heightLeft; // Negative position for the next part of the image
             pdf.addPage();
-            pdf.addImage(imgData, 'PNG', 15, position, imgWidth, imgHeight);
-            heightLeft -= (pdfHeight - 30);
+            pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+            heightLeft -= (pdfHeight - (margin * 2));
         }
 
         pdf.save('release-order.pdf');
@@ -465,7 +537,7 @@ export default function AdOrderForm() {
        // Use a timeout to ensure rendering completes before removing the class
        setTimeout(() => {
           setPdfGenerationMode(false); // Disable PDF mode styles
-       }, 100);
+       }, 100); // Increased delay slightly
     }
   }, [toast]);
 
@@ -494,7 +566,7 @@ export default function AdOrderForm() {
         )}
 
 
-       {/* Printable/PDF Area - Add ref here */}
+       {/* Printable/PDF Area - Add ref here, Moved ID to this div */}
        <div id="pdf-content-area" ref={formRef}>
            {/* Conditional wrapper for print preview centering - only added when isPreviewing is true */}
             {/* The #printable-area is MOVED inside #printable-area-wrapper by the useEffect when isPreviewing */}
@@ -533,58 +605,60 @@ export default function AdOrderForm() {
                                />
                            </div>
                            {/* Date */}
-                           <div className="field-row flex items-center popover-trigger-container">
-                               <Label htmlFor="orderDateTrigger" className="w-20 text-sm shrink-0">Date:</Label>
-                               {/* Popover for Screen - Render based on client-side check */}
-                               {isClient ? (
-                                   <Popover>
-                                       <PopoverTrigger asChild>
-                                           <Button
-                                               variant={"outline"}
-                                               className={cn(
-                                                   "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print", // Hide on print/pdf
-                                                   !safeDisplayDate && "text-muted-foreground"
-                                               )}
-                                               id="orderDateTrigger"
-                                           >
-                                               <CalendarIcon className="h-4 w-4" />
-                                                {/* Remove the date text span */}
-                                           </Button>
-                                       </PopoverTrigger>
-                                       <PopoverContent className="w-auto p-0 no-print">
-                                           <Calendar
-                                               mode="single"
-                                               selected={orderDate} // Use the Date object state
-                                               onSelect={(date) => {
-                                                   if (date instanceof Date && !isNaN(date.getTime())) {
-                                                       setOrderDate(date);
-                                                   } else if (date === undefined) {
-                                                        const today = new Date();
-                                                        setOrderDate(today); // Reset to today if cleared
-                                                   }
-                                               }}
-                                               initialFocus
-                                           />
-                                       </PopoverContent>
-                                   </Popover>
-                               ) : (
-                                    // Server-side or initial client render: Show a placeholder
-                                    <div className={cn(
-                                        "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm shadow-none no-print items-center", // Hide on print/pdf
-                                        "text-muted-foreground"
-                                    )}>
-                                        <CalendarIcon className="mr-2 h-4 w-4 inline-block" />
-                                        {/* <span>Loading date...</span> */}
-                                    </div>
-                                )}
-                                {/* Static Display for PDF/Screenshot - Always render */}
-                                <div className={cn(
-                                    "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm shadow-none items-center print-only-inline-block pdf-only-inline-block", // Show for print/pdf
-                                    !safeDisplayDate && "text-muted-foreground"
-                                )}>
-                                    <span id="orderDatePrint" className="ml-1">{safeDisplayDate || 'N/A'}</span>
-                                </div>
-                           </div>
+                            <div className="field-row flex items-center popover-trigger-container">
+                                <Label htmlFor="orderDateTrigger" className="w-20 text-sm shrink-0">Date:</Label>
+                                {/* Popover for Screen - Render based on client-side check */}
+                                {isClient ? (
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant={"outline"}
+                                                className={cn(
+                                                    "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print", // Hide on print/pdf
+                                                    !safeDisplayDate && "text-muted-foreground"
+                                                )}
+                                                id="orderDateTrigger"
+                                            >
+                                                <CalendarIcon className="mr-2 h-4 w-4" /> {/* Keep icon */}
+                                                {/* Display date here */}
+                                                <span className="ml-1">{safeDisplayDate || 'Pick a date'}</span>
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0 no-print">
+                                            <Calendar
+                                                mode="single"
+                                                selected={orderDate} // Use the Date object state
+                                                onSelect={(date) => {
+                                                    if (date instanceof Date && !isNaN(date.getTime())) {
+                                                        setOrderDate(date);
+                                                    } else if (date === undefined) {
+                                                         const today = new Date();
+                                                         setOrderDate(today); // Reset to today if cleared
+                                                    }
+                                                }}
+                                                initialFocus
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
+                                ) : (
+                                     // Server-side or initial client render: Show a placeholder
+                                     <div className={cn(
+                                         "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm shadow-none no-print items-center", // Hide on print/pdf
+                                         "text-muted-foreground"
+                                     )}>
+                                         <CalendarIcon className="mr-2 h-4 w-4 inline-block" />
+                                         <span>Loading date...</span>
+                                     </div>
+                                 )}
+                                 {/* Static Display for PDF/Screenshot - Always render */}
+                                 <div className={cn(
+                                     "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm shadow-none items-center print-only-inline-block pdf-only-inline-block", // Show for print/pdf
+                                     !safeDisplayDate && "text-muted-foreground"
+                                 )}>
+                                     <span id="orderDatePrint" className="ml-1">{safeDisplayDate || 'N/A'}</span>
+                                 </div>
+                            </div>
+
 
                            {/* Client */}
                            <div className="field-row flex items-center">
@@ -601,31 +675,31 @@ export default function AdOrderForm() {
                        </div>
                    </div>
 
-                   {/* Advertisement Manager Section */}
-                   <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
-                       <Label className="block mb-1">The Advertisement Manager</Label>
-                       <div className="relative mb-1">
-                           <Input
-                               id="adManager1"
-                               type="text"
-                               placeholder="Line 1"
-                               className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                               value={advertisementManagerLine1}
-                               onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
-                           />
-                       </div>
-                       <div className="relative">
-                           <Input
-                               id="adManager2"
-                               type="text"
-                               placeholder="Line 2"
-                               className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                               value={advertisementManagerLine2}
-                               onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
-                           />
-                       </div>
-                       <p className="text-sm mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
-                   </div>
+                    {/* Advertisement Manager Section */}
+                    <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
+                        <Label className="block mb-1">The Advertisement Manager</Label>
+                        <div className="relative mb-1">
+                            <Input
+                                id="adManager1"
+                                type="text"
+                                placeholder="Line 1"
+                                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                                value={advertisementManagerLine1}
+                                onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
+                            />
+                        </div>
+                        <div className="relative">
+                            <Input
+                                id="adManager2"
+                                type="text"
+                                placeholder="Line 2"
+                                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                                value={advertisementManagerLine2}
+                                onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
+                            />
+                        </div>
+                        <p className="text-sm mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
+                    </div>
 
                    {/* Heading & Package Section */}
                    <div className="heading-package-container flex gap-3 mb-5">
@@ -655,79 +729,79 @@ export default function AdOrderForm() {
 
 
                    {/* Schedule Table */}
-                   <div className="mb-5 table-container-print">
-                       <Table className="print-table print-border border border-black pdf-table"> {/* Add pdf-table class */}
-                           <TableHeader className="bg-secondary print-table-header">
-                               <TableRow>
-                                   <TableHead className="w-[10%] print-border-thin border border-black p-1.5 text-sm font-bold pdf-th">Key No.</TableHead>
-                                   <TableHead className="w-[25%] print-border-thin border border-black p-1.5 text-sm font-bold pdf-th">Publication(s)</TableHead>
-                                   <TableHead className="w-[15%] print-border-thin border border-black p-1.5 text-sm font-bold pdf-th">Edition(s)</TableHead>
-                                   <TableHead className="w-[15%] print-border-thin border border-black p-1.5 text-sm font-bold pdf-th">Size</TableHead>
-                                   <TableHead className="w-[20%] print-border-thin border border-black p-1.5 text-sm font-bold pdf-th">Scheduled Date(s)</TableHead>
-                                   <TableHead className="w-[15%] print-border-thin border border-black p-1.5 text-sm font-bold pdf-th">Position</TableHead>
-                               </TableRow>
-                           </TableHeader>
-                           <TableBody>
-                               {scheduleRows.map((row) => (
-                                   <TableRow key={row.id} className="h-[150px] pdf-tr"> {/* Set height, add pdf-tr */}
-                                       <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top pdf-td"> {/* Add pdf-td */}
-                                           <Textarea
-                                               value={row.keyNo}
-                                                onChange={(e) => handleScheduleChange(row.id, 'keyNo', e.target.value)}
-                                               className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none pdf-textarea" // Add pdf-textarea
-                                           />
-                                       </TableCell>
-                                       <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top pdf-td">
-                                           <Textarea
-                                               value={row.publication}
-                                               onChange={(e) => handleScheduleChange(row.id, 'publication', e.target.value)}
-                                               className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none pdf-textarea"
-                                           />
-                                       </TableCell>
-                                       <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top pdf-td">
-                                           <Textarea
-                                               value={row.edition}
-                                                onChange={(e) => handleScheduleChange(row.id, 'edition', e.target.value)}
-                                               className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none pdf-textarea"
-                                           />
-                                       </TableCell>
-                                       <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top pdf-td">
-                                           <Textarea
-                                               value={row.size}
-                                                onChange={(e) => handleScheduleChange(row.id, 'size', e.target.value)}
-                                               className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none pdf-textarea"
-                                           />
-                                       </TableCell>
-                                       <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top pdf-td">
-                                           <Textarea
-                                                value={row.scheduledDate}
-                                                 onChange={(e) => handleScheduleChange(row.id, 'scheduledDate', e.target.value)}
+                    <div className="mb-5 table-container-print">
+                        <Table className="print-table print-border border border-black pdf-table"> {/* Add pdf-table class */}
+                            <TableHeader className="bg-secondary print-table-header">
+                                <TableRow>
+                                    <TableHead className="w-[10%] print-border-thin border border-black p-1.5 text-sm font-bold pdf-th">Key No.</TableHead>
+                                    <TableHead className="w-[25%] print-border-thin border border-black p-1.5 text-sm font-bold pdf-th">Publication(s)</TableHead>
+                                    <TableHead className="w-[15%] print-border-thin border border-black p-1.5 text-sm font-bold pdf-th">Edition(s)</TableHead>
+                                    <TableHead className="w-[15%] print-border-thin border border-black p-1.5 text-sm font-bold pdf-th">Size</TableHead>
+                                    <TableHead className="w-[20%] print-border-thin border border-black p-1.5 text-sm font-bold pdf-th">Scheduled Date(s)</TableHead>
+                                    <TableHead className="w-[15%] print-border-thin border border-black p-1.5 text-sm font-bold pdf-th">Position</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {scheduleRows.map((row) => (
+                                    <TableRow key={row.id} className="h-[150px] pdf-tr"> {/* Set height, add pdf-tr */}
+                                        <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top pdf-td"> {/* Add pdf-td */}
+                                            <Textarea
+                                                value={row.keyNo}
+                                                 onChange={(e) => handleScheduleChange(row.id, 'keyNo', e.target.value)}
+                                                className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none pdf-textarea" // Add pdf-textarea
+                                            />
+                                        </TableCell>
+                                        <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top pdf-td">
+                                            <Textarea
+                                                value={row.publication}
+                                                onChange={(e) => handleScheduleChange(row.id, 'publication', e.target.value)}
                                                 className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none pdf-textarea"
                                             />
-                                       </TableCell>
-                                       <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top pdf-td">
-                                           <Textarea
-                                               value={row.position}
-                                                onChange={(e) => handleScheduleChange(row.id, 'position', e.target.value)}
-                                               className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none pdf-textarea"
-                                           />
-                                       </TableCell>
-                                   </TableRow>
-                               ))}
-                           </TableBody>
-                       </Table>
-                       {/* Buttons only visible when not in preview mode */}
-                       {!isPreviewing && (
-                            <div className="flex gap-2 mt-2 no-print">
-                                <Button variant="outline" size="sm" onClick={addRow}>
-                                    <PlusCircle className="mr-2 h-4 w-4" /> Add Row
-                                </Button>
-                                <Button variant="destructive" size="sm" onClick={deleteRow} disabled={scheduleRows.length <= 1}>
-                                    <Trash2 className="mr-2 h-4 w-4" /> Delete Last Row
-                                </Button>
-                            </div>
-                        )}
-                   </div>
+                                        </TableCell>
+                                        <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top pdf-td">
+                                            <Textarea
+                                                value={row.edition}
+                                                 onChange={(e) => handleScheduleChange(row.id, 'edition', e.target.value)}
+                                                className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none pdf-textarea"
+                                            />
+                                        </TableCell>
+                                        <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top pdf-td">
+                                            <Textarea
+                                                value={row.size}
+                                                 onChange={(e) => handleScheduleChange(row.id, 'size', e.target.value)}
+                                                className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none pdf-textarea"
+                                            />
+                                        </TableCell>
+                                        <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top pdf-td">
+                                            <Textarea
+                                                 value={row.scheduledDate}
+                                                  onChange={(e) => handleScheduleChange(row.id, 'scheduledDate', e.target.value)}
+                                                 className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none pdf-textarea"
+                                             />
+                                        </TableCell>
+                                        <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top pdf-td">
+                                            <Textarea
+                                                value={row.position}
+                                                 onChange={(e) => handleScheduleChange(row.id, 'position', e.target.value)}
+                                                className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none pdf-textarea"
+                                            />
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                        {/* Buttons only visible when not in preview mode */}
+                        {!isPreviewing && (
+                             <div className="flex gap-2 mt-2 no-print">
+                                 <Button variant="outline" size="sm" onClick={addRow}>
+                                     <PlusCircle className="mr-2 h-4 w-4" /> Add Row
+                                 </Button>
+                                 <Button variant="destructive" size="sm" onClick={deleteRow} disabled={scheduleRows.length <= 1}>
+                                     <Trash2 className="mr-2 h-4 w-4" /> Delete Last Row
+                                 </Button>
+                             </div>
+                         )}
+                    </div>
 
                    {/* Matter Section */}
                    <div className="matter-box flex h-[150px] print-border-heavy rounded mb-5 overflow-hidden border-2 border-black">
