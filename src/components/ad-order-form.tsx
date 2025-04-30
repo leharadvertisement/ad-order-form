@@ -45,6 +45,7 @@ const DEBOUNCE_DELAY = 500; // milliseconds
 
 export default function AdOrderForm() {
   // --- State Hooks ---
+  const [isPreviewing, setIsPreviewing] = useState(false); // State for print preview mode
   const [caption, setCaption] = useState('');
   const [packageName, setPackageName] = useState('');
   const [matter, setMatter] = useState('');
@@ -57,7 +58,6 @@ export default function AdOrderForm() {
   const [clientName, setClientName] = useState('');
   const [advertisementManagerLine1, setAdvertisementManagerLine1] = useState('');
   const [advertisementManagerLine2, setAdvertisementManagerLine2] = useState('');
-  const [isPreviewing, setIsPreviewing] = useState(false); // State for print preview mode
   const [isClient, setIsClient] = useState(false);
   const [displayDate, setDisplayDate] = useState<string>(''); // State to hold formatted date string for display
 
@@ -71,6 +71,20 @@ export default function AdOrderForm() {
   const { toast } = useToast();
 
   // --- Effect Hooks ---
+
+   // Effect to apply print preview class to the body if previewing
+   useEffect(() => {
+       if (isPreviewing) {
+           document.body.classList.add('print-preview-mode');
+       } else {
+           document.body.classList.remove('print-preview-mode');
+       }
+       // Cleanup function to remove class on component unmount or when preview mode ends
+       return () => {
+           document.body.classList.remove('print-preview-mode');
+       };
+   }, [isPreviewing]);
+
   // Effect to load data and set initial client state
   useEffect(() => {
     let initialDate = new Date(); // Default to today
@@ -180,18 +194,6 @@ export default function AdOrderForm() {
     // Ensure all state dependencies are listed
   }, [caption, packageName, matter, scheduleRows, stampPreview, roNumber, orderDate, clientName, advertisementManagerLine1, advertisementManagerLine2, isClient]);
 
-  // Effect to apply print preview class to the body if previewing
-  useEffect(() => {
-      if (isPreviewing) {
-          document.body.classList.add('print-preview-mode');
-      } else {
-          document.body.classList.remove('print-preview-mode');
-      }
-      // Cleanup function to remove class on component unmount or when preview mode ends
-      return () => {
-          document.body.classList.remove('print-preview-mode');
-      };
-  }, [isPreviewing]);
 
 
   // --- Callback Hooks ---
@@ -307,20 +309,6 @@ export default function AdOrderForm() {
     }
   }, [toast]);
 
-
-  // --- Conditional Return for SSR/Hydration ---
-  // Must happen *after* all hooks have been called
-  if (!isClient) {
-    // Render placeholder or null during SSR/initial client render mismatch phase
-    // Basic structure to avoid major layout shifts
-    return (
-        <div className="max-w-[210mm] mx-auto font-bold p-5 space-y-5">
-            {/* Keep placeholders minimal to avoid introducing new hydration mismatches */}
-             <div className="h-10 bg-muted rounded animate-pulse mb-4"></div> {/* Button placeholder */}
-             <div className="h-[700px] bg-muted rounded animate-pulse"></div> {/* Main form placeholder */}
-        </div>
-    );
-  }
 
 
   // --- Main Render ---
