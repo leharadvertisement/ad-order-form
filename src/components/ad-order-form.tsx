@@ -588,21 +588,27 @@ export default function AdOrderForm() {
                            {/* Date */}
                             <div className="field-row flex items-center popover-trigger-container">
                                 <Label htmlFor="orderDateTrigger" className="w-20 text-sm shrink-0">Date:</Label>
+                                {/* Static Date Display */}
+                                 <div className={cn(
+                                     "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm shadow-none items-center",
+                                     !safeDisplayDate && "text-muted-foreground"
+                                 )}>
+                                     <span id="orderDateDisplay" className="ml-1">{safeDisplayDate || 'N/A'}</span>
+                                 </div>
+
                                 {/* Popover for Screen - Render based on client-side check */}
                                 {isClient ? (
                                     <Popover>
                                         <PopoverTrigger asChild>
                                             <Button
-                                                variant={"outline"}
+                                                variant={"ghost"} // Use ghost variant for icon-only button
                                                 className={cn(
-                                                    "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print", // Hide on print/pdf
-                                                    !safeDisplayDate && "text-muted-foreground"
+                                                    "h-6 w-6 p-0 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print ml-2", // Hide on print/pdf, adjust margin
                                                 )}
                                                 id="orderDateTrigger"
                                             >
-                                                <CalendarIcon className="mr-2 h-4 w-4" /> {/* Keep icon */}
-                                                {/* Display date here */}
-                                                <span className="ml-1">{safeDisplayDate || 'Pick a date'}</span>
+                                                <CalendarIcon className="h-4 w-4" /> {/* Only icon */}
+                                                <span className="sr-only">Pick a date</span> {/* Screen reader text */}
                                             </Button>
                                         </PopoverTrigger>
                                         <PopoverContent className="w-auto p-0 no-print">
@@ -622,22 +628,19 @@ export default function AdOrderForm() {
                                         </PopoverContent>
                                     </Popover>
                                 ) : (
-                                     // Server-side or initial client render: Show a placeholder
-                                     <div className={cn(
-                                         "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm shadow-none no-print items-center", // Hide on print/pdf
-                                         "text-muted-foreground"
-                                     )}>
-                                         <CalendarIcon className="mr-2 h-4 w-4 inline-block" />
-                                         <span>Loading date...</span>
-                                     </div>
+                                     // Server-side or initial client render: Show a placeholder icon button
+                                     <Button
+                                         variant={"ghost"}
+                                         className={cn(
+                                             "h-6 w-6 p-0 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print ml-2",
+                                             "text-muted-foreground"
+                                         )}
+                                         disabled // Disable until client-side interactive
+                                     >
+                                         <CalendarIcon className="h-4 w-4" />
+                                         <span className="sr-only">Loading date picker...</span>
+                                     </Button>
                                  )}
-                                 {/* Static Display for PDF/Screenshot - Always render */}
-                                 <div className={cn(
-                                     "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm shadow-none items-center print-only-inline-block pdf-only-inline-block", // Show for print/pdf
-                                     !safeDisplayDate && "text-muted-foreground"
-                                 )}>
-                                     <span id="orderDatePrint" className="ml-1">{safeDisplayDate || 'N/A'}</span>
-                                 </div>
                             </div>
 
 
@@ -653,6 +656,32 @@ export default function AdOrderForm() {
                                    onChange={(e) => setClientName(e.target.value)}
                                />
                            </div>
+                       </div>
+                   </div>
+
+                   {/* Heading & Package Section */}
+                   <div className="heading-package-container flex gap-3 mb-5">
+                       <div className="heading-caption-box flex-1 print-border-heavy rounded p-2 border-2 border-black">
+                           <Label htmlFor="caption" className="block mb-1">Heading/Caption:</Label>
+                           <Input
+                               id="caption"
+                               type="text"
+                               placeholder="Enter caption here"
+                               className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                               value={caption}
+                               onChange={(e) => setCaption(e.target.value)}
+                           />
+                       </div>
+                       <div className="package-box w-[30%] print-border-heavy rounded p-2 border-2 border-black">
+                           <Label htmlFor="package" className="block mb-1">Package:</Label>
+                           <Input
+                               id="package" // Use unique ID
+                               type="text"
+                               placeholder="Enter package name"
+                               className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                               value={packageName}
+                               onChange={(e) => setPackageName(e.target.value)}
+                           />
                        </div>
                    </div>
 
@@ -681,32 +710,6 @@ export default function AdOrderForm() {
                         </div>
                         <p className="text-sm mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
                     </div>
-
-                   {/* Heading & Package Section */}
-                   <div className="heading-package-container flex gap-3 mb-5">
-                       <div className="heading-caption-box flex-1 print-border-heavy rounded p-2 border-2 border-black">
-                           <Label htmlFor="caption" className="block mb-1">Heading/Caption:</Label>
-                           <Input
-                               id="caption"
-                               type="text"
-                               placeholder="Enter caption here"
-                               className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                               value={caption}
-                               onChange={(e) => setCaption(e.target.value)}
-                           />
-                       </div>
-                       <div className="package-box w-[30%] print-border-heavy rounded p-2 border-2 border-black">
-                           <Label htmlFor="package" className="block mb-1">Package:</Label>
-                           <Input
-                               id="package" // Use unique ID
-                               type="text"
-                               placeholder="Enter package name"
-                               className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                               value={packageName}
-                               onChange={(e) => setPackageName(e.target.value)}
-                           />
-                       </div>
-                   </div>
 
 
                    {/* Schedule Table */}
@@ -891,4 +894,3 @@ export default function AdOrderForm() {
    </div>
 );
 }
-
