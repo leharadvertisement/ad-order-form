@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import type { ChangeEvent } from 'react';
@@ -10,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
-import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon, Printer } from 'lucide-react';
+import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon, Printer, Eye, X } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -58,6 +56,7 @@ export default function AdOrderForm() {
   const [clientName, setClientName] = useState('');
   const [advertisementManagerLine1, setAdvertisementManagerLine1] = useState('');
   const [advertisementManagerLine2, setAdvertisementManagerLine2] = useState('');
+  const [isPreviewing, setIsPreviewing] = useState(false); // State for print preview mode
 
   const stampFileRef = useRef<HTMLInputElement>(null);
   const printableAreaRef = useRef<HTMLDivElement>(null); // Ref for the printable area
@@ -250,6 +249,11 @@ export default function AdOrderForm() {
     }
   }, [toast]);
 
+   // Function to toggle print preview mode
+   const togglePrintPreview = useCallback(() => {
+     setIsPreviewing((prev) => !prev);
+   }, []);
+
 
   const handleClearForm = useCallback(() => {
     setCaption('');
@@ -296,21 +300,45 @@ export default function AdOrderForm() {
     );
   }
 
+  // Apply print preview class to the body if previewing
+  useEffect(() => {
+      if (isPreviewing) {
+          document.body.classList.add('print-preview-mode');
+      } else {
+          document.body.classList.remove('print-preview-mode');
+      }
+      // Cleanup function to remove class on component unmount or when preview mode ends
+      return () => {
+          document.body.classList.remove('print-preview-mode');
+      };
+  }, [isPreviewing]);
+
 
   return (
-    <div className="max-w-[210mm] mx-auto font-bold">
+    <div className={`max-w-[210mm] mx-auto font-bold ${isPreviewing ? 'print-preview-container' : ''}`}>
       {/* Action Buttons */}
       <div className="flex justify-end gap-2 mb-4 no-print">
         <Button onClick={handleClearForm} variant="outline">
           <Eraser className="mr-2 h-4 w-4" /> Clear Form & Draft
         </Button>
+         <Button onClick={togglePrintPreview} variant="outline">
+           <Eye className="mr-2 h-4 w-4" /> Preview Print
+         </Button>
          <Button onClick={handlePrint} variant="default">
            <Printer className="mr-2 h-4 w-4" /> Print Release Order
          </Button>
       </div>
 
-      {/* Printable Area */}
-      <Card id="printable-area" ref={printableAreaRef} className="w-full print-border-heavy rounded-none shadow-none p-5 border-2 border-black"> {/* Added ref */}
+      {/* Printable Area - Conditionally rendered in preview mode */}
+       {isPreviewing && (
+         <div className="print-preview-overlay fixed inset-0 z-[999]"> {/* Overlay for preview */}
+           <button onClick={togglePrintPreview} className="close-print-preview no-print">
+             <X size={20} />
+           </button>
+         </div>
+       )}
+
+      <Card id="printable-area" ref={printableAreaRef} className={`w-full print-border-heavy rounded-none shadow-none p-5 border-2 border-black ${isPreviewing ? 'print-preview-content' : ''}`}>
         <CardContent className="p-0">
           {/* Header */}
           <div className="text-center bg-black text-white p-1 mb-5 header-title">
@@ -475,58 +503,58 @@ export default function AdOrderForm() {
               <TableBody>
                 {scheduleRows.map((row) => (
                   <TableRow key={row.id}>
-                    <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[120px] align-top">
+                    <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[150px] align-top">
                        <Textarea
                           id={`keyNo-${row.id}`}
                           value={row.keyNo}
                           onChange={(e) => handleScheduleChange(row.id, 'keyNo', e.target.value)}
                           className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none"
-                          style={{ verticalAlign: 'top' }} // Ensure text starts top-left
+                          style={{ verticalAlign: 'top', whiteSpace: 'pre-wrap', overflowWrap: 'break-word' }}
                        />
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[120px] align-top">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[150px] align-top">
                        <Textarea
                           id={`publication-${row.id}`}
                           value={row.publication}
                           onChange={(e) => handleScheduleChange(row.id, 'publication', e.target.value)}
                           className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none"
-                           style={{ verticalAlign: 'top' }}
+                           style={{ verticalAlign: 'top', whiteSpace: 'pre-wrap', overflowWrap: 'break-word' }}
                         />
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[120px] align-top">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[150px] align-top">
                        <Textarea
                           id={`edition-${row.id}`}
                           value={row.edition}
                           onChange={(e) => handleScheduleChange(row.id, 'edition', e.target.value)}
                           className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none"
-                           style={{ verticalAlign: 'top' }}
+                           style={{ verticalAlign: 'top', whiteSpace: 'pre-wrap', overflowWrap: 'break-word' }}
                         />
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[120px] align-top">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[150px] align-top">
                        <Textarea
                            id={`size-${row.id}`}
                            value={row.size}
                            onChange={(e) => handleScheduleChange(row.id, 'size', e.target.value)}
                            className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none"
-                            style={{ verticalAlign: 'top' }}
+                            style={{ verticalAlign: 'top', whiteSpace: 'pre-wrap', overflowWrap: 'break-word' }}
                          />
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[120px] align-top">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[150px] align-top">
                        <Textarea
                            id={`scheduledDate-${row.id}`}
                            value={row.scheduledDate}
                            onChange={(e) => handleScheduleChange(row.id, 'scheduledDate', e.target.value)}
                            className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none"
-                           style={{ verticalAlign: 'top' }}
+                           style={{ verticalAlign: 'top', whiteSpace: 'pre-wrap', overflowWrap: 'break-word' }}
                        />
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[120px] align-top">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[150px] align-top">
                        <Textarea
                           id={`position-${row.id}`}
                           value={row.position}
                           onChange={(e) => handleScheduleChange(row.id, 'position', e.target.value)}
                           className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none"
-                          style={{ verticalAlign: 'top' }}
+                          style={{ verticalAlign: 'top', whiteSpace: 'pre-wrap', overflowWrap: 'break-word' }}
                        />
                     </TableCell>
                   </TableRow>
@@ -545,7 +573,7 @@ export default function AdOrderForm() {
 
           {/* Matter Section */}
           <div className="matter-box flex h-[150px] print-border-heavy rounded mb-5 overflow-hidden border-2 border-black">
-             <div className="vertical-label bg-black text-white flex items-center justify-center p-1 w-8">
+             <div className="vertical-label bg-black text-white flex items-center justify-center p-1 w-8 flex-shrink-0">
               <span className="text-base font-bold whitespace-nowrap" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)' }}>MATTER</span>
              </div>
             <div className="matter-content flex-1 p-1">
@@ -555,7 +583,7 @@ export default function AdOrderForm() {
                 className="w-full h-full resize-none border-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none p-1 align-top"
                 value={matter}
                 onChange={(e) => setMatter(e.target.value)}
-                style={{ verticalAlign: 'top' }} // Ensure text starts top-left
+                style={{ verticalAlign: 'top', writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)' }} // Ensure text starts top-left and is vertical
               />
             </div>
           </div>
