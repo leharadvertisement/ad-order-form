@@ -425,8 +425,8 @@ body {
   .no-print, .popover, .popover-content, button:not(.print-visible-button) { @apply hidden invisible; }
   #printable-area { @apply w-full max-w-full m-0 p-[10pt] border-[2pt] border-black shadow-none box-border; page-break-inside: avoid; font-weight: bold !important; }
   #printable-area * { @apply font-bold text-black border-black; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; line-height: 1.2; }
-  #printable-area > .p-0 > * { margin-bottom: 8pt !important; }
-   #printable-area .header-title { margin-bottom: 8pt !important; }
+  #printable-area > .card-content-pdf-fix > * { margin-bottom: 8pt !important; padding: 0 !important; } /* Target direct children */
+  #printable-area .header-title { margin-bottom: 8pt !important; }
    #printable-area .address-container { margin-bottom: 8pt !important; }
    #printable-area .advertisement-manager-section { margin-bottom: 8pt !important; }
    #printable-area .heading-package-container { margin-bottom: 8pt !important; }
@@ -489,6 +489,12 @@ body {
     line-height: 1.2;
 }
 
+/* Fix for CardContent padding in PDF mode */
+.pdf-generation-mode #printable-area .card-content-pdf-fix {
+    padding: 0 !important;
+}
+
+
 .pdf-generation-mode .no-print,
 .pdf-generation-mode .popover,
 .pdf-generation-mode .popover-content,
@@ -531,7 +537,7 @@ body {
   resize: none !important; /* Disable resize handles */
 }
 /* Specific overrides for table textareas in PDF */
-.pdf-generation-mode .pdf-table .pdf-textarea {
+.pdf-generation-mode .print-table .print-table-cell textarea {
     min-height: 100px !important; /* Explicit height for PDF consistency */
     height: auto !important;
     border: none !important;
@@ -545,18 +551,18 @@ body {
 
 
 /* Table Styles for PDF */
-.pdf-generation-mode .pdf-table {
+.pdf-generation-mode .print-table {
   width: 100% !important;
   border-collapse: collapse !important;
   border: 1pt solid black !important;
 }
-.pdf-generation-mode .pdf-table .print-table-header {
+.pdf-generation-mode .print-table .print-table-header {
     background-color: #f0f0f0 !important; /* Light gray background */
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
 }
-.pdf-generation-mode .pdf-table .pdf-th,
-.pdf-generation-mode .pdf-table .pdf-td {
+.pdf-generation-mode .print-table th,
+.pdf-generation-mode .print-table td {
   border: 0.5pt solid black !important;
   padding: 2pt !important; /* Minimal padding for PDF */
   vertical-align: top !important;
@@ -565,13 +571,13 @@ body {
   font-size: 8pt !important;
   box-sizing: border-box;
 }
-.pdf-generation-mode .pdf-table .pdf-tr {
+.pdf-generation-mode .print-table tr {
     height: auto !important; /* Consistent row height */
     min-height: 100px !important;
 }
 
 /* Matter Box Vertical Text for PDF */
-.pdf-generation-mode .matter-pdf-label .matter-text-pdf-clone {
+.pdf-generation-mode .vertical-label .matter-text-print {
     writing-mode: vertical-rl !important;
     text-orientation: mixed !important;
     transform: rotate(180deg) !important;
@@ -584,7 +590,7 @@ body {
     white-space: nowrap;
     font-size: 10pt !important;
 }
-.pdf-generation-mode .matter-pdf-label {
+.pdf-generation-mode .vertical-label {
     background-color: black !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
@@ -682,12 +688,12 @@ body.print-preview-mode > *:not(#printable-area-wrapper):not(#closePreviewButton
 
 #printable-area-wrapper {
   width: 210mm; /* A4 width */
-  min-height: 297mm; /* A4 height */
+  min-height: 297mm; /* A4 height - adjust if needed, but should scale */
   background-color: white;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
   margin: 20px auto; /* Center the paper */
   position: relative; /* For potential absolute elements inside */
-  overflow: hidden; /* Prevent content bleed */
+  overflow: visible; /* Allow content to flow naturally if it exceeds A4 bounds */
   box-sizing: border-box;
 }
 
@@ -715,8 +721,9 @@ body.print-preview-mode > *:not(#printable-area-wrapper):not(#closePreviewButton
 }
 
 /* Correctly target direct children of CardContent within the wrapper */
-#printable-area-wrapper #printable-area > .p-0 > * {
+#printable-area-wrapper #printable-area > .card-content-pdf-fix > * {
      margin-bottom: 8pt !important;
+     padding: 0 !important;
 }
 #printable-area-wrapper #printable-area .header-title { margin-bottom: 8pt !important; }
 #printable-area-wrapper #printable-area .address-container { margin-bottom: 8pt !important; }
@@ -768,8 +775,7 @@ body.print-preview-mode > *:not(#printable-area-wrapper):not(#closePreviewButton
   overflow: hidden !important;
   resize: none !important;
 }
-#printable-area-wrapper .pdf-table .pdf-textarea,
-#printable-area-wrapper .print-table-cell textarea {
+#printable-area-wrapper .print-table .print-table-cell textarea {
     min-height: 100px !important; /* Consistent height */
     height: auto !important;
     border: none !important;
@@ -783,7 +789,6 @@ body.print-preview-mode > *:not(#printable-area-wrapper):not(#closePreviewButton
 
 
 /* Table Styles for Preview */
-#printable-area-wrapper .pdf-table,
 #printable-area-wrapper .print-table {
   width: 100% !important;
   border-collapse: collapse !important;
@@ -794,8 +799,7 @@ body.print-preview-mode > *:not(#printable-area-wrapper):not(#closePreviewButton
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
 }
-#printable-area-wrapper .pdf-th,
-#printable-area-wrapper .pdf-td,
+
 #printable-area-wrapper .print-table th,
 #printable-area-wrapper .print-table td {
   border: 0.5pt solid black !important;
@@ -806,15 +810,13 @@ body.print-preview-mode > *:not(#printable-area-wrapper):not(#closePreviewButton
   font-size: 8pt !important;
   box-sizing: border-box !important;
 }
-#printable-area-wrapper .pdf-tr,
 #printable-area-wrapper .print-table tr {
     height: auto !important;
     min-height: 100px !important;
 }
 
 /* Ensure vertical matter text shows correctly in preview */
-#printable-area-wrapper .matter-text-print,
-#printable-area-wrapper .matter-text-pdf-clone {
+#printable-area-wrapper .vertical-label .matter-text-print {
    writing-mode: vertical-rl !important;
    text-orientation: mixed !important;
    transform: rotate(180deg) !important;
@@ -827,8 +829,7 @@ body.print-preview-mode > *:not(#printable-area-wrapper):not(#closePreviewButton
    white-space: nowrap !important;
    font-size: 10pt !important;
 }
-#printable-area-wrapper .vertical-label,
-#printable-area-wrapper .matter-pdf-label {
+#printable-area-wrapper .vertical-label {
    background-color: black !important;
    -webkit-print-color-adjust: exact !important;
    print-color-adjust: exact !important;
@@ -920,4 +921,3 @@ body.print-preview-mode > *:not(#printable-area-wrapper):not(#closePreviewButton
 #closePreviewButton:hover {
     background-color: #c82333; /* Darker red */
 }
-
