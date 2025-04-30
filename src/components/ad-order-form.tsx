@@ -25,8 +25,6 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import { saveAs } from 'file-saver';
-import { Packer, Document, Paragraph, TextRun, AlignmentType, HeadingLevel, ImageRun } from 'docx';
 
 interface ScheduleRow {
   id: number;
@@ -424,13 +422,14 @@ export default function AdOrderForm() {
                 // Explicitly style textareas in the clone for PDF rendering
                 const textareas = clonedPrintableArea.querySelectorAll('textarea');
                 textareas.forEach(ta => {
-                    (ta as HTMLElement).style.height = '145px'; // Explicit height for canvas
-                    (ta as HTMLElement).style.minHeight = '145px';
+                    (ta as HTMLElement).style.height = 'auto'; // Adjust height based on content for canvas
+                    (ta as HTMLElement).style.minHeight = '100px'; // Match print min-height
                     (ta as HTMLElement).style.overflow = 'hidden';
                     (ta as HTMLElement).style.display = 'block';
                     (ta as HTMLElement).style.verticalAlign = 'top';
                     (ta as HTMLElement).style.border = 'none'; // Ensure no border in PDF capture if needed
-                    (ta as HTMLElement).style.padding = '2pt';
+                    (ta as HTMLElement).style.padding = '1pt'; // Match print
+                    (ta as HTMLElement).style.fontSize = (ta.closest('.print-table') ? '8pt' : '9pt'); // Match print font size
                 });
 
                  // Ensure vertical matter text shows correctly in clone
@@ -442,6 +441,7 @@ export default function AdOrderForm() {
                      (matterTextClone as HTMLElement).style.textOrientation = 'mixed';
                      (matterTextClone as HTMLElement).style.transform = 'rotate(180deg)';
                      (matterTextClone as HTMLElement).style.display = 'block'; // Important
+                     (matterTextClone as HTMLElement).style.fontSize = '10pt'; // Match print
                  }
 
                  // Ensure stamp is visible in clone
@@ -449,6 +449,8 @@ export default function AdOrderForm() {
                   if (stampContainerClone) {
                        (stampContainerClone as HTMLElement).style.display = 'flex';
                        (stampContainerClone as HTMLElement).style.visibility = 'visible';
+                       (stampContainerClone as HTMLElement).style.width = '100px'; // Match print
+                       (stampContainerClone as HTMLElement).style.height = '80px'; // Match print
                   }
 
                   // Hide no-print elements in clone
@@ -470,37 +472,45 @@ export default function AdOrderForm() {
                      (el as HTMLElement).style.webkitPrintColorAdjust = 'exact';
                      (el as HTMLElement).style.printColorAdjust = 'exact';
                      // Ensure black borders where applicable
-                     if (window.getComputedStyle(el).borderWidth !== '0px') {
-                        (el as HTMLElement).style.borderColor = 'black';
+                     if (window.getComputedStyle(el).borderWidth !== '0px' && !el.closest('textarea') ) { // Don't force borders on textareas inside table
+                        const currentBorder = window.getComputedStyle(el).border;
+                         // Apply black border only if there's already a border style, and it's not transparent or none
+                         if (currentBorder && !currentBorder.includes('transparent') && !currentBorder.includes('none')) {
+                             (el as HTMLElement).style.borderColor = 'black';
+                         }
                      }
                  });
             }
         });
 
         const imgData = canvas.toDataURL('image/png');
+        // A4 dimensions in points: 595.28 x 841.89
         const pdf = new jsPDF({
             orientation: 'p', // portrait
             unit: 'pt', // points
             format: 'a4'
         });
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const pdfWidth = pdf.internal.pageSize.getWidth(); // 595.28
+        const pdfHeight = pdf.internal.pageSize.getHeight(); // 841.89
         const margin = 15; // 15pt margin
-        const contentWidth = pdfWidth - (margin * 2);
+        const contentWidth = pdfWidth - (margin * 2); // Available width for content
 
         const imgProps = pdf.getImageProperties(imgData);
+        // Calculate the height the image should have to fit the contentWidth
         const imgHeight = (imgProps.height * contentWidth) / imgProps.width;
         let heightLeft = imgHeight;
-        let position = margin;
+        let position = margin; // Initial top margin
+
+        const pageHeight = pdfHeight - (margin * 2); // Available height for content per page
 
         pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
-        heightLeft -= (pdfHeight - (margin * 2));
+        heightLeft -= pageHeight;
 
         while (heightLeft > 0) {
-            position = margin - heightLeft;
+            position = margin - heightLeft; // Negative position for the next page start
             pdf.addPage();
             pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
-            heightLeft -= (pdfHeight - (margin * 2));
+            heightLeft -= pageHeight;
         }
 
         pdf.save('release-order.pdf');
@@ -572,10 +582,10 @@ export default function AdOrderForm() {
                            </p>
                        </div>
                        {/* Right Box: R.O., Date, Client */}
-                       <div className="ro-date-client-container w-[48%] print-border-heavy rounded p-2 space-y-2 border-2 border-black">
+                       <div className="ro-date-client-container w-[48%] print-border-heavy rounded p-2 space-y-1 border-2 border-black"> {/* Reduced space-y */}
                            {/* R.O. No. LN */}
                            <div className="field-row flex items-center">
-                               <Label htmlFor="roNumber" className="w-20 text-sm shrink-0">R.O.No.LN:</Label>
+                               <Label htmlFor="roNumber" className="w-auto text-sm shrink-0 mr-1">R.O.No.LN:</Label> {/* Reduced width/margin */}
                                <Input
                                    id="roNumber"
                                    type="text"
@@ -587,7 +597,7 @@ export default function AdOrderForm() {
                            </div>
                            {/* Date */}
                             <div className="field-row flex items-center popover-trigger-container">
-                                <Label htmlFor="orderDateTrigger" className="w-20 text-sm shrink-0">Date:</Label>
+                                <Label htmlFor="orderDateTrigger" className="w-auto text-sm shrink-0 mr-1">Date:</Label>
                                 {/* Static Date Display */}
                                  <div className={cn(
                                      "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm shadow-none items-center",
@@ -603,7 +613,7 @@ export default function AdOrderForm() {
                                             <Button
                                                 variant={"ghost"} // Use ghost variant for icon-only button
                                                 className={cn(
-                                                    "h-6 w-6 p-0 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print ml-2", // Hide on print/pdf, adjust margin
+                                                    "h-6 w-6 p-0 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print ml-1", // Hide on print/pdf, adjust margin
                                                 )}
                                                 id="orderDateTrigger"
                                             >
@@ -632,7 +642,7 @@ export default function AdOrderForm() {
                                      <Button
                                          variant={"ghost"}
                                          className={cn(
-                                             "h-6 w-6 p-0 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print ml-2",
+                                             "h-6 w-6 p-0 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print ml-1",
                                              "text-muted-foreground"
                                          )}
                                          disabled // Disable until client-side interactive
@@ -646,7 +656,7 @@ export default function AdOrderForm() {
 
                            {/* Client */}
                            <div className="field-row flex items-center">
-                               <Label htmlFor="clientName" className="w-20 text-sm shrink-0">Client:</Label>
+                               <Label htmlFor="clientName" className="w-auto text-sm shrink-0 mr-1">Client:</Label>
                                <Input
                                    id="clientName"
                                    type="text"
@@ -659,41 +669,15 @@ export default function AdOrderForm() {
                        </div>
                    </div>
 
-                   {/* Heading & Package Section */}
-                   <div className="heading-package-container flex gap-3 mb-5">
-                       <div className="heading-caption-box flex-1 print-border-heavy rounded p-2 border-2 border-black">
-                           <Label htmlFor="caption" className="block mb-1">Heading/Caption:</Label>
-                           <Input
-                               id="caption"
-                               type="text"
-                               placeholder="Enter caption here"
-                               className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                               value={caption}
-                               onChange={(e) => setCaption(e.target.value)}
-                           />
-                       </div>
-                       <div className="package-box w-[30%] print-border-heavy rounded p-2 border-2 border-black">
-                           <Label htmlFor="package" className="block mb-1">Package:</Label>
-                           <Input
-                               id="package" // Use unique ID
-                               type="text"
-                               placeholder="Enter package name"
-                               className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                               value={packageName}
-                               onChange={(e) => setPackageName(e.target.value)}
-                           />
-                       </div>
-                   </div>
-
-                    {/* Advertisement Manager Section */}
+                   {/* Advertisement Manager Section */}
                     <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
-                        <Label className="block mb-1">The Advertisement Manager</Label>
-                        <div className="relative mb-1">
+                        <Label className="block mb-1 text-sm">The Advertisement Manager</Label>
+                        <div className="relative mb-0.5"> {/* Reduced margin */}
                             <Input
                                 id="adManager1"
                                 type="text"
                                 placeholder="Line 1"
-                                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                                className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto" /* Reduced padding/height */
                                 value={advertisementManagerLine1}
                                 onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
                             />
@@ -703,71 +687,96 @@ export default function AdOrderForm() {
                                 id="adManager2"
                                 type="text"
                                 placeholder="Line 2"
-                                className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                                className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto" /* Reduced padding/height */
                                 value={advertisementManagerLine2}
                                 onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
                             />
                         </div>
-                        <p className="text-sm mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
+                        <p className="text-xs mt-1">Kindly insert the advertisement/s in your issue/s for the following date/s</p> {/* Smaller text, reduced margin */}
                     </div>
 
+                    {/* Heading & Package Section */}
+                   <div className="heading-package-container flex gap-3 mb-5">
+                       <div className="heading-caption-box flex-1 print-border-heavy rounded p-2 border-2 border-black">
+                           <Label htmlFor="caption" className="block mb-1 text-sm">Heading/Caption:</Label>
+                           <Input
+                               id="caption"
+                               type="text"
+                               placeholder="Enter caption here"
+                               className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto" /* Reduced padding/height */
+                               value={caption}
+                               onChange={(e) => setCaption(e.target.value)}
+                           />
+                       </div>
+                       <div className="package-box w-[30%] print-border-heavy rounded p-2 border-2 border-black">
+                           <Label htmlFor="package" className="block mb-1 text-sm">Package:</Label>
+                           <Input
+                               id="package" // Use unique ID
+                               type="text"
+                               placeholder="Enter package name"
+                               className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto" /* Reduced padding/height */
+                               value={packageName}
+                               onChange={(e) => setPackageName(e.target.value)}
+                           />
+                       </div>
+                   </div>
 
                    {/* Schedule Table */}
                     <div className="mb-5 table-container-print">
-                        <Table className="print-table print-border border border-black pdf-table"> {/* Add pdf-table class */}
+                        <Table className="print-table print-border border border-black pdf-table">
                             <TableHeader className="bg-secondary print-table-header">
                                 <TableRow>
-                                    <TableHead className="w-[10%] print-border-thin border border-black p-1.5 text-sm font-bold">Key No.</TableHead>
-                                    <TableHead className="w-[25%] print-border-thin border border-black p-1.5 text-sm font-bold">Publication(s)</TableHead>
-                                    <TableHead className="w-[15%] print-border-thin border border-black p-1.5 text-sm font-bold">Edition(s)</TableHead>
-                                    <TableHead className="w-[15%] print-border-thin border border-black p-1.5 text-sm font-bold">Size</TableHead>
-                                    <TableHead className="w-[20%] print-border-thin border border-black p-1.5 text-sm font-bold">Scheduled Date(s)</TableHead>
-                                    <TableHead className="w-[15%] print-border-thin border border-black p-1.5 text-sm font-bold">Position</TableHead>
+                                    <TableHead className="w-[10%] print-border-thin border border-black p-1 text-xs font-bold pdf-th">Key No.</TableHead> {/* Reduced padding, smaller font */}
+                                    <TableHead className="w-[25%] print-border-thin border border-black p-1 text-xs font-bold pdf-th">Publication(s)</TableHead>
+                                    <TableHead className="w-[15%] print-border-thin border border-black p-1 text-xs font-bold pdf-th">Edition(s)</TableHead>
+                                    <TableHead className="w-[15%] print-border-thin border border-black p-1 text-xs font-bold pdf-th">Size</TableHead>
+                                    <TableHead className="w-[20%] print-border-thin border border-black p-1 text-xs font-bold pdf-th">Scheduled Date(s)</TableHead>
+                                    <TableHead className="w-[15%] print-border-thin border border-black p-1 text-xs font-bold pdf-th">Position</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {scheduleRows.map((row) => (
-                                    <TableRow key={row.id} className="h-[150px] pdf-tr"> {/* Set height, add pdf-tr */}
-                                        <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top pdf-td"> {/* Add pdf-td */}
+                                    <TableRow key={row.id} className="min-h-[100px] pdf-tr align-top"> {/* Reduced min-height */}
+                                        <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top pdf-td">
                                             <Textarea
                                                 value={row.keyNo}
                                                  onChange={(e) => handleScheduleChange(row.id, 'keyNo', e.target.value)}
-                                                className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none pdf-textarea" // Add pdf-textarea
+                                                className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none pdf-textarea" // Reduced padding, smaller font
                                             />
                                         </TableCell>
                                         <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top pdf-td">
                                             <Textarea
                                                 value={row.publication}
                                                 onChange={(e) => handleScheduleChange(row.id, 'publication', e.target.value)}
-                                                className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none pdf-textarea"
+                                                className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none pdf-textarea"
                                             />
                                         </TableCell>
                                         <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top pdf-td">
                                             <Textarea
                                                 value={row.edition}
                                                  onChange={(e) => handleScheduleChange(row.id, 'edition', e.target.value)}
-                                                className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none pdf-textarea"
+                                                className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none pdf-textarea"
                                             />
                                         </TableCell>
                                         <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top pdf-td">
                                             <Textarea
                                                 value={row.size}
                                                  onChange={(e) => handleScheduleChange(row.id, 'size', e.target.value)}
-                                                className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none pdf-textarea"
+                                                className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none pdf-textarea"
                                             />
                                         </TableCell>
                                         <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top pdf-td">
                                             <Textarea
                                                  value={row.scheduledDate}
                                                   onChange={(e) => handleScheduleChange(row.id, 'scheduledDate', e.target.value)}
-                                                 className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none pdf-textarea"
+                                                 className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none pdf-textarea"
                                              />
                                         </TableCell>
                                         <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top pdf-td">
                                             <Textarea
                                                 value={row.position}
                                                  onChange={(e) => handleScheduleChange(row.id, 'position', e.target.value)}
-                                                className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none pdf-textarea"
+                                                className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none pdf-textarea"
                                             />
                                         </TableCell>
                                     </TableRow>
@@ -788,13 +797,13 @@ export default function AdOrderForm() {
                     </div>
 
                    {/* Matter Section */}
-                   <div className="matter-box flex h-[150px] print-border-heavy rounded mb-5 overflow-hidden border-2 border-black">
+                   <div className="matter-box flex h-[100px] print-border-heavy rounded mb-5 overflow-hidden border-2 border-black"> {/* Reduced height */}
                         {/* Vertical Text Label */}
-                        <div className="vertical-label bg-black text-white flex items-center justify-center p-1 w-8 flex-shrink-0 matter-pdf-label">
+                        <div className="vertical-label bg-black text-white flex items-center justify-center p-1 w-6 flex-shrink-0 matter-pdf-label"> {/* Thinner label */}
                             {/* Separate span for PDF clone */}
                             <span className="hidden pdf-only-inline-block matter-text-pdf-clone">MATTER</span>
                              {/* Visible text for screen and print preview */}
-                            <span className="text-base font-bold whitespace-nowrap matter-text-print matter-text-screen" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)' }}>
+                            <span className="text-sm font-bold whitespace-nowrap matter-text-print matter-text-screen" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)' }}> {/* Smaller font */}
                                 MATTER
                             </span>
                         </div>
@@ -802,7 +811,7 @@ export default function AdOrderForm() {
                            <Textarea
                                id="matterArea"
                                placeholder="Enter matter here..."
-                               className="w-full h-full resize-none border-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none p-1 align-top pdf-textarea" // Add pdf-textarea
+                               className="w-full h-full resize-none border-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none p-1 align-top pdf-textarea"
                                value={matter}
                                onChange={(e) => setMatter(e.target.value)} // Allow editing
                            />
@@ -812,8 +821,8 @@ export default function AdOrderForm() {
 
                    {/* Billing Info */}
                    <div className="billing-address-box print-border rounded p-2 mb-5 border border-black">
-                       <p className="font-bold mb-1 billing-title-underline">Forward all bills with relevant voucher copies to:</p>
-                       <p className="text-sm leading-tight pt-1">
+                       <p className="font-bold mb-1 billing-title-underline text-sm">Forward all bills with relevant voucher copies to:</p>
+                       <p className="text-xs leading-tight pt-1"> {/* Smaller font */}
                            D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
                            Alaknanda Commercial Complex,<br />
                            New Delhi-110019<br />
@@ -823,11 +832,11 @@ export default function AdOrderForm() {
                    </div>
 
                    {/* Notes & Stamp Container */}
-                   <div className="notes-stamp-container relative print-border rounded p-2 border border-black min-h-[150px]">
+                   <div className="notes-stamp-container relative print-border rounded p-2 border border-black min-h-[90px]"> {/* Reduced min-height */}
                        {/* Notes Section */}
-                       <div className="notes-content flex-1 pr-[190px]"> {/* Padding to avoid overlap */}
-                           <p className="font-bold mb-1 note-title-underline">Note:</p>
-                           <ol className="list-decimal list-inside text-sm space-y-1 pt-1 pl-4">
+                       <div className="notes-content flex-1 pr-[110px]"> {/* Padding for smaller stamp */}
+                           <p className="font-bold mb-1 note-title-underline text-sm">Note:</p>
+                           <ol className="list-decimal list-inside text-xs space-y-0.5 pt-1 pl-3"> {/* Smaller font, tighter spacing */}
                                <li>Space reserved vide our letter No.</li>
                                <li>No two advertisements of the same client should appear in the same issue.</li>
                                <li>Please quote R.O. No. in all your bills and letters.</li>
@@ -839,7 +848,7 @@ export default function AdOrderForm() {
                        {!isPreviewing && (
                            <div
                                id="stampContainerElement"
-                               className="stamp-container-interactive absolute top-2 right-2 w-[180px] h-[142px] flex items-center justify-center cursor-pointer overflow-hidden group no-print" // Hide this container for pdf/print
+                               className="stamp-container-interactive absolute top-1 right-1 w-[100px] h-[80px] flex items-center justify-center cursor-pointer overflow-hidden group no-print" // Smaller size, Hide this container for pdf/print
                                onClick={triggerStampUpload}
                                onMouseEnter={triggerStampUpload}
                            >
@@ -857,18 +866,18 @@ export default function AdOrderForm() {
                                            id="stampPreviewScreen"
                                            src={stampPreview}
                                            alt="Stamp Preview"
-                                           width={180}
-                                           height={142}
+                                           width={100} // Match container
+                                           height={80} // Match container
                                            style={{ objectFit: 'contain' }}
                                            className="block max-w-full max-h-full"
                                        />
                                        {/* Hover effect */}
                                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                           <span className="text-white text-xs font-bold">Click/Hover to Change</span>
+                                           <span className="text-white text-[10px] font-bold text-center leading-tight">Click/Hover<br/>to Change</span> {/* Smaller text */}
                                        </div>
                                    </div>
                                ) : (
-                                   <Label htmlFor="stampFile" className="text-center text-xs text-muted-foreground cursor-pointer p-1 group-hover:opacity-75 transition-opacity">
+                                   <Label htmlFor="stampFile" className="text-center text-[10px] text-muted-foreground cursor-pointer p-1 group-hover:opacity-75 transition-opacity leading-tight"> {/* Smaller text */}
                                        Click or Hover<br /> to Upload Stamp
                                    </Label>
                                )}
@@ -876,12 +885,12 @@ export default function AdOrderForm() {
                        )}
                        {/* Visible Stamp Image for PDF/Screenshot/Preview Only */}
                        {stampPreview && (
-                           <div className="stamp-container-print absolute top-2 right-2 w-[180px] h-[142px] hidden print-only-flex pdf-only-flex items-center justify-center"> {/* Use pdf-only-flex */}
+                           <div className="stamp-container-print absolute top-1 right-1 w-[100px] h-[80px] hidden print-only-flex pdf-only-flex items-center justify-center"> {/* Adjusted size */}
                                <Image
                                    src={stampPreview}
                                    alt="Stamp"
-                                   width={180}
-                                   height={142}
+                                   width={100} // Match container
+                                   height={80} // Match container
                                    style={{ objectFit: 'contain' }}
                                    className="stamp-print-image max-w-full max-h-full"
                                />
