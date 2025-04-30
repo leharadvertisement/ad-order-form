@@ -54,7 +54,7 @@ export default function AdOrderForm() {
   ]);
   const [stampPreview, setStampPreview] = useState<string | null>(null);
   const [roNumber, setRoNumber] = useState('');
-  const [orderDate, setOrderDate] = useState<Date | undefined>(undefined); // Keep as Date object
+  const [orderDate, setOrderDate] = useState<Date | undefined>(new Date()); // Keep as Date object, initialize with today
   const [clientName, setClientName] = useState('');
   const [advertisementManagerLine1, setAdvertisementManagerLine1] = useState('');
   const [advertisementManagerLine2, setAdvertisementManagerLine2] = useState('');
@@ -237,7 +237,10 @@ export default function AdOrderForm() {
 
   // Function to trigger the browser's print dialog
   const handlePrint = useCallback(() => {
+    // Ensure this runs only on the client side
+    if (typeof window !== 'undefined') {
       window.print();
+    }
   }, []);
 
 
@@ -364,7 +367,7 @@ export default function AdOrderForm() {
                          } else {
                              const today = new Date(); // Fallback to today if selection is cleared or invalid
                              setOrderDate(today);
-                             setDisplayDate(format(today, "dd.MM.yyyy")); // Update display immediately
+                             // displayDate will update via useEffect
                          }
                       }}
                       initialFocus
@@ -396,32 +399,6 @@ export default function AdOrderForm() {
             </div>
           </div>
 
-           {/* Heading & Package Section */}
-           <div className="heading-package-container flex gap-3 mb-5">
-               <div className="heading-caption-box flex-1 print-border-heavy rounded p-2 border-2 border-black">
-                   <Label htmlFor="caption" className="block mb-1">Heading/Caption:</Label>
-                   <Input
-                     id="caption"
-                     type="text"
-                     placeholder="Enter caption here"
-                     className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                     value={caption}
-                     onChange={(e) => setCaption(e.target.value)}
-                   />
-               </div>
-               <div className="package-box w-[30%] print-border-heavy rounded p-2 border-2 border-black">
-                   <Label htmlFor="package" className="block mb-1">Package:</Label>
-                   <Input
-                     id="package" // Use unique ID
-                     type="text"
-                     placeholder="Enter package name"
-                     className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                     value={packageName}
-                     onChange={(e) => setPackageName(e.target.value)}
-                   />
-               </div>
-           </div>
-
             {/* Advertisement Manager Section */}
             <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
                 <Label className="block mb-1">The Advertisement Manager</Label>
@@ -448,6 +425,32 @@ export default function AdOrderForm() {
                 <p className="text-sm mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
               </div>
 
+
+           {/* Heading & Package Section */}
+           <div className="heading-package-container flex gap-3 mb-5">
+               <div className="heading-caption-box flex-1 print-border-heavy rounded p-2 border-2 border-black">
+                   <Label htmlFor="caption" className="block mb-1">Heading/Caption:</Label>
+                   <Input
+                     id="caption"
+                     type="text"
+                     placeholder="Enter caption here"
+                     className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                     value={caption}
+                     onChange={(e) => setCaption(e.target.value)}
+                   />
+               </div>
+               <div className="package-box w-[30%] print-border-heavy rounded p-2 border-2 border-black">
+                   <Label htmlFor="package" className="block mb-1">Package:</Label>
+                   <Input
+                     id="package" // Use unique ID
+                     type="text"
+                     placeholder="Enter package name"
+                     className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                     value={packageName}
+                     onChange={(e) => setPackageName(e.target.value)}
+                   />
+               </div>
+           </div>
 
 
           {/* Schedule Table */}
@@ -543,7 +546,7 @@ export default function AdOrderForm() {
               <Textarea
                 id="matterArea"
                 placeholder="Enter matter here..."
-                className="w-full h-full resize-none border-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none p-1"
+                className="w-full h-full resize-none border-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none p-1 align-top"
                 value={matter}
                 onChange={(e) => setMatter(e.target.value)}
                 style={{ verticalAlign: 'top' }} // Ensure text starts top-left
@@ -633,3 +636,4 @@ export default function AdOrderForm() {
     </div>
   );
 }
+
