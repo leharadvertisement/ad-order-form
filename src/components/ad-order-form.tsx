@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
-import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon, X } from 'lucide-react';
+import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon, X, Download } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -72,8 +72,13 @@ export default function AdOrderForm() {
 
   // --- Effect Hooks ---
 
-   // Effect to apply print preview class to the body if previewing
-   useEffect(() => {
+  // Set client flag after mount
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Effect to apply print preview class to the body if previewing
+  useEffect(() => {
        if (isPreviewing) {
            document.body.classList.add('print-preview-mode');
        } else {
@@ -85,8 +90,11 @@ export default function AdOrderForm() {
        };
    }, [isPreviewing]);
 
-  // Effect to load data and set initial client state
+  // Effect to load data
   useEffect(() => {
+    // Only run on client after initial mount
+    if (!isClient) return;
+
     let initialDate = new Date(); // Default to today
     try {
       const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -129,15 +137,15 @@ export default function AdOrderForm() {
        // Keep initialDate as today in case of error
     } finally {
       setOrderDate(initialDate); // Set the Date object state (defaults to today if no valid saved date)
-      // Display date formatting is handled in the next effect, which runs only on client
+      // Display date formatting is handled in the next effect
       isInitialLoadRef.current = false;
-      setIsClient(true); // Mark as client-side ready *after* initial state setup
     }
-  }, [toast]); // Only run once on mount
+  // Only depend on isClient and toast. Other state setters don't need to re-run this load effect.
+  }, [isClient, toast]);
 
-   // Effect to update displayDate whenever orderDate changes after initial load
+   // Effect to update displayDate whenever orderDate changes (client-side only)
    useEffect(() => {
-     if (!isClient) return; // Don't run on server or initial render before client flag is set
+     if (!isClient) return; // Don't run on server
 
      if (orderDate && !isNaN(orderDate.getTime())) {
          try {
@@ -147,20 +155,22 @@ export default function AdOrderForm() {
              // If formatting fails for some reason, reset to today
              const today = new Date();
              setOrderDate(today);
-             setDisplayDate(format(today, "dd.MM.yyyy"));
+             // displayDate will update in the next render cycle
          }
      } else {
-          // Handle cases where orderDate might become undefined or invalid after initial load
+          // Handle cases where orderDate might become undefined or invalid
           const today = new Date();
           setOrderDate(today); // Reset to today
-          setDisplayDate(format(today, "dd.MM.yyyy"));
+          // displayDate will update in the next render cycle
      }
-   }, [orderDate, isClient]); // Depend on orderDate and isClient flag
+   // Depend only on orderDate and isClient flag
+   }, [orderDate, isClient]);
 
 
-  // Effect to save data to localStorage (debounced)
+  // Effect to save data to localStorage (debounced, client-side only)
   useEffect(() => {
     if (isInitialLoadRef.current || !isClient) {
+      if (!isClient) isInitialLoadRef.current = false; // Ensure initial load flag is cleared even if save is skipped
       return; // Don't save during initial load or if not client-side yet
     }
     if (debounceTimeoutRef.current) {
@@ -256,21 +266,6 @@ export default function AdOrderForm() {
   }, []);
 
 
-  // Function to trigger the browser's print dialog
-  const handlePrint = useCallback(() => {
-    // Ensure this runs only on the client side
-    if (typeof window !== 'undefined') {
-      window.print(); // Use standard browser print functionality
-    } else {
-      console.warn("Cannot print: window object is not available.");
-       toast({
-         title: "Print Error",
-         description: "Printing is only available in the browser.",
-         variant: "destructive",
-       });
-    }
-  }, [toast]);
-
    // Function to toggle print preview mode
    const togglePrintPreview = useCallback(() => {
      setIsPreviewing((prev) => !prev);
@@ -288,17 +283,36 @@ export default function AdOrderForm() {
     }
 
     try {
+        // Temporarily apply print styles for screenshot if not in preview mode
+        const originallyInPreview = isPreviewing;
+        if (!originallyInPreview) {
+            document.body.classList.add('print-preview-mode');
+            // Force redraw if necessary, though usually class change is enough
+            await new Promise(resolve => requestAnimationFrame(resolve));
+        }
+
         const canvas = await html2canvas(printableAreaRef.current, {
-            useCORS: true, // Enable cross-origin support
-            scrollX: 0,      // Ensure all content is captured by setting scroll offsets to 0
-            scrollY: 0,
+            scale: 2, // Increase scale for better quality
+            useCORS: true, // Enable cross-origin support if needed
+            logging: false, // Disable logging for cleaner console
+            // Ensure it captures the whole element regardless of scroll
+            scrollX: -window.scrollX,
+            scrollY: -window.scrollY,
+            windowWidth: printableAreaRef.current.scrollWidth,
+            windowHeight: printableAreaRef.current.scrollHeight,
         });
+
+        // Revert styles if they were temporarily applied
+        if (!originallyInPreview) {
+            document.body.classList.remove('print-preview-mode');
+        }
+
         const dataURL = canvas.toDataURL('image/png');
 
         // Create a download link
         const link = document.createElement('a');
         link.href = dataURL;
-        link.download = 'ad_order_form.png'; // Set the filename
+        link.download = 'ad_order_form_screenshot.png'; // Set the filename
         document.body.appendChild(link); // Append to the document
         link.click();                 // Simulate a click
         document.body.removeChild(link); // Remove the link
@@ -309,13 +323,17 @@ export default function AdOrderForm() {
         });
     } catch (error: any) {
         console.error("Screenshot failed:", error);
+        // Revert styles if error occurred during screenshotting
+         if (!isPreviewing) { // Check original state
+             document.body.classList.remove('print-preview-mode');
+         }
         toast({
             title: "Screenshot Error",
-            description: "Failed to take a screenshot of the form.",
+            description: `Failed to take screenshot: ${error.message || 'Unknown error'}`,
             variant: "destructive",
         });
     }
-}, [toast]);
+}, [toast, isPreviewing]); // Depend on isPreviewing
 
 
   const handleClearForm = useCallback(() => {
@@ -350,31 +368,41 @@ export default function AdOrderForm() {
     }
   }, [toast]);
 
+   // Guard against hydration errors for date display
+   const safeDisplayDate = isClient ? displayDate : '';
 
 
   // --- Main Render ---
+  // Use 'print-preview-container' for the wrapper only when previewing
   return (
     <div className={`max-w-[210mm] mx-auto font-bold ${isPreviewing ? 'print-preview-container' : ''}`}>
-      {/* Action Buttons */}
+       {/* Action Buttons */}
       <div className="flex justify-end gap-2 mb-4 no-print">
-          <Button onClick={handleScreenshot} variant="outline">
-              Save as Image
-          </Button>
+           <Button onClick={handleScreenshot} variant="outline">
+               <Download className="mr-2 h-4 w-4" /> Save as Image
+           </Button>
+           <Button onClick={togglePrintPreview} variant="outline">
+               {isPreviewing ? 'Exit Preview' : 'Preview Print'}
+           </Button>
           <Button onClick={handleClearForm} variant="outline">
               <Eraser className="mr-2 h-4 w-4" /> Clear Form & Draft
           </Button>
       </div>
 
-      {/* Printable Area - Conditionally rendered in preview mode */}
+
+      {/* Overlay and Close Button for Preview Mode */}
        {isPreviewing && (
-         <div className="print-preview-overlay fixed inset-0 z-[999]"> {/* Overlay for preview */}
-           <button onClick={togglePrintPreview} className="close-print-preview no-print">
-             <X size={20} />
-           </button>
-         </div>
+         <>
+           <div className="print-preview-overlay fixed inset-0 z-[999]" onClick={togglePrintPreview}> {/* Overlay closes preview */}
+           </div>
+            <button onClick={togglePrintPreview} className="close-print-preview no-print z-[1002]">
+               <X size={24} /> {/* Increased size */}
+            </button>
+          </>
        )}
 
-      <Card id="printable-area" ref={printableAreaRef} className={`w-full print-border-heavy rounded-none shadow-none p-5 border-2 border-black ${isPreviewing ? 'print-preview-content' : ''}`}>
+      {/* Printable Area - Apply preview class directly */}
+      <Card id="printable-area" ref={printableAreaRef} className={`w-full print-border-heavy rounded-none shadow-none p-5 border-2 border-black ${isPreviewing ? 'print-preview-mode' : ''}`}>
         <CardContent className="p-0">
           {/* Header */}
           <div className="text-center bg-black text-white p-1 mb-5 header-title">
@@ -410,51 +438,51 @@ export default function AdOrderForm() {
               </div>
               {/* Date */}
                <div className="field-row flex items-center popover-trigger-container">
-                <Label htmlFor="orderDateTrigger" className="w-20 text-sm shrink-0">Date:</Label>
+                 <Label htmlFor="orderDateTrigger" className="w-20 text-sm shrink-0">Date:</Label>
                  {/* Popover for Screen */}
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print",
-                        !displayDate && "text-muted-foreground" // Check displayDate for styling
-                      )}
-                      id="orderDateTrigger"
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                       {/* Always render displayDate derived from state */}
-                       <span>{displayDate || 'Pick a date'}</span>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 no-print">
-                    <Calendar
-                      mode="single"
-                      selected={orderDate} // Use the Date object here
-                      onSelect={(date) => {
-                         // Ensure a valid date is selected or default to today
-                         if (date instanceof Date && !isNaN(date.getTime())) {
-                             setOrderDate(date); // Update Date object state
-                         } else {
-                             const today = new Date(); // Fallback to today if selection is cleared or invalid
-                             setOrderDate(today);
-                             // displayDate will update via useEffect
-                         }
-                      }}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-                 {/* Static Display for Print */}
-                 <div className={cn(
-                     "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm shadow-none print-only-inline-block hidden items-center",
-                     !displayDate && "text-muted-foreground" // Check displayDate for styling
-                   )}
-                 >
-                   {/* Always render displayDate derived from state */}
-                   <span id="orderDatePrint" className="ml-1">{displayDate || 'N/A'}</span>
-                 </div>
-              </div>
+                 {isClient && ( // Render Popover only on client
+                   <Popover>
+                     <PopoverTrigger asChild>
+                       <Button
+                         variant={"outline"}
+                         className={cn(
+                           "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print",
+                           !safeDisplayDate && "text-muted-foreground"
+                         )}
+                         id="orderDateTrigger"
+                       >
+                         <CalendarIcon className="mr-2 h-4 w-4" />
+                         <span>{safeDisplayDate || 'Pick a date'}</span>
+                       </Button>
+                     </PopoverTrigger>
+                     <PopoverContent className="w-auto p-0 no-print">
+                       <Calendar
+                         mode="single"
+                         selected={orderDate}
+                         onSelect={(date) => {
+                           if (date instanceof Date && !isNaN(date.getTime())) {
+                               setOrderDate(date);
+                           } else {
+                               const today = new Date();
+                               setOrderDate(today);
+                           }
+                         }}
+                         initialFocus
+                       />
+                     </PopoverContent>
+                   </Popover>
+                 )}
+                  {/* Static Display for Print/Preview */}
+                  <div className={cn(
+                      "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm shadow-none print-only-inline-block hidden items-center",
+                       // Use safeDisplayDate for conditional styling if needed, but always render the span
+                       !safeDisplayDate && "text-muted-foreground"
+                    )}
+                  >
+                    <span id="orderDatePrint" className="ml-1">{safeDisplayDate || 'N/A'}</span>
+                  </div>
+               </div>
+
               {/* Client */}
                <div className="field-row flex items-center">
                 <Label htmlFor="clientName" className="w-20 text-sm shrink-0">Client:</Label>
@@ -619,14 +647,14 @@ export default function AdOrderForm() {
                 className="w-full h-full resize-none border-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none p-1 align-top"
                 value={matter}
                 onChange={(e) => setMatter(e.target.value)}
-                style={{ verticalAlign: 'top',writingMode: 'horizontal-tb', textOrientation: 'upright', transform: 'rotate(0deg)' }} // Ensure text starts top-left and is vertical
+                // Removed inline style to allow CSS to control writing-mode for print/preview
               />
             </div>
           </div>
 
            {/* Billing Info */}
            <div className="billing-address-box print-border rounded p-2 mb-5 border border-black">
-             <p className="font-bold mb-1 note-title-underline">Forward all bills with relevant voucher copies to:</p>
+             <p className="font-bold mb-1 billing-title-underline">Forward all bills with relevant voucher copies to:</p>
             <p className="text-sm leading-tight pt-1">
               D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
               Alaknanda Commercial Complex,<br />
@@ -687,7 +715,7 @@ export default function AdOrderForm() {
                        </Label>
                   )}
               </div>
-               {/* Visible Stamp Image for Print Only */}
+               {/* Visible Stamp Image for Print/Preview Only */}
                 {stampPreview && (
                  <div className="stamp-container-print hidden print-only-block">
                    <Image
@@ -706,4 +734,3 @@ export default function AdOrderForm() {
     </div>
   );
 }
-
