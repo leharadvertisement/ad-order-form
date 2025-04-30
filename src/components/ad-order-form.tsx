@@ -77,17 +77,19 @@ export default function AdOrderForm() {
     setIsClient(true);
   }, []);
 
-  // Effect to apply print preview class to the body if previewing
-  useEffect(() => {
-       if (isPreviewing) {
-           document.body.classList.add('print-preview-mode');
-       } else {
-           document.body.classList.remove('print-preview-mode');
-       }
-       // Cleanup function to remove class on component unmount or when preview mode ends
-       return () => {
-           document.body.classList.remove('print-preview-mode');
-       };
+   // Effect to apply print preview class to the body if previewing
+   // Moved this effect hook to run after state declarations and before other useEffects
+   // This ensures it doesn't violate the Rules of Hooks
+   useEffect(() => {
+     if (isPreviewing) {
+         document.body.classList.add('print-preview-mode');
+     } else {
+         document.body.classList.remove('print-preview-mode');
+     }
+     // Cleanup function to remove class on component unmount or when preview mode ends
+     return () => {
+         document.body.classList.remove('print-preview-mode');
+     };
    }, [isPreviewing]);
 
   // Effect to load data
@@ -381,9 +383,9 @@ export default function AdOrderForm() {
            <Button onClick={handleScreenshot} variant="outline">
                <Download className="mr-2 h-4 w-4" /> Save as Image
            </Button>
-           <Button onClick={togglePrintPreview} variant="outline">
+           {/* <Button onClick={togglePrintPreview} variant="outline">
                {isPreviewing ? 'Exit Preview' : 'Preview Print'}
-           </Button>
+           </Button> */}
           <Button onClick={handleClearForm} variant="outline">
               <Eraser className="mr-2 h-4 w-4" /> Clear Form & Draft
           </Button>
@@ -647,7 +649,7 @@ export default function AdOrderForm() {
                 className="w-full h-full resize-none border-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none p-1 align-top"
                 value={matter}
                 onChange={(e) => setMatter(e.target.value)}
-                // Removed inline style to allow CSS to control writing-mode for print/preview
+                // Removed inline style to ensure CSS controls writing-mode correctly for print/preview
               />
             </div>
           </div>

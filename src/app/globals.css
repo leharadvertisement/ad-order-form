@@ -276,7 +276,7 @@ body {
          flex-grow: 1 !important; /* Allow content area to grow */
          padding: 1px !important;
        }
-       .matter-box textarea {
+       .matter-box textarea#matterArea { /* Target specific ID */
           font-size: 9pt !important;
           height: calc(100% - 2px) !important; /* Fill the content area */
           width: calc(100% - 2px) !important; /* Fill the content area */
@@ -290,6 +290,10 @@ body {
           overflow: hidden !important; /* Hide overflow */
           display: block !important; /* Ensure block display */
           box-sizing: border-box !important; /* Include padding in size calculation */
+          background-color: transparent !important; /* Ensure transparent background */
+          color: black !important; /* Ensure text is visible */
+          -webkit-print-color-adjust: exact !important; /* Force text color */
+          print-color-adjust: exact !important;
        }
 
        /* Stamp area for print - ensure it doesn't take interactive space */
@@ -507,23 +511,28 @@ body {
             }
          }
      }
-      .print-preview-mode .matter-box textarea {
+      /* Apply matter box textarea vertical styles specifically in print preview */
+      .print-preview-mode .matter-box textarea#matterArea {
           @media print {
             & {
-              /* Copy styles from @media print section */
+              /* Copy styles from @media print section for matterArea */
               font-size: 9pt !important;
               height: calc(100% - 2px) !important;
               width: calc(100% - 2px) !important;
               white-space: pre-wrap !important;
               border: none !important;
               padding: 4px !important;
-              writing-mode: vertical-rl !important;
+              writing-mode: vertical-rl !important; /* Ensure vertical */
               text-orientation: mixed !important;
               transform: rotate(180deg) !important;
               resize: none !important;
               overflow: hidden !important;
               display: block !important;
               box-sizing: border-box !important;
+              background-color: transparent !important;
+              color: black !important;
+             -webkit-print-color-adjust: exact !important;
+             print-color-adjust: exact !important;
             }
           }
        }
@@ -579,5 +588,4 @@ body {
             }
         }
         /* Add any other necessary print styles here prefixed with .print-preview-mode */
-
 
