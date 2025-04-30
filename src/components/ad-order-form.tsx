@@ -44,6 +44,7 @@ const LOCAL_STORAGE_KEY = 'adOrderFormData';
 const DEBOUNCE_DELAY = 500; // milliseconds
 
 export default function AdOrderForm() {
+  // --- State Hooks ---
   const [caption, setCaption] = useState('');
   const [packageName, setPackageName] = useState('');
   const [matter, setMatter] = useState('');
@@ -57,15 +58,19 @@ export default function AdOrderForm() {
   const [advertisementManagerLine1, setAdvertisementManagerLine1] = useState('');
   const [advertisementManagerLine2, setAdvertisementManagerLine2] = useState('');
   const [isPreviewing, setIsPreviewing] = useState(false); // State for print preview mode
-
-  const stampFileRef = useRef<HTMLInputElement>(null);
-  const printableAreaRef = useRef<HTMLDivElement>(null); // Ref for the printable area
-  const { toast } = useToast();
-  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const isInitialLoadRef = useRef(true);
   const [isClient, setIsClient] = useState(false);
   const [displayDate, setDisplayDate] = useState<string>(''); // State to hold formatted date string for display
 
+  // --- Ref Hooks ---
+  const stampFileRef = useRef<HTMLInputElement>(null);
+  const printableAreaRef = useRef<HTMLDivElement>(null); // Ref for the printable area
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isInitialLoadRef = useRef(true);
+
+  // --- Custom Hooks ---
+  const { toast } = useToast();
+
+  // --- Effect Hooks ---
   // Effect to load data and set initial client state
   useEffect(() => {
     let initialDate = new Date(); // Default to today
@@ -175,6 +180,21 @@ export default function AdOrderForm() {
     // Ensure all state dependencies are listed
   }, [caption, packageName, matter, scheduleRows, stampPreview, roNumber, orderDate, clientName, advertisementManagerLine1, advertisementManagerLine2, isClient]);
 
+  // Effect to apply print preview class to the body if previewing
+  useEffect(() => {
+      if (isPreviewing) {
+          document.body.classList.add('print-preview-mode');
+      } else {
+          document.body.classList.remove('print-preview-mode');
+      }
+      // Cleanup function to remove class on component unmount or when preview mode ends
+      return () => {
+          document.body.classList.remove('print-preview-mode');
+      };
+  }, [isPreviewing]);
+
+
+  // --- Callback Hooks ---
   const addRow = useCallback(() => {
     setScheduleRows((prevRows) => [
       ...prevRows,
@@ -288,6 +308,8 @@ export default function AdOrderForm() {
   }, [toast]);
 
 
+  // --- Conditional Return for SSR/Hydration ---
+  // Must happen *after* all hooks have been called
   if (!isClient) {
     // Render placeholder or null during SSR/initial client render mismatch phase
     // Basic structure to avoid major layout shifts
@@ -300,20 +322,8 @@ export default function AdOrderForm() {
     );
   }
 
-  // Apply print preview class to the body if previewing
-  useEffect(() => {
-      if (isPreviewing) {
-          document.body.classList.add('print-preview-mode');
-      } else {
-          document.body.classList.remove('print-preview-mode');
-      }
-      // Cleanup function to remove class on component unmount or when preview mode ends
-      return () => {
-          document.body.classList.remove('print-preview-mode');
-      };
-  }, [isPreviewing]);
 
-
+  // --- Main Render ---
   return (
     <div className={`max-w-[210mm] mx-auto font-bold ${isPreviewing ? 'print-preview-container' : ''}`}>
       {/* Action Buttons */}
