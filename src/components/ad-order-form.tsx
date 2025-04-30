@@ -257,7 +257,14 @@ export default function AdOrderForm() {
                      originalContainer.insertBefore(printableArea, wrapper);
                  } else {
                     // Fallback if parent is not found (less ideal)
-                    document.body.appendChild(printableArea);
+                    // Check if the element #pdf-content-area-placeholder exists
+                    const placeholder = document.getElementById('pdf-content-area-placeholder');
+                    if(placeholder){
+                        placeholder.appendChild(printableArea);
+                    } else {
+                        // Absolute fallback
+                        document.body.appendChild(printableArea);
+                    }
                  }
                 wrapper.remove();
             } else if (wrapper) {
@@ -284,7 +291,12 @@ export default function AdOrderForm() {
                         originalContainer.insertBefore(printableArea, wrapper);
                      } else {
                         // Fallback
-                         document.body.appendChild(printableArea);
+                        const placeholder = document.getElementById('pdf-content-area-placeholder');
+                        if(placeholder){
+                            placeholder.appendChild(printableArea);
+                        } else {
+                            document.body.appendChild(printableArea);
+                        }
                      }
                     wrapper.remove();
                 } else if (wrapper) {
@@ -417,8 +429,6 @@ export default function AdOrderForm() {
                 const clonedPrintableArea = documentClone.getElementById('printable-area');
                 if (!clonedPrintableArea) return;
 
-                clonedPrintableArea.classList.add('pdf-generation-mode'); // Ensure styles in clone
-
                 // Explicitly style textareas in the clone for PDF rendering
                 const textareas = clonedPrintableArea.querySelectorAll('textarea');
                 textareas.forEach(ta => {
@@ -428,20 +438,50 @@ export default function AdOrderForm() {
                     (ta as HTMLElement).style.display = 'block';
                     (ta as HTMLElement).style.verticalAlign = 'top';
                     (ta as HTMLElement).style.border = 'none'; // Ensure no border in PDF capture if needed
+                    (ta as HTMLElement).style.borderBottom = '0.5pt solid black'; // Re-apply underline for inputs/textareas
                     (ta as HTMLElement).style.padding = '1pt'; // Match print
                     (ta as HTMLElement).style.fontSize = (ta.closest('.print-table') ? '8pt' : '9pt'); // Match print font size
+                    (ta as HTMLElement).style.fontWeight = 'bold';
+                    (ta as HTMLElement).style.color = 'black';
+                    (ta as HTMLElement).style.backgroundColor = 'transparent';
+                    (ta as HTMLElement).style.whiteSpace = 'pre-wrap';
+                    (ta as HTMLElement).style.overflowWrap = 'break-word';
+                    (ta as HTMLElement).style.resize = 'none';
                 });
 
+                 // Explicitly style inputs in the clone
+                const inputs = clonedPrintableArea.querySelectorAll('input[type="text"]');
+                inputs.forEach(inp => {
+                    (inp as HTMLElement).style.border = 'none';
+                    (inp as HTMLElement).style.borderBottom = '0.5pt solid black'; // Underline
+                    (inp as HTMLElement).style.padding = '0';
+                    (inp as HTMLElement).style.margin = '0';
+                    (inp as HTMLElement).style.backgroundColor = 'transparent';
+                    (inp as HTMLElement).style.boxShadow = 'none';
+                    (inp as HTMLElement).style.fontWeight = 'bold';
+                    (inp as HTMLElement).style.color = 'black';
+                    (inp as HTMLElement).style.fontSize = '9pt';
+                    (inp as HTMLElement).style.height = 'auto';
+                    (inp as HTMLElement).style.minHeight = '1.1em';
+                });
+
+
                  // Ensure vertical matter text shows correctly in clone
-                 const matterLabelClone = clonedPrintableArea.querySelector('.matter-pdf-label');
-                 const matterTextClone = clonedPrintableArea.querySelector('.matter-text-pdf-clone');
+                 const matterLabelClone = clonedPrintableArea.querySelector('.vertical-label');
+                 const matterTextClone = clonedPrintableArea.querySelector('.matter-text-print');
                  if (matterLabelClone && matterTextClone) {
                       (matterLabelClone as HTMLElement).style.display = 'flex';
+                      (matterLabelClone as HTMLElement).style.alignItems = 'center';
+                      (matterLabelClone as HTMLElement).style.justifyContent = 'center';
+                      (matterLabelClone as HTMLElement).style.backgroundColor = 'black'; // Ensure BG is black
                      (matterTextClone as HTMLElement).style.writingMode = 'vertical-rl';
                      (matterTextClone as HTMLElement).style.textOrientation = 'mixed';
                      (matterTextClone as HTMLElement).style.transform = 'rotate(180deg)';
                      (matterTextClone as HTMLElement).style.display = 'block'; // Important
                      (matterTextClone as HTMLElement).style.fontSize = '10pt'; // Match print
+                     (matterTextClone as HTMLElement).style.color = 'white'; // Ensure text is white
+                     (matterTextClone as HTMLElement).style.backgroundColor = 'transparent'; // Text background is transparent
+                     (matterTextClone as HTMLElement).style.whiteSpace = 'nowrap';
                  }
 
                  // Ensure stamp is visible in clone
@@ -451,7 +491,14 @@ export default function AdOrderForm() {
                        (stampContainerClone as HTMLElement).style.visibility = 'visible';
                        (stampContainerClone as HTMLElement).style.width = '100px'; // Match print
                        (stampContainerClone as HTMLElement).style.height = '80px'; // Match print
+                       (stampContainerClone as HTMLElement).style.alignItems = 'center';
+                       (stampContainerClone as HTMLElement).style.justifyContent = 'center';
                   }
+                   const stampImageClone = clonedPrintableArea.querySelector('.stamp-print-image');
+                    if(stampImageClone) {
+                        (stampImageClone as HTMLElement).style.objectFit = 'contain';
+                    }
+
 
                   // Hide no-print elements in clone
                   const noPrintElementsClone = clonedPrintableArea.querySelectorAll('.no-print');
@@ -471,15 +518,33 @@ export default function AdOrderForm() {
                     // Force print color adjust for backgrounds and borders
                      (el as HTMLElement).style.webkitPrintColorAdjust = 'exact';
                      (el as HTMLElement).style.printColorAdjust = 'exact';
-                     // Ensure black borders where applicable
-                     if (window.getComputedStyle(el).borderWidth !== '0px' && !el.closest('textarea') ) { // Don't force borders on textareas inside table
-                        const currentBorder = window.getComputedStyle(el).border;
-                         // Apply black border only if there's already a border style, and it's not transparent or none
-                         if (currentBorder && !currentBorder.includes('transparent') && !currentBorder.includes('none')) {
-                             (el as HTMLElement).style.borderColor = 'black';
+                     // Ensure black borders where applicable (but not on inputs/textareas themselves, handled above)
+                     const elTag = el.tagName.toLowerCase();
+                      if (elTag !== 'input' && elTag !== 'textarea') {
+                         if (window.getComputedStyle(el).borderWidth !== '0px' ) {
+                             const currentBorder = window.getComputedStyle(el).border;
+                             // Apply black border only if there's already a border style, and it's not transparent or none
+                             if (currentBorder && !currentBorder.includes('transparent') && !currentBorder.includes('none')) {
+                                 (el as HTMLElement).style.borderColor = 'black';
+                             }
                          }
-                     }
+                      }
                  });
+
+                 // Ensure specific backgrounds are applied correctly
+                 const headerTitleClone = clonedPrintableArea.querySelector('.header-title');
+                 if (headerTitleClone) {
+                      (headerTitleClone as HTMLElement).style.backgroundColor = 'black';
+                      (headerTitleClone as HTMLElement).style.color = 'white';
+                 }
+                  const headerTitleH1Clone = clonedPrintableArea.querySelector('.header-title h1');
+                  if(headerTitleH1Clone){
+                      (headerTitleH1Clone as HTMLElement).style.color = 'white';
+                  }
+                 const tableHeaderClone = clonedPrintableArea.querySelector('.print-table-header');
+                 if (tableHeaderClone) {
+                      (tableHeaderClone as HTMLElement).style.backgroundColor = '#f0f0f0';
+                 }
             }
         });
 
@@ -562,7 +627,8 @@ export default function AdOrderForm() {
            {/* Conditional wrapper for print preview centering - only added when isPreviewing is true */}
             {/* The #printable-area is MOVED inside #printable-area-wrapper by the useEffect when isPreviewing */}
            <Card id="printable-area" ref={formRef} className="w-full print-border-heavy rounded-none shadow-none p-5 border-2 border-black">
-               <CardContent className="p-0">
+               {/* Use correct class for CardContent */}
+               <CardContent className="p-0 card-content-print-fix card-content-pdf-fix">
                    {/* Header */}
                    <div className="text-center bg-black text-white p-1 mb-5 header-title">
                        <h1 className="text-xl m-0 font-bold">RELEASE ORDER</h1>
@@ -723,60 +789,60 @@ export default function AdOrderForm() {
 
                    {/* Schedule Table */}
                     <div className="mb-5 table-container-print">
-                        <Table className="print-table print-border border border-black pdf-table">
+                        <Table className="print-table print-border border border-black">
                             <TableHeader className="bg-secondary print-table-header">
                                 <TableRow>
-                                    <TableHead className="w-[10%] print-border-thin border border-black p-1 text-xs font-bold pdf-th">Key No.</TableHead> {/* Reduced padding, smaller font */}
-                                    <TableHead className="w-[25%] print-border-thin border border-black p-1 text-xs font-bold pdf-th">Publication(s)</TableHead>
-                                    <TableHead className="w-[15%] print-border-thin border border-black p-1 text-xs font-bold pdf-th">Edition(s)</TableHead>
-                                    <TableHead className="w-[15%] print-border-thin border border-black p-1 text-xs font-bold pdf-th">Size</TableHead>
-                                    <TableHead className="w-[20%] print-border-thin border border-black p-1 text-xs font-bold pdf-th">Scheduled Date(s)</TableHead>
-                                    <TableHead className="w-[15%] print-border-thin border border-black p-1 text-xs font-bold pdf-th">Position</TableHead>
+                                    <TableHead className="w-[10%] print-border-thin border border-black p-1.5 text-sm font-bold">Key No.</TableHead> {/* Increased padding slightly */}
+                                    <TableHead className="w-[25%] print-border-thin border border-black p-1.5 text-sm font-bold">Publication(s)</TableHead>
+                                    <TableHead className="w-[15%] print-border-thin border border-black p-1.5 text-sm font-bold">Edition(s)</TableHead>
+                                    <TableHead className="w-[15%] print-border-thin border border-black p-1.5 text-sm font-bold">Size</TableHead>
+                                    <TableHead className="w-[20%] print-border-thin border border-black p-1.5 text-sm font-bold">Scheduled Date(s)</TableHead>
+                                    <TableHead className="w-[15%] print-border-thin border border-black p-1.5 text-sm font-bold">Position</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {scheduleRows.map((row) => (
-                                    <TableRow key={row.id} className="min-h-[100px] pdf-tr align-top"> {/* Reduced min-height */}
-                                        <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top pdf-td">
+                                    <TableRow key={row.id} className="min-h-[100px] align-top"> {/* Match original height */}
+                                        <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
                                             <Textarea
                                                 value={row.keyNo}
                                                  onChange={(e) => handleScheduleChange(row.id, 'keyNo', e.target.value)}
-                                                className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none pdf-textarea" // Reduced padding, smaller font
+                                                className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[100px]" // Match height, reduced padding, smaller font
                                             />
                                         </TableCell>
-                                        <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top pdf-td">
+                                        <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
                                             <Textarea
                                                 value={row.publication}
                                                 onChange={(e) => handleScheduleChange(row.id, 'publication', e.target.value)}
-                                                className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none pdf-textarea"
+                                                className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[100px]"
                                             />
                                         </TableCell>
-                                        <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top pdf-td">
+                                        <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
                                             <Textarea
                                                 value={row.edition}
                                                  onChange={(e) => handleScheduleChange(row.id, 'edition', e.target.value)}
-                                                className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none pdf-textarea"
+                                                className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[100px]"
                                             />
                                         </TableCell>
-                                        <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top pdf-td">
+                                        <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
                                             <Textarea
                                                 value={row.size}
                                                  onChange={(e) => handleScheduleChange(row.id, 'size', e.target.value)}
-                                                className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none pdf-textarea"
+                                                className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[100px]"
                                             />
                                         </TableCell>
-                                        <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top pdf-td">
+                                        <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
                                             <Textarea
                                                  value={row.scheduledDate}
                                                   onChange={(e) => handleScheduleChange(row.id, 'scheduledDate', e.target.value)}
-                                                 className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none pdf-textarea"
+                                                 className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[100px]"
                                              />
                                         </TableCell>
-                                        <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top pdf-td">
+                                        <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
                                             <Textarea
                                                 value={row.position}
                                                  onChange={(e) => handleScheduleChange(row.id, 'position', e.target.value)}
-                                                className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none pdf-textarea"
+                                                className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[100px]"
                                             />
                                         </TableCell>
                                     </TableRow>
@@ -797,13 +863,11 @@ export default function AdOrderForm() {
                     </div>
 
                    {/* Matter Section */}
-                   <div className="matter-box flex h-[100px] print-border-heavy rounded mb-5 overflow-hidden border-2 border-black"> {/* Reduced height */}
+                   <div className="matter-box flex h-[100px] print-border-heavy rounded mb-5 overflow-hidden border-2 border-black"> {/* Match original height */}
                         {/* Vertical Text Label */}
-                        <div className="vertical-label bg-black text-white flex items-center justify-center p-1 w-6 flex-shrink-0 matter-pdf-label"> {/* Thinner label */}
-                            {/* Separate span for PDF clone */}
-                            <span className="hidden pdf-only-inline-block matter-text-pdf-clone">MATTER</span>
-                             {/* Visible text for screen and print preview */}
-                            <span className="text-sm font-bold whitespace-nowrap matter-text-print matter-text-screen" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)' }}> {/* Smaller font */}
+                        <div className="vertical-label bg-black text-white flex items-center justify-center p-1 w-6 flex-shrink-0"> {/* Thinner label, ensure flex */}
+                             {/* Visible text for screen and print/pdf/preview */}
+                            <span className="text-sm font-bold whitespace-nowrap matter-text-print" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)' }}> {/* Smaller font */}
                                 MATTER
                             </span>
                         </div>
@@ -811,7 +875,7 @@ export default function AdOrderForm() {
                            <Textarea
                                id="matterArea"
                                placeholder="Enter matter here..."
-                               className="w-full h-full resize-none border-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none p-1 align-top pdf-textarea"
+                               className="w-full h-full resize-none border-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none p-1 align-top"
                                value={matter}
                                onChange={(e) => setMatter(e.target.value)} // Allow editing
                            />
@@ -832,7 +896,7 @@ export default function AdOrderForm() {
                    </div>
 
                    {/* Notes & Stamp Container */}
-                   <div className="notes-stamp-container relative print-border rounded p-2 border border-black min-h-[90px]"> {/* Reduced min-height */}
+                   <div className="notes-stamp-container relative print-border rounded p-2 border border-black min-h-[90px]"> {/* Match original min-height */}
                        {/* Notes Section */}
                        <div className="notes-content flex-1 pr-[110px]"> {/* Padding for smaller stamp */}
                            <p className="font-bold mb-1 note-title-underline text-sm">Note:</p>
@@ -848,7 +912,7 @@ export default function AdOrderForm() {
                        {!isPreviewing && (
                            <div
                                id="stampContainerElement"
-                               className="stamp-container-interactive absolute top-1 right-1 w-[100px] h-[80px] flex items-center justify-center cursor-pointer overflow-hidden group no-print" // Smaller size, Hide this container for pdf/print
+                               className="stamp-container-interactive absolute top-1 right-1 w-[100px] h-[80px] flex items-center justify-center cursor-pointer overflow-hidden group no-print" // Match original size, Hide this container for pdf/print
                                onClick={triggerStampUpload}
                                onMouseEnter={triggerStampUpload}
                            >
@@ -868,7 +932,7 @@ export default function AdOrderForm() {
                                            alt="Stamp Preview"
                                            width={100} // Match container
                                            height={80} // Match container
-                                           style={{ objectFit: 'contain' }}
+                                           style={{ objectFit: 'contain' }} // Changed to contain
                                            className="block max-w-full max-h-full"
                                        />
                                        {/* Hover effect */}
@@ -885,13 +949,13 @@ export default function AdOrderForm() {
                        )}
                        {/* Visible Stamp Image for PDF/Screenshot/Preview Only */}
                        {stampPreview && (
-                           <div className="stamp-container-print absolute top-1 right-1 w-[100px] h-[80px] hidden print-only-flex pdf-only-flex items-center justify-center"> {/* Adjusted size */}
+                           <div className="stamp-container-print absolute top-1 right-1 w-[100px] h-[80px] hidden print-only-flex pdf-only-flex items-center justify-center"> {/* Match original size */}
                                <Image
                                    src={stampPreview}
                                    alt="Stamp"
                                    width={100} // Match container
                                    height={80} // Match container
-                                   style={{ objectFit: 'contain' }}
+                                   style={{ objectFit: 'contain' }} // Ensure contain for print/pdf
                                    className="stamp-print-image max-w-full max-h-full"
                                />
                            </div>
@@ -903,3 +967,4 @@ export default function AdOrderForm() {
    </div>
 );
 }
+

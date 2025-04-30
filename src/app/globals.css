@@ -111,7 +111,7 @@ body {
     @apply border-border;
   } */
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-bold; /* Ensure bold is applied by default */
   }
 
    /* Underline styles */
@@ -166,21 +166,16 @@ body {
       line-height: 1.2; /* Tighter line spacing */
   }
 
-
-  /* Ensure specific elements intended for print are visible */
-  .print-only-inline-block {
-    display: inline-block !important;
-    visibility: visible !important;
+  /* Ensure correct CardContent padding handling in print */
+  #printable-area .card-content-print-fix {
+      padding: 0 !important;
   }
-  .print-only-flex {
-     display: flex !important;
-     visibility: visible !important;
-  }
-
-  /* Adjust margins between sections */
-   #printable-area > .p-0 > * { /* Target direct children of CardContent */
+   /* Target direct children of the corrected CardContent for margin */
+  #printable-area .card-content-print-fix > * {
        margin-bottom: 8pt !important; /* Reduce space between sections */
    }
+
+  /* Explicit margins for bottom-most elements if needed */
    #printable-area .header-title {
        margin-bottom: 8pt !important;
    }
@@ -206,6 +201,16 @@ body {
        margin-bottom: 0 !important; /* No margin at the very bottom */
    }
 
+
+  /* Ensure specific elements intended for print are visible */
+  .print-only-inline-block {
+    display: inline-block !important;
+    visibility: visible !important;
+  }
+  .print-only-flex {
+     display: flex !important;
+     visibility: visible !important;
+  }
 
   /* Adjust borders for print */
   .print-border, .print-border-heavy {
@@ -269,7 +274,7 @@ body {
      page-break-inside: avoid; /* Try to keep cell content together */
   }
   .print-table-cell textarea { /* Style textareas within table cells */
-     min-height: 100px !important; /* Reduced min-height */
+     min-height: 100px !important; /* Match original height */
      height: auto !important; /* Allow shrinking */
      border: none !important;
      padding: 1pt !important;
@@ -292,6 +297,17 @@ body {
 
 
   /* Matter box vertical text for print */
+   .vertical-label {
+     background-color: black !important; /* Ensure background prints */
+     -webkit-print-color-adjust: exact !important;
+     print-color-adjust: exact !important;
+     width: 6pt !important; /* Thinner label */
+     padding: 2pt !important;
+     font-size: 10pt !important; /* Smaller font */
+     display: flex !important; /* Ensure flex works for alignment */
+     align-items: center !important;
+     justify-content: center !important;
+   }
   .matter-text-print {
     writing-mode: vertical-rl !important;
     text-orientation: mixed !important;
@@ -300,18 +316,12 @@ body {
     color: white !important; /* Ensure it's white on black bg */
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-    background-color: black !important; /* Ensure background prints */
-  }
-  .vertical-label {
-     background-color: black !important; /* Ensure background prints */
-     -webkit-print-color-adjust: exact !important;
-     print-color-adjust: exact !important;
-     width: 6pt !important; /* Thinner label */
-     padding: 2pt !important;
-     font-size: 10pt !important; /* Smaller font */
+    background-color: transparent !important; /* Text itself has no background */
+    white-space: nowrap !important; /* Prevent wrapping */
+    display: block !important; /* Ensure it takes space */
   }
    .matter-box {
-       height: 100px !important; /* Reduced height */
+       height: 100px !important; /* Match original height */
    }
   .matter-content textarea {
      font-weight: bold !important;
@@ -321,6 +331,8 @@ body {
      white-space: pre-wrap !important;
      overflow-wrap: break-word !important;
      font-size: 9pt !important;
+     border: none !important; /* No border on textarea itself */
+     padding: 1pt !important; /* Minimal padding inside */
   }
 
   /* Stamp image for print */
@@ -330,10 +342,12 @@ body {
     position: absolute !important; /* Ensure positioning */
     top: 2pt !important;
     right: 2pt !important;
-    width: 100px !important; /* Smaller size */
-    height: 80px !important; /* Smaller size */
+    width: 100px !important; /* Match original size */
+    height: 80px !important; /* Match original size */
     border: none !important; /* No border around the container itself */
     overflow: hidden; /* Ensure image stays within bounds */
+    align-items: center !important; /* Vertically center */
+    justify-content: center !important; /* Horizontally center */
   }
    .stamp-print-image {
        max-width: 100% !important;
@@ -348,6 +362,9 @@ body {
        position: relative !important; /* Needed for absolute positioning of stamp */
        min-height: 90px !important; /* Ensure min height accommodates smaller stamp */
        padding-right: 110px !important; /* Space for smaller stamp */
+       padding-top: 2pt !important; /* Minimal padding */
+       padding-bottom: 2pt !important;
+       padding-left: 4pt !important;
    }
     .notes-stamp-container ol {
        font-size: 8pt !important; /* Smaller font for notes */
@@ -421,19 +438,25 @@ body {
 /* Styles for PDF Generation via html2canvas */
 .pdf-generation-mode {
   /* Apply base print styles - manually list needed styles */
+  /* Use @apply for Tailwind classes */
+  @apply p-0 m-0 box-border;
+
   body { @apply m-0 p-0 font-bold text-[9pt]; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   .no-print, .popover, .popover-content, button:not(.print-visible-button) { @apply hidden invisible; }
   #printable-area { @apply w-full max-w-full m-0 p-[10pt] border-[2pt] border-black shadow-none box-border; page-break-inside: avoid; font-weight: bold !important; }
   #printable-area * { @apply font-bold text-black border-black; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; line-height: 1.2; }
-  #printable-area > .card-content-pdf-fix > * { margin-bottom: 8pt !important; padding: 0 !important; } /* Target direct children */
-  #printable-area .header-title { margin-bottom: 8pt !important; }
-   #printable-area .address-container { margin-bottom: 8pt !important; }
-   #printable-area .advertisement-manager-section { margin-bottom: 8pt !important; }
-   #printable-area .heading-package-container { margin-bottom: 8pt !important; }
-   #printable-area .table-container-print { margin-bottom: 8pt !important; }
-   #printable-area .matter-box { margin-bottom: 8pt !important; }
-   #printable-area .billing-address-box { margin-bottom: 8pt !important; }
-   #printable-area .notes-stamp-container { margin-bottom: 0 !important; }
+   /* Fix for CardContent padding in PDF mode - adjusted selector */
+  #printable-area .card-content-pdf-fix { @apply p-0 !important; }
+  #printable-area .card-content-pdf-fix > * { @apply mb-[8pt]; }
+
+  #printable-area .header-title { @apply mb-[8pt]; }
+   #printable-area .address-container { @apply mb-[8pt]; }
+   #printable-area .advertisement-manager-section { @apply mb-[8pt]; }
+   #printable-area .heading-package-container { @apply mb-[8pt]; }
+   #printable-area .table-container-print { @apply mb-[8pt]; }
+   #printable-area .matter-box { @apply mb-[8pt]; }
+   #printable-area .billing-address-box { @apply mb-[8pt]; }
+   #printable-area .notes-stamp-container { @apply mb-0; }
 
   .print-only-inline-block, .pdf-only-inline-block { @apply inline-block visible; }
   .print-only-flex, .pdf-only-flex { @apply flex visible; }
@@ -447,13 +470,14 @@ body {
   .print-table th, .print-table td { @apply border-black p-[2pt] align-top font-bold text-black text-[8pt]; border-width: 0.5pt !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; page-break-inside: avoid; }
   .print-table-cell textarea { @apply min-h-[100px] h-auto border-none p-[1pt] font-bold text-black text-[8pt] block overflow-hidden; white-space: pre-wrap !important; overflow-wrap: break-word !important; line-height: 1.1; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   .print-table tr { @apply h-auto min-h-[100px]; page-break-inside: avoid; }
-  .matter-text-print { writing-mode: vertical-rl !important; text-orientation: mixed !important; transform: rotate(180deg) !important; @apply font-bold text-white bg-black; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-  .vertical-label { background-color: black !important; @apply p-[2pt] text-[10pt]; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; width: 6pt !important; }
+  .vertical-label { background-color: black !important; @apply p-[2pt] text-[10pt] w-[6pt] flex items-center justify-center; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  .matter-text-print { writing-mode: vertical-rl !important; text-orientation: mixed !important; transform: rotate(180deg) !important; @apply font-bold text-white bg-transparent whitespace-nowrap block; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
   .matter-box { height: 100px !important; }
-  .matter-content textarea { @apply font-bold text-black text-[9pt]; white-space: pre-wrap !important; overflow-wrap: break-word !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-  .stamp-container-print { @apply flex visible absolute top-[2pt] right-[2pt] w-[100px] h-[80px] border-none overflow-hidden; }
+  .matter-content textarea { @apply font-bold text-black text-[9pt] border-none p-[1pt]; white-space: pre-wrap !important; overflow-wrap: break-word !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  .stamp-container-print { @apply flex visible absolute top-[2pt] right-[2pt] w-[100px] h-[80px] border-none overflow-hidden items-center justify-center; }
   .stamp-print-image { @apply max-w-full max-h-full block; object-fit: contain !important; }
-  .notes-stamp-container { @apply border border-black relative min-h-[90px] pr-[110px]; }
+  .notes-stamp-container { @apply border border-black relative min-h-[90px] pr-[110px] pt-[2pt] pb-[2pt] pl-[4pt]; }
    .notes-stamp-container ol { @apply text-[8pt] mt-[4pt] pl-[15px]; }
   .note-title-underline, .billing-title-underline { border-bottom: 1pt solid black !important; @apply pb-0 mb-[2pt] inline-block border-black; }
   .address-box p, .billing-address-box p { @apply font-bold text-black text-[8pt]; line-height: 1.1 !important; }
@@ -465,7 +489,7 @@ body {
   .header-title h1 { @apply text-[14pt] m-0 font-bold text-white; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
   /* Additional or overriding styles specifically for PDF rendering */
-  @apply p-0 m-0 box-border;
+
 }
 
 .pdf-generation-mode #printable-area {
@@ -583,7 +607,7 @@ body {
     transform: rotate(180deg) !important;
     font-weight: bold !important;
     color: white !important;
-    background-color: black !important;
+    background-color: transparent !important; /* Text itself is transparent */
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     display: block; /* Ensure it takes space */
@@ -594,15 +618,18 @@ body {
     background-color: black !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-    width: auto !important; /* Adjust width as needed or let content decide */
-    padding: 2pt !important;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     width: 6pt !important; /* Match print */
+    padding: 2pt !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
 .pdf-generation-mode .matter-box {
     height: 100px !important; /* Match print */
+}
+.pdf-generation-mode .matter-content textarea {
+   border: none !important;
+   padding: 1pt !important;
 }
 
 
@@ -617,6 +644,8 @@ body {
     height: 80px !important; /* Match print */
     border: none !important;
     overflow: hidden !important; /* Important for canvas rendering */
+    align-items: center !important;
+    justify-content: center !important;
 }
 .pdf-generation-mode .stamp-print-image {
     max-width: 100% !important;
@@ -630,6 +659,9 @@ body {
    position: relative !important;
    min-height: 90px !important; /* Match print */
    padding-right: 110px !important; /* Match print */
+   padding-top: 2pt !important;
+   padding-bottom: 2pt !important;
+   padding-left: 4pt !important;
 }
 .pdf-generation-mode .notes-stamp-container ol {
    font-size: 8pt !important; /* Match print */
@@ -678,6 +710,7 @@ body.print-preview-mode {
   padding: 20px;
   min-height: 100vh;
   box-sizing: border-box;
+  overflow: auto; /* Allow scrolling if content overflows viewport */
 }
 
 body.print-preview-mode > *:not(#printable-area-wrapper):not(#closePreviewButton) {
@@ -688,7 +721,8 @@ body.print-preview-mode > *:not(#printable-area-wrapper):not(#closePreviewButton
 
 #printable-area-wrapper {
   width: 210mm; /* A4 width */
-  min-height: 297mm; /* A4 height - adjust if needed, but should scale */
+  /* min-height: 297mm; */ /* Let height be determined by content */
+  height: auto;
   background-color: white;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
   margin: 20px auto; /* Center the paper */
@@ -721,18 +755,17 @@ body.print-preview-mode > *:not(#printable-area-wrapper):not(#closePreviewButton
 }
 
 /* Correctly target direct children of CardContent within the wrapper */
-#printable-area-wrapper #printable-area > .card-content-pdf-fix > * {
-     margin-bottom: 8pt !important;
-     padding: 0 !important;
+#printable-area-wrapper #printable-area .card-content-print-fix {
+    padding: 0 !important;
 }
-#printable-area-wrapper #printable-area .header-title { margin-bottom: 8pt !important; }
-#printable-area-wrapper #printable-area .address-container { margin-bottom: 8pt !important; }
-#printable-area-wrapper #printable-area .advertisement-manager-section { margin-bottom: 8pt !important; }
-#printable-area-wrapper #printable-area .heading-package-container { margin-bottom: 8pt !important; }
-#printable-area-wrapper #printable-area .table-container-print { margin-bottom: 8pt !important; }
-#printable-area-wrapper #printable-area .matter-box { margin-bottom: 8pt !important; }
-#printable-area-wrapper #printable-area .billing-address-box { margin-bottom: 8pt !important; }
-#printable-area-wrapper #printable-area .notes-stamp-container { margin-bottom: 0 !important; }
+#printable-area-wrapper #printable-area .card-content-print-fix > * {
+     margin-bottom: 8pt !important;
+}
+/* Ensure last child has no margin */
+#printable-area-wrapper #printable-area .card-content-print-fix > *:last-child {
+     margin-bottom: 0 !important;
+}
+
 
 #printable-area-wrapper .no-print,
 #printable-area-wrapper .popover,
@@ -816,19 +849,6 @@ body.print-preview-mode > *:not(#printable-area-wrapper):not(#closePreviewButton
 }
 
 /* Ensure vertical matter text shows correctly in preview */
-#printable-area-wrapper .vertical-label .matter-text-print {
-   writing-mode: vertical-rl !important;
-   text-orientation: mixed !important;
-   transform: rotate(180deg) !important;
-   font-weight: bold !important;
-   color: white !important;
-   background-color: black !important;
-   -webkit-print-color-adjust: exact !important;
-   print-color-adjust: exact !important;
-   display: block !important;
-   white-space: nowrap !important;
-   font-size: 10pt !important;
-}
 #printable-area-wrapper .vertical-label {
    background-color: black !important;
    -webkit-print-color-adjust: exact !important;
@@ -839,8 +859,25 @@ body.print-preview-mode > *:not(#printable-area-wrapper):not(#closePreviewButton
    align-items: center !important;
    justify-content: center !important;
 }
+#printable-area-wrapper .vertical-label .matter-text-print {
+   writing-mode: vertical-rl !important;
+   text-orientation: mixed !important;
+   transform: rotate(180deg) !important;
+   font-weight: bold !important;
+   color: white !important;
+   background-color: transparent !important; /* Match PDF */
+   -webkit-print-color-adjust: exact !important;
+   print-color-adjust: exact !important;
+   display: block !important;
+   white-space: nowrap !important;
+   font-size: 10pt !important;
+}
 #printable-area-wrapper .matter-box {
     height: 100px !important;
+}
+#printable-area-wrapper .matter-content textarea {
+    border: none !important;
+    padding: 1pt !important;
 }
 
 /* Stamp Image for Preview */
@@ -854,6 +891,8 @@ body.print-preview-mode > *:not(#printable-area-wrapper):not(#closePreviewButton
     height: 80px !important;
     border: none !important;
     overflow: hidden !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
 #printable-area-wrapper .stamp-print-image {
     max-width: 100% !important;
@@ -866,6 +905,9 @@ body.print-preview-mode > *:not(#printable-area-wrapper):not(#closePreviewButton
    position: relative !important;
    min-height: 90px !important;
    padding-right: 110px !important;
+   padding-top: 2pt !important;
+   padding-bottom: 2pt !important;
+   padding-left: 4pt !important;
 }
 #printable-area-wrapper .notes-stamp-container ol {
    font-size: 8pt !important;
