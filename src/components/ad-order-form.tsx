@@ -362,7 +362,9 @@ export default function AdOrderForm() {
                          if (date instanceof Date && !isNaN(date.getTime())) {
                              setOrderDate(date); // Update Date object state
                          } else {
-                             setOrderDate(new Date()); // Fallback to today if selection is cleared or invalid
+                             const today = new Date(); // Fallback to today if selection is cleared or invalid
+                             setOrderDate(today);
+                             setDisplayDate(format(today, "dd.MM.yyyy")); // Update display immediately
                          }
                       }}
                       initialFocus
@@ -394,57 +396,58 @@ export default function AdOrderForm() {
             </div>
           </div>
 
-             {/* Advertisement Manager Section */}
-             <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
-                 <Label className="block mb-1">The Advertisement Manager</Label>
-                  <div className="relative mb-1">
+           {/* Heading & Package Section */}
+           <div className="heading-package-container flex gap-3 mb-5">
+               <div className="heading-caption-box flex-1 print-border-heavy rounded p-2 border-2 border-black">
+                   <Label htmlFor="caption" className="block mb-1">Heading/Caption:</Label>
                    <Input
-                     id="adManager1"
+                     id="caption"
                      type="text"
-                     placeholder="Line 1"
+                     placeholder="Enter caption here"
                      className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                     value={advertisementManagerLine1}
-                     onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
+                     value={caption}
+                     onChange={(e) => setCaption(e.target.value)}
                    />
-                  </div>
-                 <div className="relative">
-                 <Input
-                   id="adManager2"
-                   type="text"
-                   placeholder="Line 2"
-                   className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                   value={advertisementManagerLine2}
-                   onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
-                 />
-                  </div>
-                 <p className="text-sm mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
                </div>
+               <div className="package-box w-[30%] print-border-heavy rounded p-2 border-2 border-black">
+                   <Label htmlFor="package" className="block mb-1">Package:</Label>
+                   <Input
+                     id="package" // Use unique ID
+                     type="text"
+                     placeholder="Enter package name"
+                     className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                     value={packageName}
+                     onChange={(e) => setPackageName(e.target.value)}
+                   />
+               </div>
+           </div>
 
-            {/* Heading & Package Section */}
-            <div className="heading-package-container flex gap-3 mb-5">
-                <div className="heading-caption-box flex-1 print-border-heavy rounded p-2 border-2 border-black">
-                    <Label htmlFor="caption" className="block mb-1">Heading/Caption:</Label>
-                    <Input
-                      id="caption"
-                      type="text"
-                      placeholder="Enter caption here"
-                      className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                      value={caption}
-                      onChange={(e) => setCaption(e.target.value)}
-                    />
-                </div>
-                <div className="package-box w-[30%] print-border-heavy rounded p-2 border-2 border-black">
-                    <Label htmlFor="package" className="block mb-1">Package:</Label>
-                    <Input
-                      id="package" // Use unique ID
-                      type="text"
-                      placeholder="Enter package name"
-                      className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                      value={packageName}
-                      onChange={(e) => setPackageName(e.target.value)}
-                    />
-                </div>
-            </div>
+            {/* Advertisement Manager Section */}
+            <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
+                <Label className="block mb-1">The Advertisement Manager</Label>
+                 <div className="relative mb-1">
+                  <Input
+                    id="adManager1"
+                    type="text"
+                    placeholder="Line 1"
+                    className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                    value={advertisementManagerLine1}
+                    onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
+                  />
+                 </div>
+                <div className="relative">
+                <Input
+                  id="adManager2"
+                  type="text"
+                  placeholder="Line 2"
+                  className="w-full border-0 border-b border-black rounded-none px-1 py-1 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                  value={advertisementManagerLine2}
+                  onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
+                />
+                 </div>
+                <p className="text-sm mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
+              </div>
+
 
 
           {/* Schedule Table */}
@@ -630,4 +633,3 @@ export default function AdOrderForm() {
     </div>
   );
 }
-
