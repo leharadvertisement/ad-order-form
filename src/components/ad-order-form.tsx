@@ -240,8 +240,15 @@ export default function AdOrderForm() {
     // Ensure this runs only on the client side
     if (typeof window !== 'undefined') {
       window.print(); // Use standard browser print functionality
+    } else {
+      console.warn("Cannot print: window object is not available.");
+       toast({
+         title: "Print Error",
+         description: "Printing is only available in the browser.",
+         variant: "destructive",
+       });
     }
-  }, []);
+  }, [toast]);
 
 
   const handleClearForm = useCallback(() => {
@@ -635,3 +642,4 @@ export default function AdOrderForm() {
     </div>
   );
 }
+

@@ -129,8 +129,8 @@ body {
          padding: 0 !important;
          background: white !important; /* Ensure white background */
          font-size: 10pt; /* Adjust base font size for print */
-        -webkit-print-color-adjust: exact; /* Ensure background colors print */
-        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact !important; /* Ensure background colors print */
+        print-color-adjust: exact !important;
        }
 
       .no-print {
@@ -187,8 +187,8 @@ body {
 
       .print-table-header {
         background-color: #f0f0f0 !important; /* Match secondary background more closely */
-         -webkit-print-color-adjust: exact; /* Force background color printing */
-        print-color-adjust: exact;
+         -webkit-print-color-adjust: exact !important; /* Force background color printing */
+        print-color-adjust: exact !important;
       }
 
        .print-table-cell {
@@ -213,8 +213,8 @@ body {
            padding: 1px !important; /* Minimal padding */
            box-shadow: none !important;
            font-weight: bold !important; /* Keep bold style */
-            -webkit-print-color-adjust: exact; /* Ensure text prints */
-           print-color-adjust: exact;
+            -webkit-print-color-adjust: exact !important; /* Ensure text prints */
+           print-color-adjust: exact !important;
            width: 100% !important; /* Ensure they take full width */
            display: block !important; /* Treat as block for layout */
            min-height: 1em; /* Give minimum height */
@@ -225,16 +225,15 @@ body {
           color: transparent !important; /* Hide placeholders when printing */
        }
        /* Remove bottom border specifically for table inputs */
-       .print-table-cell input {
-           border-bottom: none !important;
+       .print-table-cell textarea { /* Target Textarea specifically */
+           border: none !important; /* Remove all borders for textarea in table cell */
            padding: 6px 4px !important; /* Match cell padding */
            height: 100% !important; /* Fill cell height */
-       }
-       .print-table-cell textarea { /* If textareas are used in tables */
-            border: none !important;
-            padding: 6px 4px !important;
-            height: 100% !important;
-            vertical-align: top !important;
+           vertical-align: top !important; /* Align text top */
+           resize: none !important; /* Disable resizing */
+           background-color: transparent !important;
+           -webkit-print-color-adjust: exact !important;
+           print-color-adjust: exact !important;
        }
 
        .matter-box {
@@ -252,8 +251,8 @@ body {
          justify-content: center;
          width: 32px; /* Explicit width */
          padding: 4px 0 !important;
-         -webkit-print-color-adjust: exact; /* Force background color printing */
-         print-color-adjust: exact;
+         -webkit-print-color-adjust: exact !important; /* Force background color printing */
+         print-color-adjust: exact !important;
        }
        .matter-box .vertical-label span {
           font-size: 12pt !important;
@@ -275,6 +274,7 @@ body {
           width: 180px; /* Match image width */
           height: 142px; /* Match image height */
           overflow: hidden; /* Ensure content fits */
+          z-index: 10; /* Ensure it's above notes */
        }
        #stampPreviewScreen {
           display: none !important; /* Hide the screen version */
