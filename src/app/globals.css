@@ -311,6 +311,7 @@ body {
      padding-bottom: 1px !important;
      margin-bottom: 2pt !important;
      display: inline-block !important; /* Ensure it behaves correctly */
+     border-color: black !important; /* Explicitly set black color */
   }
 
   /* Address box specific styles */
@@ -520,6 +521,7 @@ body {
    padding-bottom: 1px !important;
    margin-bottom: 4pt !important;
    display: inline-block !important;
+   border-color: black !important; /* Explicitly set black color */
 }
 
 /* General text legibility */
@@ -537,44 +539,225 @@ body {
     visibility: hidden !important;
 }
 
-/* Print Preview Mode (Optional: If you want a separate preview) */
+/* Print Preview Mode */
 body.print-preview-mode {
   background-color: #ccc; /* Grey background */
   display: flex;
   justify-content: center;
   align-items: flex-start; /* Align to top */
   padding: 20px;
+  min-height: 100vh;
+  box-sizing: border-box;
 }
 
 body.print-preview-mode > *:not(#printable-area-wrapper) {
-  display: none; /* Hide everything except the preview wrapper */
+  display: none !important; /* Hide everything except the preview wrapper */
+  visibility: hidden !important;
 }
 
 #printable-area-wrapper {
   width: 210mm; /* A4 width */
-  min-height: 297mm; /* A4 height */
+  min-height: 297mm; /* A4 height - adjust if needed */
   background-color: white;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-  margin: auto; /* Center the paper */
+  margin: 20px auto; /* Center the paper */
   position: relative; /* For potential absolute elements inside */
+  overflow: hidden; /* Prevent content bleed */
 }
 
 /* Apply print styles within the preview wrapper */
 #printable-area-wrapper #printable-area {
-   @media print {
-     /* Apply all print styles defined above */
-   }
-   /* Ensure borders are visible in preview */
-   border: 2pt solid black !important;
+  /* Apply all print styles defined above */
+  @media print {
+    /* Base print styles are already applied */
+  }
+  /* Ensure borders and print styles are visible in preview */
+  border: 2pt solid black !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  padding: 15pt !important; /* Use same padding as PDF for consistency */
+  width: 100% !important;
+  max-width: 100% !important;
+  font-weight: bold !important;
+  box-sizing: border-box;
+}
+
+#printable-area-wrapper #printable-area * {
+   font-weight: bold !important;
+   color: black !important;
+   border-color: black !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+}
+
+#printable-area-wrapper .no-print,
+#printable-area-wrapper .popover,
+#printable-area-wrapper .popover-content,
+#printable-area-wrapper button:not(.print-visible-button):not(#closePreviewButton) /* Allow close button */
+{
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Ensure print-only elements ARE visible in preview */
+#printable-area-wrapper .print-only-inline-block,
+#printable-area-wrapper .pdf-only-inline-block {
+  display: inline-block !important;
+  visibility: visible !important;
+}
+#printable-area-wrapper .print-only-flex,
+#printable-area-wrapper .pdf-only-flex {
+   display: flex !important;
+   visibility: visible !important;
+}
+
+/* Input/Textarea Styles for Preview */
+#printable-area-wrapper input[type="text"],
+#printable-area-wrapper textarea {
+  border: none !important;
+  border-bottom: 1pt solid black !important;
+  padding: 1pt 0 !important;
+  margin: 0 !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  font-weight: bold !important;
+  color: black !important;
+  white-space: pre-wrap !important;
+  overflow-wrap: break-word !important;
+  height: auto !important;
+  min-height: 1.2em;
+  display: block !important;
+  overflow: hidden !important;
+  resize: none !important;
+}
+#printable-area-wrapper .pdf-table .pdf-textarea,
+#printable-area-wrapper .print-table-cell textarea {
+    height: 145px !important; /* Consistent height */
+    min-height: 145px !important;
+    border: none !important;
+    padding: 2pt !important;
+    vertical-align: top !important;
+    display: block !important;
+    box-sizing: border-box !important;
+}
+
+
+/* Table Styles for Preview */
+#printable-area-wrapper .pdf-table,
+#printable-area-wrapper .print-table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  border: 1pt solid black !important;
+}
+#printable-area-wrapper .print-table-header {
+    background-color: #f0f0f0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+}
+#printable-area-wrapper .pdf-th,
+#printable-area-wrapper .pdf-td,
+#printable-area-wrapper .print-table th,
+#printable-area-wrapper .print-table td {
+  border: 0.5pt solid black !important;
+  padding: 4pt !important;
+  vertical-align: top !important;
+  font-weight: bold !important;
+  color: black !important;
+  box-sizing: border-box !important;
+}
+#printable-area-wrapper .pdf-tr,
+#printable-area-wrapper .print-table tr {
+    height: 150px !important;
 }
 
 /* Ensure vertical matter text shows correctly in preview */
-#printable-area-wrapper .matter-text-print {
+#printable-area-wrapper .matter-text-print,
+#printable-area-wrapper .matter-text-pdf-clone {
    writing-mode: vertical-rl !important;
    text-orientation: mixed !important;
    transform: rotate(180deg) !important;
-}
-#printable-area-wrapper .vertical-label {
-   background-color: black !important;
+   font-weight: bold !important;
    color: white !important;
+   background-color: black !important;
+   -webkit-print-color-adjust: exact !important;
+   print-color-adjust: exact !important;
+   display: block !important;
+   white-space: nowrap !important;
+}
+#printable-area-wrapper .vertical-label,
+#printable-area-wrapper .matter-pdf-label {
+   background-color: black !important;
+   -webkit-print-color-adjust: exact !important;
+   print-color-adjust: exact !important;
+   width: auto !important;
+   padding: 2pt !important;
+   display: flex !important;
+   align-items: center !important;
+   justify-content: center !important;
+}
+
+/* Stamp Image for Preview */
+#printable-area-wrapper .stamp-container-print {
+    display: flex !important;
+    visibility: visible !important;
+    position: absolute !important;
+    top: 2pt !important;
+    right: 2pt !important;
+    width: 180px !important;
+    height: 142px !important;
+    border: none !important;
+    overflow: hidden !important;
+}
+#printable-area-wrapper .stamp-print-image {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+    display: block !important;
+}
+#printable-area-wrapper .notes-stamp-container {
+   border: 1pt solid black !important;
+   position: relative !important;
+   min-height: 150px !important;
+}
+
+/* Ensure underlines are visible in Preview */
+#printable-area-wrapper .note-title-underline,
+#printable-area-wrapper .billing-title-underline {
+   border-bottom: 2pt solid black !important;
+   padding-bottom: 1px !important;
+   margin-bottom: 4pt !important;
+   display: inline-block !important;
+   border-color: black !important; /* Explicitly set black color */
+}
+
+/* General text legibility in Preview */
+#printable-area-wrapper p,
+#printable-area-wrapper li,
+#printable-area-wrapper label {
+    font-weight: bold !important;
+    color: black !important;
+    line-height: 1.3 !important;
+}
+
+/* Style for the close button in preview */
+#closePreviewButton {
+    position: fixed; /* Position relative to viewport */
+    top: 10px;
+    right: 10px;
+    z-index: 1000; /* Ensure it's above the preview */
+    padding: 8px 16px;
+    background-color: #dc3545; /* Red */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    /* Ensure it's visible even when body has specific styles */
+    display: block !important;
+    visibility: visible !important;
+}
+
+#closePreviewButton:hover {
+    background-color: #c82333; /* Darker red */
 }
