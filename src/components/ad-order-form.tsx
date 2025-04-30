@@ -15,7 +15,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
-import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon, FileDown } from 'lucide-react'; // Changed Download to FileDown for PDF
+import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon, FileDown, Eye } from 'lucide-react'; // Added Eye for preview
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -23,7 +23,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf'; // Import jsPDF
+import jsPDF from 'jspdf';
 
 interface ScheduleRow {
   id: number;
@@ -67,6 +67,8 @@ export default function AdOrderForm() {
   const [advertisementManagerLine2, setAdvertisementManagerLine2] = useState('');
   const [isClient, setIsClient] = useState(false);
   const [displayDate, setDisplayDate] = useState<string>(''); // State to hold formatted date string for display
+  const [isPreviewing, setIsPreviewing] = useState(false); // State for print preview mode
+  const [pdfGenerationMode, setPdfGenerationMode] = useState(false); // State for PDF generation mode
 
 
   // --- Ref Hooks ---
@@ -111,7 +113,11 @@ export default function AdOrderForm() {
         setPackageName(parsedData.packageName || '');
         setMatter(parsedData.matter || '');
         const loadedRows = Array.isArray(parsedData.scheduleRows) && parsedData.scheduleRows.length > 0
-          ? parsedData.scheduleRows
+          ? parsedData.scheduleRows.map(row => ({
+              ...row,
+              // Ensure an id exists for each loaded row, generate if missing
+              id: row.id || Date.now() + Math.random() // Add randomness to avoid collisions if loaded fast
+            }))
           : [{ id: Date.now(), keyNo: '', publication: '', edition: '', size: '', scheduledDate: '', position: '' }];
         setScheduleRows(loadedRows);
         setStampPreview(parsedData.stampPreview || null);
@@ -217,6 +223,66 @@ export default function AdOrderForm() {
     // Ensure all state dependencies are listed
   }, [caption, packageName, matter, scheduleRows, stampPreview, roNumber, orderDate, clientName, advertisementManagerLine1, advertisementManagerLine2, isClient]);
 
+  // Apply/remove print preview class to the body
+  useEffect(() => {
+    if (isPreviewing) {
+        document.body.classList.add('print-preview-mode');
+        // Add wrapper for centering preview
+        const wrapper = document.createElement('div');
+        wrapper.id = 'printable-area-wrapper';
+        document.body.appendChild(wrapper);
+        // Move the printable area into the wrapper
+        const printableArea = document.getElementById('pdf-content-area');
+        if (printableArea) {
+            wrapper.appendChild(printableArea);
+        }
+        // Add close button
+        const closeButton = document.createElement('button');
+        closeButton.id = 'closePreviewButton';
+        closeButton.innerText = 'Close Preview';
+        closeButton.onclick = () => setIsPreviewing(false); // Use state setter
+        document.body.appendChild(closeButton); // Append directly to body, position fixed
+    } else {
+        document.body.classList.remove('print-preview-mode');
+        // Move printable area back and remove wrapper/button
+        const wrapper = document.getElementById('printable-area-wrapper');
+        const printableArea = document.getElementById('pdf-content-area');
+        const closeButton = document.getElementById('closePreviewButton');
+        if (wrapper && printableArea) {
+            // Find the original container (assuming it's the direct parent of the wrapper)
+             const originalContainer = wrapper.parentNode;
+             if (originalContainer) {
+                 originalContainer.appendChild(printableArea); // Move it back
+             }
+            wrapper.remove();
+        }
+        if (closeButton) {
+            closeButton.remove();
+        }
+    }
+
+    // Cleanup function
+    return () => {
+        if (document.body.classList.contains('print-preview-mode')) {
+            document.body.classList.remove('print-preview-mode');
+            const wrapper = document.getElementById('printable-area-wrapper');
+            const printableArea = document.getElementById('pdf-content-area');
+             const closeButton = document.getElementById('closePreviewButton');
+            if (wrapper && printableArea && wrapper.parentNode) {
+                 // On unmount, ensure it's moved back if still in wrapper
+                 const originalContainer = wrapper.parentNode;
+                 if (originalContainer) {
+                    originalContainer.appendChild(printableArea);
+                 }
+                wrapper.remove();
+            }
+             if (closeButton) {
+                 closeButton.remove();
+             }
+        }
+    };
+  }, [isPreviewing]);
+
 
   // --- Callback Hooks ---
   const addRow = useCallback(() => {
@@ -243,6 +309,7 @@ export default function AdOrderForm() {
       prevRows.map((row) => (row.id === id ? { ...row, [field]: value } : row))
     );
   }, []);
+
 
   const handleStampUpload = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -313,77 +380,92 @@ export default function AdOrderForm() {
  const handleDownloadPdf = useCallback(async () => {
     if (!formRef.current) return;
 
-    const noPrintElements = formRef.current.querySelectorAll('.no-print');
-    noPrintElements.forEach(el => el.classList.add('hidden-for-pdf'));
-    formRef.current.classList.add('pdf-generation-mode'); // Apply styles for PDF
+    setPdfGenerationMode(true); // Enable PDF mode styles
+
+    // Need a slight delay for styles to apply before capturing
+    await new Promise(resolve => setTimeout(resolve, 100));
+
 
     try {
-      // Use A4 dimensions in points (pt) for jsPDF (1pt = 1/72 inch)
-      // A4: 210mm x 297mm => 595.28pt x 841.89pt
-      const pdfWidth = 595.28;
-      const pdfHeight = 841.89;
-      const pdf = new jsPDF('p', 'pt', 'a4');
+        const canvas = await html2canvas(formRef.current, {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            onclone: (documentClone) => {
+                const clonedForm = documentClone.getElementById('printable-area');
+                if (clonedForm) {
+                    clonedForm.classList.add('pdf-generation-mode'); // Ensure styles in clone
+                    // Re-apply specific print/PDF styles that might be missed
+                    const textareas = clonedForm.querySelectorAll('textarea');
+                    textareas.forEach(ta => {
+                        (ta as HTMLElement).style.height = '145px'; // Set height explicitly for canvas
+                        (ta as HTMLElement).style.minHeight = '145px';
+                         (ta as HTMLElement).style.overflow = 'hidden'; // Hide potential scrollbars in canvas
+                    });
+                     // Ensure vertical matter text in clone
+                    const matterTextClone = clonedForm.querySelector('.matter-text-pdf-clone');
+                    if (matterTextClone) {
+                        (matterTextClone as HTMLElement).style.writingMode = 'vertical-rl';
+                        (matterTextClone as HTMLElement).style.textOrientation = 'mixed';
+                        (matterTextClone as HTMLElement).style.transform = 'rotate(180deg)';
+                        (matterTextClone as HTMLElement).style.display = 'block';
+                        (matterTextClone as HTMLElement).style.whiteSpace = 'nowrap';
+                    }
 
-      // Ensure high-quality canvas rendering
-      const canvas = await html2canvas(formRef.current, {
-        scale: 2, // Increase scale for better resolution in PDF
-        useCORS: true,
-        logging: false,
-        onclone: (documentClone) => {
-           // Ensure print styles are applied in the cloned document for canvas
-           const clonedForm = documentClone.getElementById('printable-area');
-           if (clonedForm) {
-               clonedForm.classList.add('pdf-generation-mode');
-               // Remove elements that should not be in the PDF from the clone
-               const clonedNoPrint = clonedForm.querySelectorAll('.no-print');
-               clonedNoPrint.forEach(el => (el as HTMLElement).style.display = 'none');
-               // Ensure vertical text rendering for matter in the clone
-                const matterTextClone = clonedForm.querySelector('.matter-text-pdf-clone');
-                if (matterTextClone) {
-                    (matterTextClone as HTMLElement).style.writingMode = 'vertical-rl';
-                    (matterTextClone as HTMLElement).style.textOrientation = 'mixed';
-                    (matterTextClone as HTMLElement).style.transform = 'rotate(180deg)';
+                    // Ensure stamp image is visible in clone if it exists
+                     const stampImageClone = clonedForm.querySelector('.stamp-print-image');
+                     const stampContainerClone = clonedForm.querySelector('.stamp-container-print');
+                     if (stampImageClone && stampContainerClone) {
+                          (stampContainerClone as HTMLElement).style.display = 'flex'; // Make container visible
+                         (stampContainerClone as HTMLElement).style.visibility = 'visible';
+                     }
+
+                      // Hide elements specifically marked for no-print/no-pdf in the clone
+                     const noPrintElementsClone = clonedForm.querySelectorAll('.no-print');
+                     noPrintElementsClone.forEach(el => (el as HTMLElement).style.display = 'none');
                 }
+            }
+        });
 
-           }
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'pt', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const imgProps = pdf.getImageProperties(imgData);
+        const imgWidth = pdfWidth - 30; // Add some margin (15pt each side)
+        const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+
+        let heightLeft = imgHeight;
+        let position = 15; // Top margin
+
+        pdf.addImage(imgData, 'PNG', 15, position, imgWidth, imgHeight); // Add left margin
+        heightLeft -= (pdfHeight - 30); // Account for top/bottom margins
+
+        while (heightLeft > 0) {
+            position = heightLeft - imgHeight + 15; // Adjust position for next page, add margin
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 15, position, imgWidth, imgHeight);
+            heightLeft -= (pdfHeight - 30);
         }
-      });
 
-      const imgData = canvas.toDataURL('image/png');
-      const imgProps = pdf.getImageProperties(imgData);
-      const imgWidth = pdfWidth; // Fit image to PDF width
-      const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+        pdf.save('release-order.pdf');
+        toast({
+            title: "PDF Downloaded",
+            description: "The release order has been saved as a PDF.",
+        });
 
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pdfHeight;
-
-      // Add extra pages if content exceeds one page
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pdfHeight;
-      }
-
-      pdf.save('release-order.pdf');
-      toast({
-        title: "PDF Downloaded",
-        description: "The release order has been saved as a PDF.",
-      });
     } catch (error) {
-      console.error("Error generating PDF:", error);
-      toast({
-        title: "PDF Generation Failed",
-        description: "Could not save the release order as a PDF.",
-        variant: "destructive",
-      });
+        console.error("Error generating PDF:", error);
+        toast({
+            title: "PDF Generation Failed",
+            description: "Could not save the release order as a PDF.",
+            variant: "destructive",
+        });
     } finally {
-      // Restore elements and remove PDF styles
-      noPrintElements.forEach(el => el.classList.remove('hidden-for-pdf'));
-      formRef.current.classList.remove('pdf-generation-mode');
+       // Use a timeout to ensure rendering completes before removing the class
+       setTimeout(() => {
+          setPdfGenerationMode(false); // Disable PDF mode styles
+       }, 100);
     }
   }, [toast]);
 
@@ -395,19 +477,27 @@ export default function AdOrderForm() {
 
   // --- Main Render ---
   return (
-    <div className="max-w-[210mm] mx-auto font-bold"> {/* Removed formRef here */}
-       {/* Action Buttons */}
-       <div className="flex justify-end gap-2 mb-4 no-print">
-           <Button onClick={handleDownloadPdf} variant="outline">
-               <FileDown className="mr-2 h-4 w-4" /> Download PDF
-           </Button>
-           <Button onClick={handleClearForm} variant="outline">
-               <Eraser className="mr-2 h-4 w-4" /> Clear Form & Draft
-           </Button>
-       </div>
+    <div className={cn("max-w-[210mm] mx-auto font-bold", { 'pdf-generation-mode': pdfGenerationMode })}>
+       {/* Action Buttons - Hidden during preview */}
+       {!isPreviewing && (
+           <div className="flex justify-end gap-2 mb-4 no-print">
+                <Button onClick={() => setIsPreviewing(true)} variant="outline">
+                    <Eye className="mr-2 h-4 w-4" /> Preview Print
+                </Button>
+               <Button onClick={handleDownloadPdf} variant="outline">
+                   <FileDown className="mr-2 h-4 w-4" /> Download PDF
+               </Button>
+               <Button onClick={handleClearForm} variant="outline">
+                   <Eraser className="mr-2 h-4 w-4" /> Clear Form & Draft
+               </Button>
+           </div>
+        )}
+
 
        {/* Printable/PDF Area - Add ref here */}
        <div id="pdf-content-area" ref={formRef}>
+           {/* Conditional wrapper for print preview centering - only added when isPreviewing is true */}
+            {/* The #printable-area is MOVED inside #printable-area-wrapper by the useEffect when isPreviewing */}
            <Card id="printable-area" className="w-full print-border-heavy rounded-none shadow-none p-5 border-2 border-black pdf-target-card">
                <CardContent className="p-0">
                    {/* Header */}
@@ -457,9 +547,8 @@ export default function AdOrderForm() {
                                                )}
                                                id="orderDateTrigger"
                                            >
-                                               <CalendarIcon className="mr-2 h-4 w-4" />
-                                               {/* Display formatted date or placeholder */}
-                                               <span>{safeDisplayDate || 'Pick a date'}</span>
+                                               <CalendarIcon className="h-4 w-4" />
+                                                {/* Remove the date text span */}
                                            </Button>
                                        </PopoverTrigger>
                                        <PopoverContent className="w-auto p-0 no-print">
@@ -470,7 +559,8 @@ export default function AdOrderForm() {
                                                    if (date instanceof Date && !isNaN(date.getTime())) {
                                                        setOrderDate(date);
                                                    } else if (date === undefined) {
-                                                       // Optional: keep current or reset
+                                                        const today = new Date();
+                                                        setOrderDate(today); // Reset to today if cleared
                                                    }
                                                }}
                                                initialFocus
@@ -480,11 +570,11 @@ export default function AdOrderForm() {
                                ) : (
                                     // Server-side or initial client render: Show a placeholder
                                     <div className={cn(
-                                        "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm shadow-none no-print", // Hide on print/pdf
+                                        "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm shadow-none no-print items-center", // Hide on print/pdf
                                         "text-muted-foreground"
                                     )}>
                                         <CalendarIcon className="mr-2 h-4 w-4 inline-block" />
-                                        <span>Loading date...</span>
+                                        {/* <span>Loading date...</span> */}
                                     </div>
                                 )}
                                 {/* Static Display for PDF/Screenshot - Always render */}
@@ -582,43 +672,43 @@ export default function AdOrderForm() {
                                    <TableRow key={row.id} className="h-[150px] pdf-tr"> {/* Set height, add pdf-tr */}
                                        <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top pdf-td"> {/* Add pdf-td */}
                                            <Textarea
-                                               readOnly // Make Textarea read-only for PDF
                                                value={row.keyNo}
+                                                onChange={(e) => handleScheduleChange(row.id, 'keyNo', e.target.value)}
                                                className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none pdf-textarea" // Add pdf-textarea
                                            />
                                        </TableCell>
                                        <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top pdf-td">
                                            <Textarea
-                                               readOnly
                                                value={row.publication}
+                                               onChange={(e) => handleScheduleChange(row.id, 'publication', e.target.value)}
                                                className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none pdf-textarea"
                                            />
                                        </TableCell>
                                        <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top pdf-td">
                                            <Textarea
-                                               readOnly
                                                value={row.edition}
+                                                onChange={(e) => handleScheduleChange(row.id, 'edition', e.target.value)}
                                                className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none pdf-textarea"
                                            />
                                        </TableCell>
                                        <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top pdf-td">
                                            <Textarea
-                                               readOnly
                                                value={row.size}
+                                                onChange={(e) => handleScheduleChange(row.id, 'size', e.target.value)}
                                                className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none pdf-textarea"
                                            />
                                        </TableCell>
                                        <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top pdf-td">
                                            <Textarea
-                                               readOnly
-                                               value={row.scheduledDate}
-                                               className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none pdf-textarea"
-                                           />
+                                                value={row.scheduledDate}
+                                                 onChange={(e) => handleScheduleChange(row.id, 'scheduledDate', e.target.value)}
+                                                className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none pdf-textarea"
+                                            />
                                        </TableCell>
                                        <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top pdf-td">
                                            <Textarea
-                                               readOnly
                                                value={row.position}
+                                                onChange={(e) => handleScheduleChange(row.id, 'position', e.target.value)}
                                                className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none pdf-textarea"
                                            />
                                        </TableCell>
@@ -626,28 +716,37 @@ export default function AdOrderForm() {
                                ))}
                            </TableBody>
                        </Table>
-                       <div className="flex gap-2 mt-2 no-print"> {/* Keep buttons hidden for PDF */}
-                           <Button variant="outline" size="sm" onClick={addRow}>
-                               <PlusCircle className="mr-2 h-4 w-4" /> Add Row
-                           </Button>
-                           <Button variant="destructive" size="sm" onClick={deleteRow} disabled={scheduleRows.length <= 1}>
-                               <Trash2 className="mr-2 h-4 w-4" /> Delete Last Row
-                           </Button>
-                       </div>
+                       {/* Buttons only visible when not in preview mode */}
+                       {!isPreviewing && (
+                            <div className="flex gap-2 mt-2 no-print">
+                                <Button variant="outline" size="sm" onClick={addRow}>
+                                    <PlusCircle className="mr-2 h-4 w-4" /> Add Row
+                                </Button>
+                                <Button variant="destructive" size="sm" onClick={deleteRow} disabled={scheduleRows.length <= 1}>
+                                    <Trash2 className="mr-2 h-4 w-4" /> Delete Last Row
+                                </Button>
+                            </div>
+                        )}
                    </div>
 
                    {/* Matter Section */}
                    <div className="matter-box flex h-[150px] print-border-heavy rounded mb-5 overflow-hidden border-2 border-black">
-                       <div className="vertical-label bg-black text-white flex items-center justify-center p-1 w-8 flex-shrink-0 matter-pdf-label"> {/* Add class for PDF styling */}
-                           <span className="text-base font-bold whitespace-nowrap matter-text-print matter-text-screen matter-text-pdf-clone" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)' }}>MATTER</span>
-                       </div>
+                        {/* Vertical Text Label */}
+                        <div className="vertical-label bg-black text-white flex items-center justify-center p-1 w-8 flex-shrink-0 matter-pdf-label">
+                            {/* Separate span for PDF clone */}
+                            <span className="hidden pdf-only-inline-block matter-text-pdf-clone">MATTER</span>
+                             {/* Visible text for screen and print preview */}
+                            <span className="text-base font-bold whitespace-nowrap matter-text-print matter-text-screen" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)' }}>
+                                MATTER
+                            </span>
+                        </div>
                        <div className="matter-content flex-1 p-1">
                            <Textarea
-                               readOnly // Make read-only for PDF
                                id="matterArea"
                                placeholder="Enter matter here..."
                                className="w-full h-full resize-none border-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none p-1 align-top pdf-textarea" // Add pdf-textarea
                                value={matter}
+                               onChange={(e) => setMatter(e.target.value)} // Allow editing
                            />
                        </div>
                    </div>
@@ -678,44 +777,46 @@ export default function AdOrderForm() {
                            </ol>
                        </div>
 
-                       {/* Stamp Area - Interactive Container (Screen Only) */}
-                       <div
-                           id="stampContainerElement"
-                           className="stamp-container-interactive absolute top-2 right-2 w-[180px] h-[142px] flex items-center justify-center cursor-pointer overflow-hidden group no-print" // Hide this container for pdf
-                           onClick={triggerStampUpload}
-                           onMouseEnter={triggerStampUpload}
-                       >
-                           <Input
-                               type="file"
-                               ref={stampFileRef}
-                               accept="image/*"
-                               onChange={handleStampUpload}
-                               className="hidden"
-                               id="stampFile"
-                           />
-                           {stampPreview ? (
-                               <div className="relative w-full h-full flex items-center justify-center">
-                                   <Image
-                                       id="stampPreviewScreen"
-                                       src={stampPreview}
-                                       alt="Stamp Preview"
-                                       width={180}
-                                       height={142}
-                                       style={{ objectFit: 'contain' }}
-                                       className="block max-w-full max-h-full"
-                                   />
-                                   {/* Hover effect */}
-                                   <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                       <span className="text-white text-xs font-bold">Click/Hover to Change</span>
+                       {/* Stamp Area - Interactive Container (Screen Only, hidden in preview) */}
+                       {!isPreviewing && (
+                           <div
+                               id="stampContainerElement"
+                               className="stamp-container-interactive absolute top-2 right-2 w-[180px] h-[142px] flex items-center justify-center cursor-pointer overflow-hidden group no-print" // Hide this container for pdf/print
+                               onClick={triggerStampUpload}
+                               onMouseEnter={triggerStampUpload}
+                           >
+                               <Input
+                                   type="file"
+                                   ref={stampFileRef}
+                                   accept="image/*"
+                                   onChange={handleStampUpload}
+                                   className="hidden"
+                                   id="stampFile"
+                               />
+                               {stampPreview ? (
+                                   <div className="relative w-full h-full flex items-center justify-center">
+                                       <Image
+                                           id="stampPreviewScreen"
+                                           src={stampPreview}
+                                           alt="Stamp Preview"
+                                           width={180}
+                                           height={142}
+                                           style={{ objectFit: 'contain' }}
+                                           className="block max-w-full max-h-full"
+                                       />
+                                       {/* Hover effect */}
+                                       <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                           <span className="text-white text-xs font-bold">Click/Hover to Change</span>
+                                       </div>
                                    </div>
-                               </div>
-                           ) : (
-                               <Label htmlFor="stampFile" className="text-center text-xs text-muted-foreground cursor-pointer p-1 group-hover:opacity-75 transition-opacity">
-                                   Click or Hover<br /> to Upload Stamp
-                               </Label>
-                           )}
-                       </div>
-                       {/* Visible Stamp Image for PDF/Screenshot Only */}
+                               ) : (
+                                   <Label htmlFor="stampFile" className="text-center text-xs text-muted-foreground cursor-pointer p-1 group-hover:opacity-75 transition-opacity">
+                                       Click or Hover<br /> to Upload Stamp
+                                   </Label>
+                               )}
+                           </div>
+                       )}
+                       {/* Visible Stamp Image for PDF/Screenshot/Preview Only */}
                        {stampPreview && (
                            <div className="stamp-container-print absolute top-2 right-2 w-[180px] h-[142px] hidden print-only-flex pdf-only-flex items-center justify-center"> {/* Use pdf-only-flex */}
                                <Image
