@@ -593,7 +593,7 @@ export default function AdOrderForm() {
                 className="w-full h-full resize-none border-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none p-1 align-top"
                 value={matter}
                 onChange={(e) => setMatter(e.target.value)}
-                style={{ verticalAlign: 'top', writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)' }} // Ensure text starts top-left and is vertical
+                style={{ verticalAlign: 'top',writingMode: 'horizontal-tb', textOrientation: 'upright', transform: 'rotate(0deg)' }} // Ensure text starts top-left and is vertical
               />
             </div>
           </div>
@@ -680,5 +680,3 @@ export default function AdOrderForm() {
     </div>
   );
 }
-
-
