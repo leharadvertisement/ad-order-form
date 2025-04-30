@@ -122,3 +122,459 @@ body {
       @apply border-b-2 border-black inline-block pb-px mb-1; /* Adjusted margin */
    }
 } /* End @layer base */
+
+
+/* General Print Styles */
+@media print {
+  body {
+    margin: 0;
+    padding: 0;
+    -webkit-print-color-adjust: exact !important; /* Chrome, Safari, Edge */
+    print-color-adjust: exact !important; /* Firefox */
+    font-weight: bold !important; /* Ensure bold is applied */
+  }
+
+  .no-print,
+  .popover,
+  .popover-content, /* Ensure popovers are hidden */
+  button:not(.print-visible-button) /* Hide most buttons */
+  {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Styles specifically for the printable area */
+  #printable-area {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 10pt !important; /* Adjust padding for print */
+    border: 2pt solid black !important; /* Ensure border prints */
+    box-shadow: none !important; /* Remove shadows for print */
+    page-break-inside: avoid; /* Try to keep card content together */
+    font-weight: bold !important; /* Ensure bold is applied within */
+  }
+
+  #printable-area * {
+     font-weight: bold !important; /* Force bold on all children */
+     color: black !important; /* Ensure text is black */
+     border-color: black !important; /* Ensure borders are black */
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+  }
+
+
+  /* Ensure specific elements intended for print are visible */
+  .print-only-inline-block {
+    display: inline-block !important;
+    visibility: visible !important;
+  }
+  .print-only-flex {
+     display: flex !important;
+     visibility: visible !important;
+  }
+
+  /* Adjust borders for print */
+  .print-border, .print-border-heavy {
+     border: 1pt solid black !important;
+  }
+  .print-border-heavy {
+     border-width: 2pt !important;
+  }
+  .print-border-thin {
+    border: 0.5pt solid black !important; /* Thinner border for table cells */
+  }
+
+  /* Input and Textarea appearance for print */
+  input[type="text"],
+  textarea {
+    border-bottom: 1pt solid black !important; /* Show underline */
+    border-top: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important; /* Minimal padding */
+    margin: 0 !important;
+    background-color: transparent !important; /* No background */
+    box-shadow: none !important;
+     font-weight: bold !important;
+     color: black !important;
+     -webkit-print-color-adjust: exact !important;
+     print-color-adjust: exact !important;
+     /* Ensure text wraps and is visible */
+     white-space: pre-wrap !important;
+     overflow-wrap: break-word !important;
+     height: auto !important; /* Allow height to adjust */
+     min-height: 1.2em; /* Minimum height for visibility */
+  }
+
+  /* Table specific styles for print */
+  .table-container-print {
+     page-break-inside: auto; /* Allow table to break across pages if needed */
+  }
+  .print-table {
+     width: 100% !important;
+     border-collapse: collapse !important;
+     border: 1pt solid black !important;
+     font-weight: bold !important;
+  }
+  .print-table-header {
+    background-color: #f0f0f0 !important; /* Use hex for better print consistency */
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .print-table th, .print-table td {
+     border: 0.5pt solid black !important; /* Use thin border */
+     padding: 2pt !important; /* Minimal padding */
+     vertical-align: top !important; /* Align text top */
+     font-weight: bold !important;
+     color: black !important;
+     -webkit-print-color-adjust: exact !important;
+     print-color-adjust: exact !important;
+     page-break-inside: avoid; /* Try to keep cell content together */
+  }
+  .print-table-cell textarea { /* Style textareas within table cells */
+     height: 100% !important; /* Try to fill cell height */
+     min-height: 140px !important; /* Ensure minimum height matches the TR height */
+     border: none !important;
+     padding: 2pt !important;
+     font-weight: bold !important;
+     color: black !important;
+     -webkit-print-color-adjust: exact !important;
+     print-color-adjust: exact !important;
+     white-space: pre-wrap !important;
+     overflow-wrap: break-word !important;
+     display: block; /* Ensure it behaves like a block */
+     overflow: hidden; /* Hide overflow */
+  }
+   .print-table tr {
+       height: 150px !important; /* Match the height set in component */
+       page-break-inside: avoid; /* Try to keep rows on one page */
+   }
+
+
+  /* Matter box vertical text for print */
+  .matter-text-print {
+    writing-mode: vertical-rl !important;
+    text-orientation: mixed !important;
+    transform: rotate(180deg) !important;
+    font-weight: bold !important;
+    color: white !important; /* Ensure it's white on black bg */
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    background-color: black !important; /* Ensure background prints */
+  }
+  .vertical-label {
+     background-color: black !important; /* Ensure background prints */
+     -webkit-print-color-adjust: exact !important;
+     print-color-adjust: exact !important;
+     width: 8pt !important; /* Adjust width if needed */
+  }
+  .matter-content textarea {
+     font-weight: bold !important;
+     color: black !important;
+     -webkit-print-color-adjust: exact !important;
+     print-color-adjust: exact !important;
+     white-space: pre-wrap !important;
+     overflow-wrap: break-word !important;
+  }
+
+  /* Stamp image for print */
+  .stamp-container-print {
+    display: flex !important; /* Ensure it's visible */
+    visibility: visible !important;
+    position: absolute !important; /* Ensure positioning */
+    top: 2pt !important;
+    right: 2pt !important;
+    width: 180px !important; /* Fixed size */
+    height: 142px !important; /* Fixed size */
+    border: none !important; /* No border around the container itself */
+    overflow: hidden; /* Ensure image stays within bounds */
+  }
+   .stamp-print-image {
+       max-width: 100% !important;
+       max-height: 100% !important;
+       object-fit: contain !important;
+       display: block !important;
+   }
+
+   /* Notes container - ensure border is visible */
+   .notes-stamp-container {
+       border: 1pt solid black !important;
+       position: relative !important; /* Needed for absolute positioning of stamp */
+       min-height: 150px !important; /* Ensure min height */
+   }
+
+  /* Ensure underlines print correctly */
+  .note-title-underline, .billing-title-underline {
+     border-bottom: 2pt solid black !important;
+     padding-bottom: 1px !important;
+     margin-bottom: 2pt !important;
+     display: inline-block !important; /* Ensure it behaves correctly */
+  }
+
+  /* Address box specific styles */
+  .address-box p, .billing-address-box p {
+     font-weight: bold !important;
+     color: black !important;
+     line-height: 1.2 !important; /* Adjust line height if needed */
+  }
+
+  /* RO/Date/Client Box specific */
+  .ro-date-client-container .field-row label {
+     font-weight: bold !important;
+     color: black !important;
+  }
+  .ro-date-client-container input {
+      font-weight: bold !important;
+      color: black !important;
+      border-bottom: 1pt solid black !important;
+  }
+   #orderDatePrint {
+      display: inline-block !important; /* Ensure date is visible */
+      font-weight: bold !important;
+      color: black !important;
+   }
+
+  /* Header title */
+  .header-title {
+      background-color: black !important;
+      color: white !important;
+      font-weight: bold !important;
+      padding: 2pt !important;
+      margin-bottom: 10pt !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+  }
+  .header-title h1 {
+       font-size: 16pt !important; /* Adjust size if needed */
+       margin: 0 !important;
+       font-weight: bold !important;
+       color: white !important;
+       -webkit-print-color-adjust: exact !important;
+       print-color-adjust: exact !important;
+  }
+}
+
+/* Styles for PDF Generation via html2canvas */
+.pdf-generation-mode {
+  /* Apply base print styles */
+  @media print {
+      /* Base print styles are already applied */
+  }
+  /* Additional or overriding styles specifically for PDF rendering */
+  padding: 0 !important; /* Remove outer padding if needed */
+  margin: 0 !important;
+  box-sizing: border-box;
+}
+
+.pdf-generation-mode #printable-area {
+  border: 2pt solid black !important;
+  box-shadow: none !important;
+  margin: 0 !important; /* Ensure no extra margins */
+  padding: 15pt !important; /* Consistent padding for PDF */
+  width: 100% !important; /* Use full width for canvas capture */
+  max-width: 100% !important;
+  font-weight: bold !important;
+  box-sizing: border-box;
+}
+
+.pdf-generation-mode #printable-area * {
+   font-weight: bold !important;
+   color: black !important;
+   border-color: black !important;
+    -webkit-print-color-adjust: exact !important; /* Crucial for html2canvas */
+    print-color-adjust: exact !important; /* Crucial for html2canvas */
+}
+
+.pdf-generation-mode .no-print,
+.pdf-generation-mode .popover,
+.pdf-generation-mode .popover-content,
+.pdf-generation-mode button:not(.print-visible-button) {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Ensure print-only elements ARE visible for PDF */
+.pdf-generation-mode .print-only-inline-block,
+.pdf-generation-mode .pdf-only-inline-block {
+  display: inline-block !important;
+  visibility: visible !important;
+}
+.pdf-generation-mode .print-only-flex,
+.pdf-generation-mode .pdf-only-flex {
+   display: flex !important;
+   visibility: visible !important;
+}
+
+
+/* Input/Textarea Styles for PDF */
+.pdf-generation-mode input[type="text"],
+.pdf-generation-mode textarea {
+  border: none !important; /* Generally remove borders for a cleaner look */
+  border-bottom: 1pt solid black !important; /* Underline style */
+  padding: 1pt 0 !important;
+  margin: 0 !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  font-weight: bold !important;
+  color: black !important;
+  white-space: pre-wrap !important;
+  overflow-wrap: break-word !important;
+  height: auto !important;
+  min-height: 1.2em;
+  display: block; /* Ensure textareas behave predictably */
+  overflow: hidden; /* Hide scrollbars within textareas */
+  resize: none !important; /* Disable resize handles */
+}
+/* Specific overrides for table textareas in PDF */
+.pdf-generation-mode .pdf-table .pdf-textarea {
+    height: 145px !important; /* Explicit height for PDF consistency */
+    min-height: 145px !important;
+    border: none !important;
+    padding: 2pt !important;
+    vertical-align: top !important;
+    display: block;
+    box-sizing: border-box; /* Include padding in height */
+}
+
+
+/* Table Styles for PDF */
+.pdf-generation-mode .pdf-table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  border: 1pt solid black !important;
+}
+.pdf-generation-mode .pdf-table .print-table-header {
+    background-color: #f0f0f0 !important; /* Light gray background */
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+}
+.pdf-generation-mode .pdf-table .pdf-th,
+.pdf-generation-mode .pdf-table .pdf-td {
+  border: 0.5pt solid black !important;
+  padding: 4pt !important; /* Slightly more padding for PDF readability */
+  vertical-align: top !important;
+  font-weight: bold !important;
+  color: black !important;
+  box-sizing: border-box;
+}
+.pdf-generation-mode .pdf-table .pdf-tr {
+    height: 150px !important; /* Consistent row height */
+}
+
+/* Matter Box Vertical Text for PDF */
+.pdf-generation-mode .matter-pdf-label .matter-text-pdf-clone {
+    writing-mode: vertical-rl !important;
+    text-orientation: mixed !important;
+    transform: rotate(180deg) !important;
+    font-weight: bold !important;
+    color: white !important;
+    background-color: black !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    display: block; /* Ensure it takes space */
+    white-space: nowrap;
+}
+.pdf-generation-mode .matter-pdf-label {
+    background-color: black !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    width: auto !important; /* Adjust width as needed or let content decide */
+    padding: 2pt !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+/* Stamp Image for PDF */
+.pdf-generation-mode .stamp-container-print {
+    display: flex !important;
+    visibility: visible !important;
+    position: absolute !important;
+    top: 2pt !important;
+    right: 2pt !important;
+    width: 180px !important;
+    height: 142px !important;
+    border: none !important;
+    overflow: hidden !important; /* Important for canvas rendering */
+}
+.pdf-generation-mode .stamp-print-image {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+    display: block !important;
+}
+/* Ensure the container holding the stamp has a border in PDF */
+.pdf-generation-mode .notes-stamp-container {
+   border: 1pt solid black !important;
+   position: relative !important;
+   min-height: 150px !important;
+}
+
+/* Ensure underlines are visible in PDF */
+.pdf-generation-mode .note-title-underline,
+.pdf-generation-mode .billing-title-underline {
+   border-bottom: 2pt solid black !important;
+   padding-bottom: 1px !important;
+   margin-bottom: 4pt !important;
+   display: inline-block !important;
+}
+
+/* General text legibility */
+.pdf-generation-mode p,
+.pdf-generation-mode li,
+.pdf-generation-mode label {
+    font-weight: bold !important;
+    color: black !important;
+    line-height: 1.3 !important; /* Improve readability */
+}
+
+/* Hide elements specifically marked to be hidden during PDF generation */
+.hidden-for-pdf {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+/* Print Preview Mode (Optional: If you want a separate preview) */
+body.print-preview-mode {
+  background-color: #ccc; /* Grey background */
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* Align to top */
+  padding: 20px;
+}
+
+body.print-preview-mode > *:not(#printable-area-wrapper) {
+  display: none; /* Hide everything except the preview wrapper */
+}
+
+#printable-area-wrapper {
+  width: 210mm; /* A4 width */
+  min-height: 297mm; /* A4 height */
+  background-color: white;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  margin: auto; /* Center the paper */
+  position: relative; /* For potential absolute elements inside */
+}
+
+/* Apply print styles within the preview wrapper */
+#printable-area-wrapper #printable-area {
+   @media print {
+     /* Apply all print styles defined above */
+   }
+   /* Ensure borders are visible in preview */
+   border: 2pt solid black !important;
+}
+
+/* Ensure vertical matter text shows correctly in preview */
+#printable-area-wrapper .matter-text-print {
+   writing-mode: vertical-rl !important;
+   text-orientation: mixed !important;
+   transform: rotate(180deg) !important;
+}
+#printable-area-wrapper .vertical-label {
+   background-color: black !important;
+   color: white !important;
+}
