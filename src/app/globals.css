@@ -121,6 +121,7 @@ body {
    .note-title-underline, .billing-title-underline {
       @apply border-b-2 border-black inline-block pb-px mb-1; /* Adjusted margin */
    }
+} /* End @layer base */
 
    /* Print specific styles */
    @media print {
@@ -263,6 +264,9 @@ body {
            white-space: pre-wrap !important; /* Ensure textarea content wraps in print */
            border: none !important; /* Remove border for textarea inside */
            padding: 4px !important;
+           writing-mode: vertical-rl !important; /* Vertical text */
+           text-orientation: mixed !important; /* Ensure correct orientation */
+           transform: rotate(180deg) !important; /* Rotate to read top-down */
        }
 
        /* Stamp area for print - ensure it doesn't take interactive space */
@@ -337,4 +341,3 @@ body {
 
    } /* End @media print */
 
-} /* End @layer base */
