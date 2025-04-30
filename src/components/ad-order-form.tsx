@@ -239,7 +239,7 @@ export default function AdOrderForm() {
   const handlePrint = useCallback(() => {
     // Ensure this runs only on the client side
     if (typeof window !== 'undefined') {
-      window.print();
+      window.print(); // Use standard browser print functionality
     }
   }, []);
 
@@ -399,7 +399,7 @@ export default function AdOrderForm() {
             </div>
           </div>
 
-            {/* Advertisement Manager Section */}
+             {/* Advertisement Manager Section */}
             <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
                 <Label className="block mb-1">The Advertisement Manager</Label>
                  <div className="relative mb-1">
@@ -424,7 +424,6 @@ export default function AdOrderForm() {
                  </div>
                 <p className="text-sm mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
               </div>
-
 
            {/* Heading & Package Section */}
            <div className="heading-package-container flex gap-3 mb-5">
@@ -636,4 +635,3 @@ export default function AdOrderForm() {
     </div>
   );
 }
-
