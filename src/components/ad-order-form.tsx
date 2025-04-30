@@ -15,7 +15,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 interface ScheduleRow {
   id: number;
@@ -276,6 +277,47 @@ export default function AdOrderForm() {
      setIsPreviewing((prev) => !prev);
    }, []);
 
+   // Function to handle taking a screenshot
+   const handleScreenshot = useCallback(async () => {
+    if (!printableAreaRef.current) {
+        toast({
+            title: "Screenshot Error",
+            description: "Could not find the printable area.",
+            variant: "destructive",
+        });
+        return;
+    }
+
+    try {
+        const canvas = await html2canvas(printableAreaRef.current, {
+            useCORS: true, // Enable cross-origin support
+            scrollX: 0,      // Ensure all content is captured by setting scroll offsets to 0
+            scrollY: 0,
+        });
+        const dataURL = canvas.toDataURL('image/png');
+
+        // Create a download link
+        const link = document.createElement('a');
+        link.href = dataURL;
+        link.download = 'ad_order_form.png'; // Set the filename
+        document.body.appendChild(link); // Append to the document
+        link.click();                 // Simulate a click
+        document.body.removeChild(link); // Remove the link
+
+        toast({
+            title: "Screenshot Saved",
+            description: "The form has been saved as a PNG image.",
+        });
+    } catch (error: any) {
+        console.error("Screenshot failed:", error);
+        toast({
+            title: "Screenshot Error",
+            description: "Failed to take a screenshot of the form.",
+            variant: "destructive",
+        });
+    }
+}, [toast]);
+
 
   const handleClearForm = useCallback(() => {
     setCaption('');
@@ -316,9 +358,12 @@ export default function AdOrderForm() {
     <div className={`max-w-[210mm] mx-auto font-bold ${isPreviewing ? 'print-preview-container' : ''}`}>
       {/* Action Buttons */}
       <div className="flex justify-end gap-2 mb-4 no-print">
-        <Button onClick={handleClearForm} variant="outline">
-          <Eraser className="mr-2 h-4 w-4" /> Clear Form & Draft
-        </Button>
+          <Button onClick={handleScreenshot} variant="outline">
+              Save as Image
+          </Button>
+          <Button onClick={handleClearForm} variant="outline">
+              <Eraser className="mr-2 h-4 w-4" /> Clear Form & Draft
+          </Button>
       </div>
 
       {/* Printable Area - Conditionally rendered in preview mode */}
@@ -582,7 +627,7 @@ export default function AdOrderForm() {
 
            {/* Billing Info */}
            <div className="billing-address-box print-border rounded p-2 mb-5 border border-black">
-             <p className="font-bold mb-1 billing-title-underline">Forward all bills with relevant voucher copies to:</p>
+             <p className="font-bold mb-1 note-title-underline">Forward all bills with relevant voucher copies to:</p>
             <p className="text-sm leading-tight pt-1">
               D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
               Alaknanda Commercial Complex,<br />
