@@ -6,9 +6,16 @@ import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader, // Added missing import
+  TableRow,
+} from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
-import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon, X, Download } from 'lucide-react';
+import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon, Download } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -45,7 +52,6 @@ const DEBOUNCE_DELAY = 500; // milliseconds
 
 export default function AdOrderForm() {
   // --- State Hooks ---
-  const [isPreviewing, setIsPreviewing] = useState(false); // State for print preview mode
   const [caption, setCaption] = useState('');
   const [packageName, setPackageName] = useState('');
   const [matter, setMatter] = useState('');
@@ -54,18 +60,19 @@ export default function AdOrderForm() {
   ]);
   const [stampPreview, setStampPreview] = useState<string | null>(null);
   const [roNumber, setRoNumber] = useState('');
-  const [orderDate, setOrderDate] = useState<Date | undefined>(new Date()); // Keep as Date object, initialize with today
+  const [orderDate, setOrderDate] = useState<Date | undefined>(undefined); // Initialize as undefined
   const [clientName, setClientName] = useState('');
   const [advertisementManagerLine1, setAdvertisementManagerLine1] = useState('');
   const [advertisementManagerLine2, setAdvertisementManagerLine2] = useState('');
   const [isClient, setIsClient] = useState(false);
   const [displayDate, setDisplayDate] = useState<string>(''); // State to hold formatted date string for display
 
+
   // --- Ref Hooks ---
   const stampFileRef = useRef<HTMLInputElement>(null);
-  const printableAreaRef = useRef<HTMLDivElement>(null); // Ref for the printable area
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isInitialLoadRef = useRef(true);
+  const formRef = useRef<HTMLDivElement>(null);
 
   // --- Custom Hooks ---
   const { toast } = useToast();
@@ -77,27 +84,20 @@ export default function AdOrderForm() {
     setIsClient(true);
   }, []);
 
-   // Effect to apply print preview class to the body if previewing
-   // Moved this effect hook to run after state declarations and before other useEffects
-   // This ensures it doesn't violate the Rules of Hooks
-   useEffect(() => {
-     if (isPreviewing) {
-         document.body.classList.add('print-preview-mode');
-     } else {
-         document.body.classList.remove('print-preview-mode');
-     }
-     // Cleanup function to remove class on component unmount or when preview mode ends
-     return () => {
-         document.body.classList.remove('print-preview-mode');
-     };
-   }, [isPreviewing]);
+  // Initialize date on client-side mount
+  useEffect(() => {
+    if (isClient) {
+      setOrderDate(new Date()); // Set to today's date once mounted on client
+    }
+  }, [isClient]);
+
 
   // Effect to load data
   useEffect(() => {
-    // Only run on client after initial mount
-    if (!isClient) return;
+    // Only run on client after initial mount and after date is initialized
+    if (!isClient || orderDate === undefined) return;
 
-    let initialDate = new Date(); // Default to today
+    let initialDate = orderDate; // Default to the initialized date (today)
     try {
       const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (savedData) {
@@ -119,11 +119,12 @@ export default function AdOrderForm() {
            if (!isNaN(savedDateObj.getTime())) {
                initialDate = savedDateObj; // Use saved date if valid
            } else {
-                // If saved date is invalid, keep initialDate as today (already set)
-                console.warn("Invalid date found in localStorage, defaulting to today.");
+                // If saved date is invalid, keep initialDate as today
+                console.warn("Invalid date found in localStorage, using today's date instead.");
+                initialDate = new Date(); // Explicitly set to today if saved date is bad
            }
         }
-         // If no orderDate in saved data, initialDate remains today (already set)
+         // If no orderDate in saved data, initialDate remains the initialized date (today)
 
         setClientName(parsedData.clientName || '');
         setAdvertisementManagerLine1(parsedData.advertisementManagerLine1 || '');
@@ -137,13 +138,18 @@ export default function AdOrderForm() {
         variant: "destructive",
       });
        // Keep initialDate as today in case of error
+       initialDate = new Date();
     } finally {
-      setOrderDate(initialDate); // Set the Date object state (defaults to today if no valid saved date)
+        // Ensure orderDate state is set correctly (either loaded or default today)
+        // Only update if the loaded/default date is different from the current state
+        if (!orderDate || initialDate.toISOString() !== orderDate.toISOString()) {
+           setOrderDate(initialDate);
+        }
       // Display date formatting is handled in the next effect
       isInitialLoadRef.current = false;
     }
-  // Only depend on isClient and toast. Other state setters don't need to re-run this load effect.
-  }, [isClient, toast]);
+  // Depend on isClient, toast, and the initial setting of orderDate
+  }, [isClient, toast, orderDate === undefined]); // Re-run when orderDate is first set
 
    // Effect to update displayDate whenever orderDate changes (client-side only)
    useEffect(() => {
@@ -159,11 +165,15 @@ export default function AdOrderForm() {
              setOrderDate(today);
              // displayDate will update in the next render cycle
          }
+     } else if (orderDate === undefined && isClient) {
+         // Handle initial undefined state on client by setting to today
+         const today = new Date();
+         setOrderDate(today);
      } else {
-          // Handle cases where orderDate might become undefined or invalid
+          // Handle other invalid cases if they occur
+          console.warn("Order date is invalid, resetting to today.");
           const today = new Date();
           setOrderDate(today); // Reset to today
-          // displayDate will update in the next render cycle
      }
    // Depend only on orderDate and isClient flag
    }, [orderDate, isClient]);
@@ -171,9 +181,9 @@ export default function AdOrderForm() {
 
   // Effect to save data to localStorage (debounced, client-side only)
   useEffect(() => {
-    if (isInitialLoadRef.current || !isClient) {
-      if (!isClient) isInitialLoadRef.current = false; // Ensure initial load flag is cleared even if save is skipped
-      return; // Don't save during initial load or if not client-side yet
+    if (isInitialLoadRef.current || !isClient || orderDate === undefined) {
+      if (!isClient && orderDate !== undefined) isInitialLoadRef.current = false; // Ensure initial load flag is cleared even if save is skipped
+      return; // Don't save during initial load, if not client-side yet, or if date is still undefined
     }
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
@@ -268,76 +278,6 @@ export default function AdOrderForm() {
   }, []);
 
 
-   // Function to toggle print preview mode
-   const togglePrintPreview = useCallback(() => {
-     setIsPreviewing((prev) => !prev);
-   }, []);
-
-   // Function to handle taking a screenshot
-   const handleScreenshot = useCallback(async () => {
-    if (!printableAreaRef.current) {
-        toast({
-            title: "Screenshot Error",
-            description: "Could not find the printable area.",
-            variant: "destructive",
-        });
-        return;
-    }
-
-    try {
-        // Temporarily apply print styles for screenshot if not in preview mode
-        const originallyInPreview = isPreviewing;
-        if (!originallyInPreview) {
-            document.body.classList.add('print-preview-mode');
-            // Force redraw if necessary, though usually class change is enough
-            await new Promise(resolve => requestAnimationFrame(resolve));
-        }
-
-        const canvas = await html2canvas(printableAreaRef.current, {
-            scale: 2, // Increase scale for better quality
-            useCORS: true, // Enable cross-origin support if needed
-            logging: false, // Disable logging for cleaner console
-            // Ensure it captures the whole element regardless of scroll
-            scrollX: -window.scrollX,
-            scrollY: -window.scrollY,
-            windowWidth: printableAreaRef.current.scrollWidth,
-            windowHeight: printableAreaRef.current.scrollHeight,
-        });
-
-        // Revert styles if they were temporarily applied
-        if (!originallyInPreview) {
-            document.body.classList.remove('print-preview-mode');
-        }
-
-        const dataURL = canvas.toDataURL('image/png');
-
-        // Create a download link
-        const link = document.createElement('a');
-        link.href = dataURL;
-        link.download = 'ad_order_form_screenshot.png'; // Set the filename
-        document.body.appendChild(link); // Append to the document
-        link.click();                 // Simulate a click
-        document.body.removeChild(link); // Remove the link
-
-        toast({
-            title: "Screenshot Saved",
-            description: "The form has been saved as a PNG image.",
-        });
-    } catch (error: any) {
-        console.error("Screenshot failed:", error);
-        // Revert styles if error occurred during screenshotting
-         if (!isPreviewing) { // Check original state
-             document.body.classList.remove('print-preview-mode');
-         }
-        toast({
-            title: "Screenshot Error",
-            description: `Failed to take screenshot: ${error.message || 'Unknown error'}`,
-            variant: "destructive",
-        });
-    }
-}, [toast, isPreviewing]); // Depend on isPreviewing
-
-
   const handleClearForm = useCallback(() => {
     setCaption('');
     setPackageName('');
@@ -370,17 +310,64 @@ export default function AdOrderForm() {
     }
   }, [toast]);
 
+  const handleScreenshot = useCallback(async () => {
+    if (!formRef.current) return;
+
+    // Temporarily remove no-print elements before taking the screenshot
+    const noPrintElements = formRef.current.querySelectorAll('.no-print');
+    noPrintElements.forEach(el => el.classList.add('hidden-for-screenshot'));
+    // Add print-specific styles temporarily
+     formRef.current.classList.add('screenshot-mode');
+
+    try {
+        const canvas = await html2canvas(formRef.current, {
+            scale: 2, // Increase scale for better resolution
+            useCORS: true, // If images are from external sources
+            logging: false, // Disable console logs from html2canvas
+            onclone: (documentClone) => {
+              // Ensure print styles are applied in the cloned document
+              const clonedForm = documentClone.getElementById('printable-area');
+              if (clonedForm) {
+                 clonedForm.classList.add('screenshot-mode-clone'); // Apply styles specifically for the clone if needed
+                  // You might need to re-apply certain styles dynamically here if they don't transfer
+              }
+            }
+        });
+        const image = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.href = image;
+        link.download = 'release-order.png';
+        link.click();
+        toast({
+            title: "Screenshot Saved",
+            description: "The release order has been saved as an image.",
+        });
+    } catch (error) {
+        console.error("Error taking screenshot:", error);
+        toast({
+            title: "Screenshot Failed",
+            description: "Could not save the release order as an image.",
+            variant: "destructive",
+        });
+    } finally {
+        // Restore no-print elements and remove print styles after taking the screenshot
+        noPrintElements.forEach(el => el.classList.remove('hidden-for-screenshot'));
+         formRef.current.classList.remove('screenshot-mode');
+    }
+}, [toast]);
+
+
    // Guard against hydration errors for date display
-   const safeDisplayDate = isClient ? displayDate : '';
+   // Render placeholder or null on server, actual date on client
+   const safeDisplayDate = isClient && orderDate ? displayDate : '';
 
 
   // --- Main Render ---
-  // Use 'print-preview-container' for the wrapper only when previewing
   return (
-    <div className={`max-w-[210mm] mx-auto font-bold ${isPreviewing ? 'print-preview-container' : ''}`}>
+    <div className="max-w-[210mm] mx-auto font-bold" ref={formRef}>
        {/* Action Buttons */}
       <div className="flex justify-end gap-2 mb-4 no-print">
-           <Button onClick={handleScreenshot} variant="outline">
+            <Button onClick={handleScreenshot} variant="outline">
                <Download className="mr-2 h-4 w-4" /> Save as Image
            </Button>
            {/* <Button onClick={togglePrintPreview} variant="outline">
@@ -391,20 +378,8 @@ export default function AdOrderForm() {
           </Button>
       </div>
 
-
-      {/* Overlay and Close Button for Preview Mode */}
-       {isPreviewing && (
-         <>
-           <div className="print-preview-overlay fixed inset-0 z-[999]" onClick={togglePrintPreview}> {/* Overlay closes preview */}
-           </div>
-            <button onClick={togglePrintPreview} className="close-print-preview no-print z-[1002]">
-               <X size={24} /> {/* Increased size */}
-            </button>
-          </>
-       )}
-
-      {/* Printable Area - Apply preview class directly */}
-      <Card id="printable-area" ref={printableAreaRef} className={`w-full print-border-heavy rounded-none shadow-none p-5 border-2 border-black ${isPreviewing ? 'print-preview-mode' : ''}`}>
+      {/* Printable Area */}
+      <Card id="printable-area" className="w-full print-border-heavy rounded-none shadow-none p-5 border-2 border-black">
         <CardContent className="p-0">
           {/* Header */}
           <div className="text-center bg-black text-white p-1 mb-5 header-title">
@@ -441,8 +416,8 @@ export default function AdOrderForm() {
               {/* Date */}
                <div className="field-row flex items-center popover-trigger-container">
                  <Label htmlFor="orderDateTrigger" className="w-20 text-sm shrink-0">Date:</Label>
-                 {/* Popover for Screen */}
-                 {isClient && ( // Render Popover only on client
+                 {/* Popover for Screen - Render based on client-side check */}
+                 {isClient ? (
                    <Popover>
                      <PopoverTrigger asChild>
                        <Button
@@ -454,33 +429,45 @@ export default function AdOrderForm() {
                          id="orderDateTrigger"
                        >
                          <CalendarIcon className="mr-2 h-4 w-4" />
+                         {/* Display formatted date or placeholder */}
                          <span>{safeDisplayDate || 'Pick a date'}</span>
                        </Button>
                      </PopoverTrigger>
                      <PopoverContent className="w-auto p-0 no-print">
                        <Calendar
                          mode="single"
-                         selected={orderDate}
+                         selected={orderDate} // Use the Date object state
                          onSelect={(date) => {
-                           if (date instanceof Date && !isNaN(date.getTime())) {
-                               setOrderDate(date);
-                           } else {
-                               const today = new Date();
-                               setOrderDate(today);
-                           }
+                            // Ensure we only set a valid date or keep the existing one if undefined is selected
+                            if (date instanceof Date && !isNaN(date.getTime())) {
+                                setOrderDate(date);
+                            } else if (date === undefined) {
+                                // Optional: handle deselection, maybe reset to today or keep current
+                                // setOrderDate(new Date()); // Or keep the current orderDate
+                            }
                          }}
                          initialFocus
                        />
                      </PopoverContent>
                    </Popover>
+                 ) : (
+                   // Server-side or initial client render: Show a placeholder or static non-interactive element
+                   <div className={cn(
+                      "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm shadow-none",
+                      "text-muted-foreground" // Indicate loading or non-interactive state
+                    )}>
+                      <CalendarIcon className="mr-2 h-4 w-4 inline-block" />
+                      <span>Loading date...</span>
+                    </div>
                  )}
-                  {/* Static Display for Print/Preview */}
+                 {/* Static Display for Print/Screenshot - Always render this div but control visibility */}
                   <div className={cn(
                       "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm shadow-none print-only-inline-block hidden items-center",
-                       // Use safeDisplayDate for conditional styling if needed, but always render the span
+                       // Use safeDisplayDate for conditional styling if needed
                        !safeDisplayDate && "text-muted-foreground"
                     )}
                   >
+                    {/* Display formatted date or 'N/A' */}
                     <span id="orderDatePrint" className="ml-1">{safeDisplayDate || 'N/A'}</span>
                   </div>
                </div>
@@ -568,59 +555,59 @@ export default function AdOrderForm() {
               </TableHeader>
               <TableBody>
                 {scheduleRows.map((row) => (
-                  <TableRow key={row.id}>
-                    <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[150px] align-top">
+                  <TableRow key={row.id} className="h-[150px]"> {/* Set height on TableRow */}
+                    <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
                        <Textarea
                           id={`keyNo-${row.id}`}
                           value={row.keyNo}
                           onChange={(e) => handleScheduleChange(row.id, 'keyNo', e.target.value)}
                           className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none"
-                          style={{ verticalAlign: 'top', whiteSpace: 'pre-wrap', overflowWrap: 'break-word' }}
+                          // style={{ verticalAlign: 'top', whiteSpace: 'pre-wrap', overflowWrap: 'break-word' }}
                        />
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[150px] align-top">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
                        <Textarea
                           id={`publication-${row.id}`}
                           value={row.publication}
                           onChange={(e) => handleScheduleChange(row.id, 'publication', e.target.value)}
                           className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none"
-                           style={{ verticalAlign: 'top', whiteSpace: 'pre-wrap', overflowWrap: 'break-word' }}
+                           // style={{ verticalAlign: 'top', whiteSpace: 'pre-wrap', overflowWrap: 'break-word' }}
                         />
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[150px] align-top">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
                        <Textarea
                           id={`edition-${row.id}`}
                           value={row.edition}
                           onChange={(e) => handleScheduleChange(row.id, 'edition', e.target.value)}
                           className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none"
-                           style={{ verticalAlign: 'top', whiteSpace: 'pre-wrap', overflowWrap: 'break-word' }}
+                           // style={{ verticalAlign: 'top', whiteSpace: 'pre-wrap', overflowWrap: 'break-word' }}
                         />
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[150px] align-top">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
                        <Textarea
                            id={`size-${row.id}`}
                            value={row.size}
                            onChange={(e) => handleScheduleChange(row.id, 'size', e.target.value)}
                            className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none"
-                            style={{ verticalAlign: 'top', whiteSpace: 'pre-wrap', overflowWrap: 'break-word' }}
+                            // style={{ verticalAlign: 'top', whiteSpace: 'pre-wrap', overflowWrap: 'break-word' }}
                          />
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[150px] align-top">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
                        <Textarea
                            id={`scheduledDate-${row.id}`}
                            value={row.scheduledDate}
                            onChange={(e) => handleScheduleChange(row.id, 'scheduledDate', e.target.value)}
                            className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none"
-                           style={{ verticalAlign: 'top', whiteSpace: 'pre-wrap', overflowWrap: 'break-word' }}
+                           // style={{ verticalAlign: 'top', whiteSpace: 'pre-wrap', overflowWrap: 'break-word' }}
                        />
                     </TableCell>
-                     <TableCell className="print-border-thin border border-black p-0 print-table-cell h-[150px] align-top">
+                     <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
                        <Textarea
                           id={`position-${row.id}`}
                           value={row.position}
                           onChange={(e) => handleScheduleChange(row.id, 'position', e.target.value)}
                           className="w-full h-full border-none rounded-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1.5 py-1.5 align-top resize-none"
-                          style={{ verticalAlign: 'top', whiteSpace: 'pre-wrap', overflowWrap: 'break-word' }}
+                          // style={{ verticalAlign: 'top', whiteSpace: 'pre-wrap', overflowWrap: 'break-word' }}
                        />
                     </TableCell>
                   </TableRow>
@@ -640,19 +627,20 @@ export default function AdOrderForm() {
           {/* Matter Section */}
           <div className="matter-box flex h-[150px] print-border-heavy rounded mb-5 overflow-hidden border-2 border-black">
              <div className="vertical-label bg-black text-white flex items-center justify-center p-1 w-8 flex-shrink-0">
-              <span className="text-base font-bold whitespace-nowrap" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)' }}>MATTER</span>
+                <span className="text-base font-bold whitespace-nowrap matter-text-print matter-text-screen" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)' }}>MATTER</span>
              </div>
-            <div className="matter-content flex-1 p-1">
-              <Textarea
-                id="matterArea"
-                placeholder="Enter matter here..."
-                className="w-full h-full resize-none border-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none p-1 align-top"
-                value={matter}
-                onChange={(e) => setMatter(e.target.value)}
-                // Removed inline style to ensure CSS controls writing-mode correctly for print/preview
-              />
-            </div>
-          </div>
+             <div className="matter-content flex-1 p-1">
+               <Textarea
+                 id="matterArea"
+                 placeholder="Enter matter here..."
+                 className="w-full h-full resize-none border-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none p-1 align-top"
+                 value={matter}
+                 onChange={(e) => setMatter(e.target.value)}
+                 // style={{ writingMode: 'horizontal-tb' }} // Ensure horizontal for input
+               />
+             </div>
+           </div>
+
 
            {/* Billing Info */}
            <div className="billing-address-box print-border rounded p-2 mb-5 border border-black">
@@ -679,10 +667,10 @@ export default function AdOrderForm() {
                 </ol>
               </div>
 
-               {/* Stamp Area - Positioned absolutely */}
+               {/* Stamp Area - Interactive Container (Screen Only) */}
                <div
                   id="stampContainerElement"
-                  className="stamp-container absolute top-2 right-2 w-[180px] h-[142px] flex items-center justify-center cursor-pointer overflow-hidden group border-0" // Ensure no border here for the interactive container
+                  className="stamp-container-interactive absolute top-2 right-2 w-[180px] h-[142px] flex items-center justify-center cursor-pointer overflow-hidden group no-print" // Hide this container for print/screenshot
                   onClick={triggerStampUpload}
                   onMouseEnter={triggerStampUpload}
                >
@@ -696,37 +684,36 @@ export default function AdOrderForm() {
                       />
                    {stampPreview ? (
                        <div className="relative w-full h-full flex items-center justify-center">
-                           {/* Image for Screen */}
                            <Image
                               id="stampPreviewScreen"
                               src={stampPreview}
                               alt="Stamp Preview"
-                              width={180} // Static width
-                              height={142} // Static height
-                              style={{ objectFit: 'contain' }} // Use contain to fit within bounds
+                              width={180} // Static width for screen preview container
+                              height={142} // Static height for screen preview container
+                              style={{ objectFit: 'contain' }} // Fit within bounds
                               className="block max-w-full max-h-full"
                             />
                             {/* Hover effect */}
-                            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity no-print">
+                            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                               <span className="text-white text-xs font-bold">Click/Hover to Change</span>
                             </div>
                        </div>
                   ) : (
-                       <Label htmlFor="stampFile" className="text-center text-xs text-muted-foreground cursor-pointer p-1 no-print group-hover:opacity-75 transition-opacity">
+                       <Label htmlFor="stampFile" className="text-center text-xs text-muted-foreground cursor-pointer p-1 group-hover:opacity-75 transition-opacity">
                            Click or Hover<br/> to Upload Stamp
                        </Label>
                   )}
               </div>
-               {/* Visible Stamp Image for Print/Preview Only */}
+               {/* Visible Stamp Image for Print/Screenshot Only */}
                 {stampPreview && (
-                 <div className="stamp-container-print hidden print-only-block">
+                 <div className="stamp-container-print absolute top-2 right-2 w-[180px] h-[142px] hidden print-only-flex items-center justify-center">
                    <Image
                       src={stampPreview}
                       alt="Stamp"
-                      width={180}
-                      height={142}
-                      style={{ objectFit: 'contain' }}
-                      className="stamp-print-image"
+                      width={180} // Explicit width for print/screenshot
+                      height={142} // Explicit height for print/screenshot
+                      style={{ objectFit: 'contain' }} // Fit within bounds
+                      className="stamp-print-image max-w-full max-h-full" // Ensure it doesn't exceed container
                     />
                  </div>
                )}
