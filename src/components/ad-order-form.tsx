@@ -224,8 +224,9 @@ export default function AdOrderForm() {
     // Ensure all state dependencies are listed
   }, [caption, packageName, matter, scheduleRows, stampPreview, roNumber, orderDate, clientName, advertisementManagerLine1, advertisementManagerLine2, isClient]);
 
-    // Apply/remove print preview class to the body
-    useEffect(() => {
+
+  // Apply/remove print preview class to the body
+  useEffect(() => {
         if (isPreviewing) {
             document.body.classList.add('print-preview-mode');
             // Add wrapper for centering preview
@@ -251,20 +252,13 @@ export default function AdOrderForm() {
             const closeButton = document.getElementById('closePreviewButton');
             if (wrapper && printableArea) {
                 // Find the original container (assuming it's the direct parent of the wrapper)
-                 const originalContainer = wrapper.parentNode;
+                 const originalContainer = document.getElementById('pdf-content-area-placeholder');
                  if (originalContainer) {
-                     // Insert printableArea back *before* the wrapper (if it still exists)
-                     originalContainer.insertBefore(printableArea, wrapper);
+                     // Insert printableArea back *into* the placeholder
+                     originalContainer.appendChild(printableArea);
                  } else {
                     // Fallback if parent is not found (less ideal)
-                    // Check if the element #pdf-content-area-placeholder exists
-                    const placeholder = document.getElementById('pdf-content-area-placeholder');
-                    if(placeholder){
-                        placeholder.appendChild(printableArea);
-                    } else {
-                        // Absolute fallback
-                        document.body.appendChild(printableArea);
-                    }
+                    document.body.appendChild(printableArea);
                  }
                 wrapper.remove();
             } else if (wrapper) {
@@ -285,18 +279,13 @@ export default function AdOrderForm() {
                  const closeButton = document.getElementById('closePreviewButton');
                 if (wrapper && printableArea && wrapper.parentNode) {
                      // On unmount, ensure it's moved back if still in wrapper
-                     const originalContainer = wrapper.parentNode;
+                     const originalContainer = document.getElementById('pdf-content-area-placeholder');
                      if (originalContainer) {
-                         // Insert printableArea back *before* the wrapper (if it still exists)
-                        originalContainer.insertBefore(printableArea, wrapper);
+                         // Insert printableArea back *into* the placeholder
+                        originalContainer.appendChild(printableArea);
                      } else {
                         // Fallback
-                        const placeholder = document.getElementById('pdf-content-area-placeholder');
-                        if(placeholder){
-                            placeholder.appendChild(printableArea);
-                        } else {
-                            document.body.appendChild(printableArea);
-                        }
+                        document.body.appendChild(printableArea);
                      }
                     wrapper.remove();
                 } else if (wrapper) {
@@ -307,7 +296,7 @@ export default function AdOrderForm() {
                  }
             }
         };
-      }, [isPreviewing]);
+  }, [isPreviewing]);
 
 
   // --- Callback Hooks ---
@@ -466,7 +455,7 @@ export default function AdOrderForm() {
                 });
 
 
-                 // Ensure vertical matter text shows correctly in clone
+                 // Ensure vertical matter text shows correctly in clone for PDF
                  const matterLabelClone = clonedPrintableArea.querySelector('.vertical-label');
                  const matterTextClone = clonedPrintableArea.querySelector('.matter-text-print');
                  if (matterLabelClone && matterTextClone) {
@@ -612,12 +601,8 @@ export default function AdOrderForm() {
                 <Button onClick={() => setIsPreviewing(true)} variant="outline">
                     <Eye className="mr-2 h-4 w-4" /> Preview Print
                 </Button>
-               <Button onClick={handleDownloadPdf} variant="outline">
-                   <FileDown className="mr-2 h-4 w-4" /> Download PDF
-               </Button>
-               <Button onClick={handleClearForm} variant="outline">
-                   <Eraser className="mr-2 h-4 w-4" /> Clear Form & Draft
-               </Button>
+                {/* Removed Download PDF Button */}
+                {/* Removed Clear Form Button */}
            </div>
         )}
 
@@ -666,10 +651,10 @@ export default function AdOrderForm() {
                                 <Label htmlFor="orderDateTrigger" className="w-auto text-sm shrink-0 mr-1">Date:</Label>
                                 {/* Static Date Display */}
                                  <div className={cn(
-                                     "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm shadow-none items-center",
+                                     "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm shadow-none items-center flex", // Added flex
                                      !safeDisplayDate && "text-muted-foreground"
                                  )}>
-                                     <span id="orderDateDisplay" className="ml-1">{safeDisplayDate || 'N/A'}</span>
+                                     <span id="orderDateDisplay" className="flex-1 text-center">{safeDisplayDate || 'N/A'}</span> {/* Center date */}
                                  </div>
 
                                 {/* Popover for Screen - Render based on client-side check */}
@@ -790,7 +775,7 @@ export default function AdOrderForm() {
                    {/* Schedule Table */}
                     <div className="mb-5 table-container-print">
                         <Table className="print-table print-border border border-black">
-                            <TableHeader className="bg-secondary print-table-header">
+                           <TableHeader className="bg-secondary print-table-header">
                                 <TableRow>
                                     <TableHead className="w-[10%] print-border-thin border border-black p-1.5 text-sm font-bold">Key No.</TableHead> {/* Increased padding slightly */}
                                     <TableHead className="w-[25%] print-border-thin border border-black p-1.5 text-sm font-bold">Publication(s)</TableHead>
@@ -867,7 +852,7 @@ export default function AdOrderForm() {
                         {/* Vertical Text Label */}
                         <div className="vertical-label bg-black text-white flex items-center justify-center p-1 w-6 flex-shrink-0"> {/* Thinner label, ensure flex */}
                              {/* Visible text for screen and print/pdf/preview */}
-                            <span className="text-sm font-bold whitespace-nowrap matter-text-print" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)' }}> {/* Smaller font */}
+                            <span className="text-sm font-bold whitespace-nowrap matter-text-print" > {/* Smaller font */}
                                 MATTER
                             </span>
                         </div>
@@ -967,4 +952,5 @@ export default function AdOrderForm() {
    </div>
 );
 }
+
 
