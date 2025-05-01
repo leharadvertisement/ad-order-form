@@ -178,7 +178,16 @@ body {
   /* Explicit margins for bottom-most elements if needed */
    #printable-area .header-title {
        margin-bottom: 8pt !important;
+       background-color: black !important;
+       color: white !important;
+       padding: 2pt !important;
    }
+    #printable-area .header-title h1 {
+       font-size: 14pt !important;
+       margin: 0 !important;
+       font-weight: bold !important;
+       color: white !important;
+    }
    #printable-area .address-container {
       margin-bottom: 8pt !important;
    }
@@ -193,6 +202,7 @@ body {
    }
    #printable-area .matter-box {
        margin-bottom: 8pt !important;
+       height: 100px !important; /* Match original height */
    }
     #printable-area .billing-address-box {
        margin-bottom: 8pt !important;
@@ -320,9 +330,7 @@ body {
     white-space: nowrap !important; /* Prevent wrapping */
     display: block !important; /* Ensure it takes space */
   }
-   .matter-box {
-       height: 100px !important; /* Match original height */
-   }
+
   .matter-content textarea {
      font-weight: bold !important;
      color: black !important;
@@ -416,23 +424,6 @@ body {
       padding-left: 2pt !important;
    }
 
-  /* Header title */
-  .header-title {
-      background-color: black !important;
-      color: white !important;
-      font-weight: bold !important;
-      padding: 2pt !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-  }
-  .header-title h1 {
-       font-size: 14pt !important; /* Adjust size if needed */
-       margin: 0 !important;
-       font-weight: bold !important;
-       color: white !important;
-       -webkit-print-color-adjust: exact !important;
-       print-color-adjust: exact !important;
-  }
 }
 
 /* Styles for PDF Generation via html2canvas */
@@ -449,12 +440,13 @@ body {
   #printable-area .card-content-pdf-fix { @apply p-0 !important; }
   #printable-area .card-content-pdf-fix > * { @apply mb-[8pt]; }
 
-  #printable-area .header-title { @apply mb-[8pt]; }
+  #printable-area .header-title { @apply mb-[8pt] bg-black text-white p-[2pt]; }
+   #printable-area .header-title h1 { @apply text-[14pt] m-0 font-bold text-white; }
    #printable-area .address-container { @apply mb-[8pt]; }
    #printable-area .advertisement-manager-section { @apply mb-[8pt]; }
    #printable-area .heading-package-container { @apply mb-[8pt]; }
    #printable-area .table-container-print { @apply mb-[8pt]; }
-   #printable-area .matter-box { @apply mb-[8pt]; }
+   #printable-area .matter-box { @apply mb-[8pt] h-[100px]; }
    #printable-area .billing-address-box { @apply mb-[8pt]; }
    #printable-area .notes-stamp-container { @apply mb-0; }
 
@@ -473,7 +465,6 @@ body {
   .vertical-label { background-color: black !important; @apply p-[2pt] text-[10pt] w-[6pt] flex items-center justify-center; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   .matter-text-print { writing-mode: vertical-rl !important; text-orientation: mixed !important; transform: rotate(180deg) !important; @apply font-bold text-white bg-transparent whitespace-nowrap block; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
-  .matter-box { height: 100px !important; }
   .matter-content textarea { @apply font-bold text-black text-[9pt] border-none p-[1pt]; white-space: pre-wrap !important; overflow-wrap: break-word !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   .stamp-container-print { @apply flex visible absolute top-[2pt] right-[2pt] w-[100px] h-[80px] border-none overflow-hidden items-center justify-center; }
   .stamp-print-image { @apply max-w-full max-h-full block; object-fit: contain !important; }
@@ -485,8 +476,7 @@ body {
   .ro-date-client-container .field-row label { @apply font-bold text-black text-[9pt] w-auto mr-[4pt] shrink; }
   .ro-date-client-container input { @apply font-bold text-black border-b-[0.5pt] border-black text-[9pt]; }
   #orderDateDisplay { @apply inline font-bold text-black text-[9pt] ml-0 pl-[2pt]; }
-  .header-title { @apply bg-black text-white font-bold p-[2pt]; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-  .header-title h1 { @apply text-[14pt] m-0 font-bold text-white; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
 
   /* Additional or overriding styles specifically for PDF rendering */
 
@@ -610,7 +600,7 @@ body {
     background-color: transparent !important; /* Text itself is transparent */
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-    display: block; /* Ensure it takes space */
+    display: block !important; /* Ensure it takes space */
     white-space: nowrap;
     font-size: 10pt !important;
 }
@@ -623,13 +613,6 @@ body {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-}
-.pdf-generation-mode .matter-box {
-    height: 100px !important; /* Match print */
-}
-.pdf-generation-mode .matter-content textarea {
-   border: none !important;
-   padding: 1pt !important;
 }
 
 
@@ -962,4 +945,22 @@ body.print-preview-mode > *:not(#printable-area-wrapper):not(#closePreviewButton
 
 #closePreviewButton:hover {
     background-color: #c82333; /* Darker red */
+}
+
+/* Ensure Release Order Header styles apply in preview */
+#printable-area-wrapper .header-title {
+    background-color: black !important;
+    color: white !important;
+    font-weight: bold !important;
+    padding: 2pt !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+}
+#printable-area-wrapper .header-title h1 {
+    font-size: 14pt !important; /* Adjust size if needed */
+    margin: 0 !important;
+    font-weight: bold !important;
+    color: white !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
 }
