@@ -77,6 +77,7 @@ export default function AdOrderForm() {
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isInitialLoadRef = useRef(true);
   const formRef = useRef<HTMLDivElement>(null);
+  const printableAreaPlaceholderRef = useRef<HTMLDivElement>(null); // Ref for the placeholder
 
   // --- Custom Hooks ---
   const { toast } = useToast();
@@ -97,7 +98,7 @@ export default function AdOrderForm() {
         }
     }
   // Depend only on isClient flag. Date setting logic moved to load effect.
-  }, [isClient, orderDate]); // Added orderDate dependency
+  }, [isClient]); // Removed orderDate dependency
 
 
   // Effect to load data
@@ -138,6 +139,9 @@ export default function AdOrderForm() {
         setClientName(parsedData.clientName || '');
         setAdvertisementManagerLine1(parsedData.advertisementManagerLine1 || '');
         setAdvertisementManagerLine2(parsedData.advertisementManagerLine2 || '');
+      } else {
+          // If no saved data, ensure orderDate is set to today
+          setOrderDate(initialDate);
       }
     } catch (error) {
       console.error("Failed to load data from localStorage:", error);
@@ -147,14 +151,17 @@ export default function AdOrderForm() {
         variant: "destructive",
       });
        // initialDate remains today in case of error
+       setOrderDate(initialDate);
     } finally {
-        // Set orderDate state (either loaded or default today)
-        setOrderDate(initialDate);
+        // Set orderDate state (either loaded or default today) if not already set by loading logic
+        if (orderDate === undefined) { // Only set if still undefined after potential load
+           setOrderDate(initialDate);
+        }
         // Display date formatting is handled in the next effect
         isInitialLoadRef.current = false;
     }
   // Depend only on isClient and toast
-  }, [isClient, toast]);
+  }, [isClient, toast, orderDate]); // Added orderDate back to dependency array
 
    // Effect to update displayDate whenever orderDate changes (client-side only)
    useEffect(() => {
@@ -227,76 +234,72 @@ export default function AdOrderForm() {
 
   // Apply/remove print preview class to the body
   useEffect(() => {
+        const printableArea = document.getElementById('printable-area'); // Use original ID
+        const placeholder = printableAreaPlaceholderRef.current;
+
         if (isPreviewing) {
             document.body.classList.add('print-preview-mode');
-            // Add wrapper for centering preview
-            const wrapper = document.createElement('div');
-            wrapper.id = 'printable-area-wrapper';
-            document.body.appendChild(wrapper);
-            // Move the printable area into the wrapper
-            const printableArea = document.getElementById('printable-area'); // Use original ID
-            if (printableArea) {
+
+            // Check if wrapper exists, if not, create it
+            let wrapper = document.getElementById('printable-area-wrapper');
+            if (!wrapper) {
+                wrapper = document.createElement('div');
+                wrapper.id = 'printable-area-wrapper';
+                document.body.appendChild(wrapper);
+            }
+
+            // Move the printable area into the wrapper if it's not already there
+            if (printableArea && wrapper && printableArea.parentElement !== wrapper) {
                 wrapper.appendChild(printableArea);
             }
-            // Add close button
-            const closeButton = document.createElement('button');
-            closeButton.id = 'closePreviewButton';
-            closeButton.innerText = 'Close Preview';
-            closeButton.onclick = () => setIsPreviewing(false); // Use state setter
-            document.body.appendChild(closeButton); // Append directly to body, position fixed
+
+            // Add close button if it doesn't exist
+            if (!document.getElementById('closePreviewButton')) {
+                 const closeButton = document.createElement('button');
+                 closeButton.id = 'closePreviewButton';
+                 closeButton.innerText = 'Close Preview';
+                 closeButton.onclick = () => setIsPreviewing(false); // Use state setter
+                 document.body.appendChild(closeButton);
+            }
+
         } else {
             document.body.classList.remove('print-preview-mode');
-            // Move printable area back and remove wrapper/button
-            const wrapper = document.getElementById('printable-area-wrapper');
-            const printableArea = document.getElementById('printable-area'); // Use original ID
-            const closeButton = document.getElementById('closePreviewButton');
-            if (wrapper && printableArea) {
-                // Find the original container (assuming it's the direct parent of the wrapper)
-                 const originalContainer = document.getElementById('pdf-content-area-placeholder');
-                 if (originalContainer) {
-                     // Insert printableArea back *into* the placeholder
-                     originalContainer.appendChild(printableArea);
-                 } else {
-                    // Fallback if parent is not found (less ideal)
-                    document.body.appendChild(printableArea);
-                 }
-                wrapper.remove();
-            } else if (wrapper) {
-                 // If only wrapper exists, remove it
-                 wrapper.remove();
+
+            // Move printable area back to its placeholder if needed
+            if (printableArea && placeholder && printableArea.parentElement !== placeholder) {
+                placeholder.appendChild(printableArea);
             }
+
+            // Remove wrapper and button if they exist
+            const wrapper = document.getElementById('printable-area-wrapper');
+            if (wrapper) {
+                wrapper.remove();
+            }
+            const closeButton = document.getElementById('closePreviewButton');
             if (closeButton) {
                 closeButton.remove();
             }
         }
 
-        // Cleanup function
+        // Cleanup function for component unmount or when isPreviewing changes *before* next render
         return () => {
             if (document.body.classList.contains('print-preview-mode')) {
-                document.body.classList.remove('print-preview-mode');
-                const wrapper = document.getElementById('printable-area-wrapper');
-                const printableArea = document.getElementById('printable-area'); // Use original ID
+                 document.body.classList.remove('print-preview-mode');
+                 const wrapper = document.getElementById('printable-area-wrapper');
+                 const currentPrintableArea = document.getElementById('printable-area'); // Get potentially moved area
+                 const currentPlaceholder = printableAreaPlaceholderRef.current; // Use ref
                  const closeButton = document.getElementById('closePreviewButton');
-                if (wrapper && printableArea && wrapper.parentNode) {
-                     // On unmount, ensure it's moved back if still in wrapper
-                     const originalContainer = document.getElementById('pdf-content-area-placeholder');
-                     if (originalContainer) {
-                         // Insert printableArea back *into* the placeholder
-                        originalContainer.appendChild(printableArea);
-                     } else {
-                        // Fallback
-                        document.body.appendChild(printableArea);
-                     }
-                    wrapper.remove();
-                } else if (wrapper) {
-                     wrapper.remove();
-                }
-                 if (closeButton) {
-                     closeButton.remove();
+
+                 // Ensure printable area is returned to placeholder on cleanup if necessary
+                 if (currentPrintableArea && currentPlaceholder && currentPrintableArea.parentElement !== currentPlaceholder) {
+                    currentPlaceholder.appendChild(currentPrintableArea);
                  }
+
+                 if (wrapper) wrapper.remove();
+                 if (closeButton) closeButton.remove();
             }
         };
-  }, [isPreviewing]);
+  }, [isPreviewing]); // Dependency array is correct
 
 
   // --- Callback Hooks ---
@@ -601,14 +604,13 @@ export default function AdOrderForm() {
                 <Button onClick={() => setIsPreviewing(true)} variant="outline">
                     <Eye className="mr-2 h-4 w-4" /> Preview Print
                 </Button>
-                {/* Removed Download PDF Button */}
-                {/* Removed Clear Form Button */}
            </div>
         )}
 
 
        {/* Printable/PDF Area - Add ref here, Moved ID to this div */}
-       <div id="pdf-content-area-placeholder"> {/* Placeholder for structure */}
+       {/* Placeholder for structure - Use ref here */}
+       <div id="pdf-content-area-placeholder" ref={printableAreaPlaceholderRef}>
            {/* Conditional wrapper for print preview centering - only added when isPreviewing is true */}
             {/* The #printable-area is MOVED inside #printable-area-wrapper by the useEffect when isPreviewing */}
            <Card id="printable-area" ref={formRef} className="w-full print-border-heavy rounded-none shadow-none p-5 border-2 border-black">
@@ -651,10 +653,10 @@ export default function AdOrderForm() {
                                 <Label htmlFor="orderDateTrigger" className="w-auto text-sm shrink-0 mr-1">Date:</Label>
                                 {/* Static Date Display */}
                                  <div className={cn(
-                                     "flex-1 justify-start text-left font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm shadow-none items-center flex", // Added flex
+                                     "flex-1 justify-center text-center font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm shadow-none items-center flex", // Centered date display
                                      !safeDisplayDate && "text-muted-foreground"
                                  )}>
-                                     <span id="orderDateDisplay" className="flex-1 text-center">{safeDisplayDate || 'N/A'}</span> {/* Center date */}
+                                     <span id="orderDateDisplay" className="flex-1">{safeDisplayDate || 'N/A'}</span> {/* Date centered within the div */}
                                  </div>
 
                                 {/* Popover for Screen - Render based on client-side check */}
@@ -720,32 +722,6 @@ export default function AdOrderForm() {
                        </div>
                    </div>
 
-                   {/* Advertisement Manager Section */}
-                    <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
-                        <Label className="block mb-1 text-sm">The Advertisement Manager</Label>
-                        <div className="relative mb-0.5"> {/* Reduced margin */}
-                            <Input
-                                id="adManager1"
-                                type="text"
-                                placeholder="Line 1"
-                                className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto" /* Reduced padding/height */
-                                value={advertisementManagerLine1}
-                                onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
-                            />
-                        </div>
-                        <div className="relative">
-                            <Input
-                                id="adManager2"
-                                type="text"
-                                placeholder="Line 2"
-                                className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto" /* Reduced padding/height */
-                                value={advertisementManagerLine2}
-                                onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
-                            />
-                        </div>
-                        <p className="text-xs mt-1">Kindly insert the advertisement/s in your issue/s for the following date/s</p> {/* Smaller text, reduced margin */}
-                    </div>
-
                     {/* Heading & Package Section */}
                    <div className="heading-package-container flex gap-3 mb-5">
                        <div className="heading-caption-box flex-1 print-border-heavy rounded p-2 border-2 border-black">
@@ -772,6 +748,33 @@ export default function AdOrderForm() {
                        </div>
                    </div>
 
+                   {/* Advertisement Manager Section */}
+                    <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
+                        <Label className="block mb-1 text-sm">The Advertisement Manager</Label>
+                        <div className="relative mb-0.5"> {/* Reduced margin */}
+                            <Input
+                                id="adManager1"
+                                type="text"
+                                placeholder="Line 1"
+                                className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto" /* Reduced padding/height */
+                                value={advertisementManagerLine1}
+                                onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
+                            />
+                        </div>
+                        <div className="relative">
+                            <Input
+                                id="adManager2"
+                                type="text"
+                                placeholder="Line 2"
+                                className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto" /* Reduced padding/height */
+                                value={advertisementManagerLine2}
+                                onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
+                            />
+                        </div>
+                        <p className="text-xs mt-1">Kindly insert the advertisement/s in your issue/s for the following date/s</p> {/* Smaller text, reduced margin */}
+                    </div>
+
+
                    {/* Schedule Table */}
                     <div className="mb-5 table-container-print">
                         <Table className="print-table print-border border border-black">
@@ -792,7 +795,7 @@ export default function AdOrderForm() {
                                             <Textarea
                                                 value={row.keyNo}
                                                  onChange={(e) => handleScheduleChange(row.id, 'keyNo', e.target.value)}
-                                                className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[100px]" // Match height, reduced padding, smaller font
+                                                className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[100px]" // Match height, reduced padding, smaller font, align-top
                                             />
                                         </TableCell>
                                         <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
@@ -952,5 +955,3 @@ export default function AdOrderForm() {
    </div>
 );
 }
-
-

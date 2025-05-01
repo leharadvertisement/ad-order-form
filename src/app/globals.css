@@ -298,6 +298,7 @@ body {
      display: block; /* Ensure it behaves like a block */
      overflow: hidden; /* Hide overflow */
      line-height: 1.1; /* Tighter line height in cells */
+     vertical-align: top !important; /* Ensure text starts top */
   }
    .print-table tr {
        height: auto !important; /* Let content determine height */
@@ -460,7 +461,7 @@ body {
   .print-table { @apply w-full border-collapse border border-black font-bold; }
   .print-table-header { background-color: #f0f0f0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   .print-table th, .print-table td { @apply border-black p-[2pt] align-top font-bold text-black text-[8pt]; border-width: 0.5pt !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; page-break-inside: avoid; }
-  .print-table-cell textarea { @apply min-h-[100px] h-auto border-none p-[1pt] font-bold text-black text-[8pt] block overflow-hidden; white-space: pre-wrap !important; overflow-wrap: break-word !important; line-height: 1.1; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  .print-table-cell textarea { @apply min-h-[100px] h-auto border-none p-[1pt] font-bold text-black text-[8pt] block overflow-hidden align-top; white-space: pre-wrap !important; overflow-wrap: break-word !important; line-height: 1.1; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   .print-table tr { @apply h-auto min-h-[100px]; page-break-inside: avoid; }
   .vertical-label { background-color: black !important; @apply p-[2pt] text-[10pt] w-[6pt] flex items-center justify-center; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   .matter-text-print { writing-mode: vertical-rl !important; text-orientation: mixed !important; transform: rotate(180deg) !important; @apply font-bold text-white bg-transparent whitespace-nowrap block; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -557,8 +558,8 @@ body {
     border: none !important;
     padding: 1pt !important;
     vertical-align: top !important;
-    display: block;
-    box-sizing: border-box; /* Include padding in height */
+    display: block !important;
+    box-sizing: border-box !important; /* Include padding in height */
     font-size: 8pt !important;
     line-height: 1.1;
 }
@@ -955,6 +956,7 @@ body.print-preview-mode > *:not(#printable-area-wrapper):not(#closePreviewButton
     padding: 2pt !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    margin-bottom: 8pt !important; /* Consistent margin */
 }
 #printable-area-wrapper .header-title h1 {
     font-size: 14pt !important; /* Adjust size if needed */
@@ -963,4 +965,27 @@ body.print-preview-mode > *:not(#printable-area-wrapper):not(#closePreviewButton
     color: white !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+}
+
+/* Ensure address containers have consistent margins */
+#printable-area-wrapper .address-container {
+   margin-bottom: 8pt !important;
+}
+#printable-area-wrapper .advertisement-manager-section {
+   margin-bottom: 8pt !important;
+}
+#printable-area-wrapper .heading-package-container {
+   margin-bottom: 8pt !important;
+}
+#printable-area-wrapper .table-container-print {
+   margin-bottom: 8pt !important;
+}
+#printable-area-wrapper .matter-box {
+   margin-bottom: 8pt !important;
+}
+#printable-area-wrapper .billing-address-box {
+   margin-bottom: 8pt !important;
+}
+#printable-area-wrapper .notes-stamp-container {
+   margin-bottom: 0 !important; /* No margin at bottom */
 }
