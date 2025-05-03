@@ -336,12 +336,12 @@ export default function AdOrderForm() {
    // Function to trigger browser's print dialog
    const handlePrint = useCallback(() => {
       // Ensure fullscreen mode is exited before printing
-      handleExitFullScreenPreview();
+      // handleExitFullScreenPreview(); // Keep fullscreen for printing the preview
       // Add a slight delay to allow DOM to update before printing
       setTimeout(() => {
          window.print();
       }, 100);
-   }, [handleExitFullScreenPreview]);
+   }, []); // Removed handleExitFullScreenPreview dependency
 
    const safeDisplayDate = isClient && orderDate && !isNaN(orderDate.getTime()) ? displayDate : 'Loading...';
 
@@ -366,7 +366,7 @@ export default function AdOrderForm() {
                    {/* Print Button within Fullscreen */}
                   <Button
                      variant="outline"
-                     className="absolute top-4 left-4 z-50 print-hidden"
+                     className="absolute top-4 left-4 z-50 print-hidden" // Use print-hidden class
                      onClick={handlePrint}
                    >
                      <Printer className="mr-2 h-4 w-4" /> Print
@@ -392,23 +392,21 @@ export default function AdOrderForm() {
                            <Label className="block mb-1 text-sm">The Advertisement Manager</Label>
                            <div className="relative mb-0.5">
                              <Input
-                               id="adManager1"
+                               id="adManager1Preview"
                                type="text"
                                placeholder="Line 1"
                                className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
                                value={advertisementManagerLine1}
-                               onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
                                readOnly // Make inputs read-only in preview
                              />
                            </div>
                            <div className="relative">
                              <Input
-                               id="adManager2"
+                               id="adManager2Preview"
                                type="text"
                                placeholder="Line 2"
                                className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
                                value={advertisementManagerLine2}
-                               onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
                                readOnly // Make inputs read-only in preview
                              />
                            </div>

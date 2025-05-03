@@ -167,6 +167,8 @@ body {
     font-weight: bold !important; /* Ensure bold is applied within */
     box-sizing: border-box !important;
     background-color: white !important; /* Ensure background is white */
+    -webkit-print-color-adjust: exact !important; /* Force background print */
+    print-color-adjust: exact !important;
   }
 
   #printable-area *, /* Target children of both potential printable areas */
@@ -174,9 +176,9 @@ body {
      font-weight: bold !important; /* Force bold on all children */
      color: black !important; /* Ensure text is black */
      border-color: black !important; /* Ensure borders are black */
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-      line-height: 1.2; /* Tighter line spacing */
+     -webkit-print-color-adjust: exact !important; /* Force colors/backgrounds on children */
+     print-color-adjust: exact !important;
+     line-height: 1.2; /* Tighter line spacing */
   }
 
   /* Ensure correct CardContent padding handling in print */
@@ -201,12 +203,16 @@ body {
        background-color: black !important;
        color: white !important;
        padding: 2pt !important;
+       -webkit-print-color-adjust: exact !important; /* Force background print */
+       print-color-adjust: exact !important;
    }
     .header-title h1 {
        font-size: 14pt !important;
        margin: 0 !important;
        font-weight: bold !important;
-       color: white !important;
+       color: white !important; /* Force text color */
+       -webkit-print-color-adjust: exact !important;
+       print-color-adjust: exact !important;
     }
    .heading-package-container {
         margin-bottom: 8pt !important;
@@ -547,8 +553,22 @@ body {
 .fullscreen-preview-mode .card-content-print-fix { padding: 0 !important; }
 .fullscreen-preview-mode .card-content-print-fix > * { margin-bottom: 8pt !important; }
 .fullscreen-preview-mode .card-content-print-fix > *:last-child { margin-bottom: 0 !important; }
-.fullscreen-preview-mode .header-title { margin-bottom: 8pt !important; background-color: black !important; color: white !important; padding: 2pt !important; }
-.fullscreen-preview-mode .header-title h1 { font-size: 14pt !important; margin: 0 !important; font-weight: bold !important; color: white !important; }
+.fullscreen-preview-mode .header-title {
+  margin-bottom: 8pt !important;
+  background-color: black !important;
+  color: white !important;
+  padding: 2pt !important;
+  -webkit-print-color-adjust: exact !important; /* Force background */
+  print-color-adjust: exact !important;
+}
+.fullscreen-preview-mode .header-title h1 {
+  font-size: 14pt !important;
+  margin: 0 !important;
+  font-weight: bold !important;
+  color: white !important;
+  -webkit-print-color-adjust: exact !important; /* Force text color */
+  print-color-adjust: exact !important;
+}
 .fullscreen-preview-mode .heading-package-container { margin-bottom: 8pt !important; }
 .fullscreen-preview-mode .address-container { margin-bottom: 8pt !important; }
 .fullscreen-preview-mode .advertisement-manager-section { margin-bottom: 8pt !important; border: 1pt solid black !important; }
@@ -563,12 +583,22 @@ body {
 .fullscreen-preview-mode .print-border-heavy { border-width: 2pt !important; }
 .fullscreen-preview-mode .print-border-thin { border: 0.5pt solid black !important; }
 .fullscreen-preview-mode .print-table { width: 100% !important; border-collapse: collapse !important; border: 1pt solid black !important; font-weight: bold !important; }
-.fullscreen-preview-mode .print-table-header { background-color: #f0f0f0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+.fullscreen-preview-mode .print-table-header {
+  background-color: #f0f0f0 !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
 .fullscreen-preview-mode .print-table th, .fullscreen-preview-mode .print-table td { border: 0.5pt solid black !important; padding: 2pt !important; vertical-align: top !important; font-weight: bold !important; color: black !important; font-size: 8pt !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; page-break-inside: avoid; height: auto !important; min-height: 100px !important; }
 .fullscreen-preview-mode .print-table-cell > div { min-height: 100px !important; height: auto !important; border: none !important; padding: 1pt !important; font-weight: bold !important; color: black !important; font-size: 8pt !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; white-space: pre-wrap !important; overflow-wrap: break-word !important; display: block; overflow: hidden; line-height: 1.1; vertical-align: top !important; }
 .fullscreen-preview-mode .print-table tr { height: auto !important; min-height: 100px !important; page-break-inside: avoid; }
-.fullscreen-preview-mode .vertical-label { background-color: black !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; width: 6pt !important; padding: 2pt !important; font-size: 10pt !important; display: flex !important; align-items: center !important; justify-content: center !important; height: 100px !important; }
-.fullscreen-preview-mode .matter-text-print { writing-mode: vertical-rl !important; text-orientation: mixed !important; transform: rotate(180deg) !important; font-weight: bold !important; color: white !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; background-color: transparent !important; white-space: nowrap !important; display: block !important; }
+.fullscreen-preview-mode .vertical-label {
+  background-color: black !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+  width: 6pt !important; padding: 2pt !important; font-size: 10pt !important; display: flex !important; align-items: center !important; justify-content: center !important; height: 100px !important; }
+.fullscreen-preview-mode .matter-text-print {
+  writing-mode: vertical-rl !important; text-orientation: mixed !important; transform: rotate(180deg) !important; font-weight: bold !important; color: white !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; background-color: transparent !important; white-space: nowrap !important; display: block !important;
+}
 .fullscreen-preview-mode .matter-content > div { font-weight: bold !important; color: black !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; white-space: pre-wrap !important; overflow-wrap: break-word !important; font-size: 9pt !important; border: none !important; padding: 1pt !important; height: 100% !important; }
 .fullscreen-preview-mode .stamp-container-print { display: flex !important; visibility: visible !important; position: absolute !important; top: 2pt !important; right: 2pt !important; width: 100px !important; height: 80px !important; border: none !important; overflow: hidden !important; align-items: center !important; justify-content: center !important; }
 .fullscreen-preview-mode .stamp-print-image { max-width: 100% !important; max-height: 100% !important; object-fit: contain !important; display: block !important; }
@@ -592,8 +622,9 @@ body {
    padding: 1pt 0 !important;
    background: transparent !important;
    box-shadow: none !important;
+   -webkit-print-color-adjust: exact !important; /* Ensure text prints */
+   print-color-adjust: exact !important;
 }
 .fullscreen-preview-mode .stamp-container-interactive {
    display: none !important; /* Hide interactive stamp upload area */
 }
-
