@@ -24,8 +24,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 
 
 interface ScheduleRow {
@@ -78,7 +76,7 @@ export default function AdOrderForm() {
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isInitialLoadRef = useRef(true);
   const formRef = useRef<HTMLDivElement>(null);
-  const printableAreaRef = useRef<HTMLDivElement>(null);
+  const printableAreaRef = useRef<HTMLDivElement>(null); // Ref for the preview area
 
   // --- Custom Hooks ---
   const { toast } = useToast();
@@ -375,14 +373,14 @@ export default function AdOrderForm() {
 
 
                   {/* Render the printable area inside the fullscreen overlay */}
-                  <Card
+                  {/* Use a separate div for the preview content instead of Card */}
+                  <div
                       id="printable-area"
                       ref={printableAreaRef}
                       className="w-full print-border-heavy rounded-none shadow-none p-5 border-2 border-black bg-white overflow-auto" // Added overflow-auto
                       style={{ height: 'calc(100vh - 4rem)' }} // Example height, adjust as needed
                   >
-                      {/* Content identical to the normal view */}
-                     <CardContent className="p-0 card-content-print-fix card-content-pdf-fix">
+                      {/* Content identical to the normal view - Removed CardContent */}
                         {/* Header */}
                         <div className="text-center bg-black text-white p-1 mb-5 header-title">
                           <h1 className="text-xl m-0 font-bold">RELEASE ORDER</h1>
@@ -392,24 +390,12 @@ export default function AdOrderForm() {
                          <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
                            <Label className="block mb-1 text-sm">The Advertisement Manager</Label>
                            <div className="relative mb-0.5">
-                             <Input
-                               id="adManager1Preview"
-                               type="text"
-                               placeholder="Line 1"
-                               className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                               value={advertisementManagerLine1}
-                               readOnly // Make inputs read-only in preview
-                             />
+                             {/* Display as simple text */}
+                             <p className="w-full px-1 py-0.5 text-sm font-bold min-h-[1.5em] border-b border-black">{advertisementManagerLine1 || <span className="text-muted-foreground italic">Not entered</span>}</p>
                            </div>
                            <div className="relative">
-                             <Input
-                               id="adManager2Preview"
-                               type="text"
-                               placeholder="Line 2"
-                               className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                               value={advertisementManagerLine2}
-                               readOnly // Make inputs read-only in preview
-                             />
+                             {/* Display as simple text */}
+                             <p className="w-full px-1 py-0.5 text-sm font-bold min-h-[1.5em] border-b border-black">{advertisementManagerLine2 || <span className="text-muted-foreground italic">Not entered</span>}</p>
                            </div>
                            <p className="text-xs mt-1">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
                          </div>
@@ -526,7 +512,7 @@ export default function AdOrderForm() {
                              </span>
                            </div>
                            {/* Display matter content */}
-                           <div className="matter-content flex-1 p-1 overflow-auto">
+                           <div className="matter-content flex-1 p-1 overflow-hidden"> {/* Changed overflow-auto to overflow-hidden */}
                               <div className="whitespace-pre-wrap break-words text-sm font-bold h-full">
                                   {matter}
                               </div>
@@ -574,8 +560,7 @@ export default function AdOrderForm() {
                                </div>
                              )}
                           </div>
-                      </CardContent>
-                  </Card>
+                  </div> {/* End of printable-area */}
               </div>
           </div>
       )}

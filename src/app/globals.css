@@ -1,5 +1,6 @@
 
 
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -614,16 +615,44 @@ body {
   background-color: black !important;
   -webkit-print-color-adjust: exact !important;
   print-color-adjust: exact !important;
-  width: 6pt !important; padding: 2pt !important; font-size: 10pt !important; display: flex !important; align-items: center !important; justify-content: center !important; height: 100px !important; flex-shrink: 0 !important; }
+  width: 6pt !important;
+  padding: 2pt !important;
+  font-size: 10pt !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 100px !important; /* Ensure height matches parent */
+  flex-shrink: 0 !important;
+}
 .fullscreen-preview-mode .matter-text-print {
-  writing-mode: vertical-rl !important; text-orientation: mixed !important; transform: rotate(180deg) !important; font-weight: bold !important; color: white !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; background-color: transparent !important; white-space: nowrap !important; display: block !important;
+  writing-mode: vertical-rl !important;
+  text-orientation: mixed !important;
+  transform: rotate(180deg) !important;
+  font-weight: bold !important;
+  color: white !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+  background-color: transparent !important;
+  white-space: nowrap !important;
+  display: block !important;
 }
 .fullscreen-preview-mode .matter-content {
     flex: 1 !important;
     padding: 1pt !important;
     overflow: hidden !important;
 }
-.fullscreen-preview-mode .matter-content > div { font-weight: bold !important; color: black !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; white-space: pre-wrap !important; overflow-wrap: break-word !important; font-size: 9pt !important; border: none !important; height: 100% !important; overflow: auto !important; }
+.fullscreen-preview-mode .matter-content > div {
+   font-weight: bold !important;
+   color: black !important;
+   -webkit-print-color-adjust: exact !important;
+   print-color-adjust: exact !important;
+   white-space: pre-wrap !important;
+   overflow-wrap: break-word !important;
+   font-size: 9pt !important;
+   border: none !important;
+   height: 100% !important;
+   overflow: hidden !important; /* Prevent scrollbars in preview */
+ }
 .fullscreen-preview-mode .stamp-container-print { display: flex !important; visibility: visible !important; position: absolute !important; top: 2pt !important; right: 2pt !important; width: 100px !important; height: 80px !important; border: none !important; overflow: hidden !important; align-items: center !important; justify-content: center !important; }
 .fullscreen-preview-mode .stamp-print-image { max-width: 100% !important; max-height: 100% !important; object-fit: contain !important; display: block !important; }
 .fullscreen-preview-mode .notes-stamp-container ol { font-size: 8pt !important; margin-top: 4pt !important; padding-left: 15px !important; }
