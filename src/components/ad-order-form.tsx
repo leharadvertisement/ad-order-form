@@ -110,7 +110,7 @@ export default function AdOrderForm() {
          setOrderDate(new Date()); // Fallback to today on error
        }
      }
-   }, [isClient, orderDate]); // Depend only on isClient
+   }, [isClient]); // Depend only on isClient and ensure orderDate is defined before use
 
   // Effect to load data
   useEffect(() => {
@@ -498,13 +498,13 @@ export default function AdOrderForm() {
 
                         {/* Matter Section */}
                         <div className="matter-box flex h-[100px] print-border-heavy rounded mb-5 overflow-hidden border-2 border-black">
-                            {/* Keep the label horizontal for preview */}
-                           <div className="matter-label bg-black text-white flex items-center justify-center px-2 py-1 flex-shrink-0">
-                               <span className="text-sm font-bold whitespace-nowrap">
-                                  MATTER
-                               </span>
-                           </div>
-                           {/* Display matter content horizontally */}
+                            {/* Vertical Text Label */}
+                            <div className="matter-label bg-black text-white flex items-center justify-center p-1 w-6 flex-shrink-0" style={{ writingMode: 'vertical-lr', textOrientation: 'upright' }}>
+                              <span className="text-sm font-bold whitespace-nowrap">
+                                MATTER
+                              </span>
+                            </div>
+                           {/* Display matter content */}
                            <div className="matter-content flex-1 p-1 overflow-hidden">
                               <div className="whitespace-pre-wrap break-words text-sm font-bold h-full">
                                   {matter}
@@ -801,7 +801,7 @@ export default function AdOrderForm() {
           {/* Matter Section */}
           <div className="matter-box flex h-[100px] print-border-heavy rounded mb-5 overflow-hidden border-2 border-black">
             {/* Vertical Text Label */}
-            <div className="vertical-label bg-black text-white flex items-center justify-center p-1 w-6 flex-shrink-0">
+            <div className="vertical-label bg-black text-white flex items-center justify-center p-1 w-6 flex-shrink-0" style={{ writingMode: 'vertical-lr', textOrientation: 'upright' }}>
               <span className="text-sm font-bold whitespace-nowrap matter-text-print">
                 MATTER
               </span>
