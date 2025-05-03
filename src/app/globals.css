@@ -2,6 +2,7 @@
 
 
 
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -206,6 +207,7 @@ body {
        color: white !important;
        padding: 2pt !important;
        text-align: center !important;
+       border-radius: 0 !important; /* Remove radius for print */
        -webkit-print-color-adjust: exact !important; /* Force background print */
        print-color-adjust: exact !important;
    }
@@ -239,7 +241,10 @@ body {
    }
    /* Horizontal label for print */
    .matter-label {
+       writing-mode: initial !important; /* Override vertical */
+       text-orientation: initial !important; /* Override vertical */
        background-color: black !important;
+       color: white !important;
        -webkit-print-color-adjust: exact !important;
        print-color-adjust: exact !important;
        padding: 2pt 4pt !important; /* Adjusted padding */
@@ -248,6 +253,8 @@ body {
        justify-content: center !important;
        height: 100px !important; /* Match parent height */
        flex-shrink: 0 !important;
+       width: auto !important; /* Adjust width based on content */
+       min-width: 30px; /* Ensure minimum width */
    }
    .matter-label span {
        font-weight: bold !important;
@@ -258,6 +265,8 @@ body {
        white-space: nowrap !important;
        display: block !important;
        font-size: 10pt !important; /* Consistent font size */
+       writing-mode: initial !important; /* Ensure horizontal */
+       text-orientation: initial !important; /* Ensure horizontal */
    }
 
     .billing-address-box {
@@ -310,6 +319,9 @@ body {
      font-size: 9pt !important; /* Match body font size */
      display: block !important; /* Behave like a block element */
      width: 100% !important; /* Take full width */
+     line-height: 1.2 !important; /* Match body line-height */
+     min-height: 100px !important; /* Match original height */
+     vertical-align: top !important; /* Align text top */
   }
   /* Hide the actual input/textarea element visually but keep content for screen readers/scraping if needed */
    input[type="text"]::placeholder,
@@ -370,12 +382,6 @@ body {
        page-break-inside: avoid; /* Try to keep rows on one page */
    }
 
-
-  /* Matter box vertical text REMOVED for print */
-  /*
-   .vertical-label { ... }
-   .matter-text-print { ... }
-   */
 
   /* Ensure matter content displays correctly */
   .matter-content {
@@ -574,6 +580,7 @@ body {
   color: white !important;
   padding: 2pt !important;
   text-align: center !important;
+  border-radius: 0 !important; /* No radius in preview */
   -webkit-print-color-adjust: exact !important; /* Force background */
   print-color-adjust: exact !important;
 }
@@ -600,7 +607,10 @@ body {
 }
 /* Horizontal label for fullscreen preview */
 .fullscreen-preview-mode .matter-label {
+    writing-mode: initial !important; /* Override vertical */
+    text-orientation: initial !important; /* Override vertical */
     background-color: black !important;
+    color: white !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     padding: 2pt 4pt !important; /* Adjusted padding */
@@ -609,6 +619,8 @@ body {
     justify-content: center !important;
     height: 100px !important; /* Match parent height */
     flex-shrink: 0 !important;
+    width: auto !important; /* Adjust width based on content */
+    min-width: 30px; /* Ensure minimum width */
 }
 .fullscreen-preview-mode .matter-label span {
     font-weight: bold !important;
@@ -619,6 +631,8 @@ body {
     white-space: nowrap !important;
     display: block !important;
     font-size: 10pt !important;
+    writing-mode: initial !important; /* Ensure horizontal */
+    text-orientation: initial !important; /* Ensure horizontal */
 }
 
 .fullscreen-preview-mode .billing-address-box { margin-bottom: 8pt !important; border: 1pt solid black !important; }
@@ -637,11 +651,7 @@ body {
 .fullscreen-preview-mode .print-table th, .fullscreen-preview-mode .print-table td { border: 0.5pt solid black !important; padding: 2pt !important; vertical-align: top !important; font-weight: bold !important; color: black !important; font-size: 8pt !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; page-break-inside: avoid; height: auto !important; min-height: 100px !important; }
 .fullscreen-preview-mode .print-table-cell > div { min-height: 100px !important; height: auto !important; border: none !important; padding: 1pt !important; font-weight: bold !important; color: black !important; font-size: 8pt !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; white-space: pre-wrap !important; overflow-wrap: break-word !important; display: block; overflow: hidden; line-height: 1.1; vertical-align: top !important; }
 .fullscreen-preview-mode .print-table tr { height: auto !important; min-height: 100px !important; page-break-inside: avoid; }
-/* Matter vertical text REMOVED for fullscreen preview */
-/*
-.fullscreen-preview-mode .vertical-label { ... }
-.fullscreen-preview-mode .matter-text-print { ... }
-*/
+
 .fullscreen-preview-mode .matter-content {
     flex: 1 !important;
     padding: 1pt !important;
@@ -687,4 +697,3 @@ body {
 .fullscreen-preview-mode .stamp-container-interactive {
    display: none !important; /* Hide interactive stamp upload area */
 }
-

@@ -498,11 +498,9 @@ export default function AdOrderForm() {
 
                         {/* Matter Section */}
                         <div className="matter-box flex h-[100px] print-border-heavy rounded mb-5 overflow-hidden border-2 border-black">
-                            {/* Vertical Text Label */}
-                            <div className="matter-label bg-black text-white flex items-center justify-center p-1 w-6 flex-shrink-0" style={{ writingMode: 'vertical-lr', textOrientation: 'upright' }}>
-                              <span className="text-sm font-bold whitespace-nowrap">
-                                MATTER
-                              </span>
+                            {/* Horizontal Matter Label for Print/Preview */}
+                            <div className="matter-label bg-black text-white flex items-center justify-center p-1 flex-shrink-0">
+                                <span className="text-sm font-bold whitespace-nowrap">MATTER</span>
                             </div>
                            {/* Display matter content */}
                            <div className="matter-content flex-1 p-1 overflow-hidden">
@@ -574,7 +572,7 @@ export default function AdOrderForm() {
         {/* Use correct class for CardContent */}
         <CardContent className="p-0 card-content-print-fix card-content-pdf-fix">
           {/* Header */}
-          <div className="text-center bg-black text-white p-1 mb-5 header-title">
+          <div className="text-center bg-black text-white p-1 mb-5 header-title rounded">
             <h1 className="text-xl m-0 font-bold">RELEASE ORDER</h1>
           </div>
 
@@ -802,7 +800,7 @@ export default function AdOrderForm() {
           <div className="matter-box flex h-[100px] print-border-heavy rounded mb-5 overflow-hidden border-2 border-black">
             {/* Vertical Text Label */}
             <div className="vertical-label bg-black text-white flex items-center justify-center p-1 w-6 flex-shrink-0" style={{ writingMode: 'vertical-lr', textOrientation: 'upright' }}>
-              <span className="text-sm font-bold whitespace-nowrap matter-text-print">
+              <span className="text-sm font-bold whitespace-nowrap">
                 MATTER
               </span>
             </div>
@@ -899,4 +897,3 @@ export default function AdOrderForm() {
     </div>
   );
 }
-
