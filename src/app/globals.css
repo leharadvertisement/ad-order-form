@@ -203,6 +203,7 @@ body {
        background-color: black !important;
        color: white !important;
        padding: 2pt !important;
+       text-align: center !important;
        -webkit-print-color-adjust: exact !important; /* Force background print */
        print-color-adjust: exact !important;
    }
@@ -229,6 +230,10 @@ body {
    .matter-box {
        margin-bottom: 8pt !important;
        height: 100px !important; /* Match original height */
+       display: flex !important; /* Ensure flex layout for vertical text */
+       border: 2pt solid black !important; /* Make sure border is visible */
+       border-radius: 0.3rem !important; /* Match form border radius */
+       overflow: hidden !important; /* Ensure content stays within box */
    }
     .billing-address-box {
        margin-bottom: 8pt !important;
@@ -353,6 +358,7 @@ body {
      align-items: center !important;
      justify-content: center !important;
      height: 100px !important; /* Match parent height */
+     flex-shrink: 0 !important; /* Prevent shrinking */
    }
   .matter-text-print {
     writing-mode: vertical-rl !important;
@@ -368,6 +374,11 @@ body {
   }
 
   /* Ensure matter content displays correctly */
+  .matter-content {
+     flex: 1 !important; /* Allow content to take remaining space */
+     padding: 1pt !important; /* Minimal padding */
+     overflow: hidden !important; /* Hide overflow */
+  }
   .matter-content > div {
      font-weight: bold !important;
      color: black !important;
@@ -377,8 +388,8 @@ body {
      overflow-wrap: break-word !important;
      font-size: 9pt !important;
      border: none !important; /* No border on the div itself */
-     padding: 1pt !important; /* Minimal padding inside */
      height: 100% !important; /* Fill the container height */
+     overflow: auto !important; /* Allow scrolling if needed, though hidden usually */
   }
 
   /* Stamp image for print */
@@ -558,6 +569,7 @@ body {
   background-color: black !important;
   color: white !important;
   padding: 2pt !important;
+  text-align: center !important;
   -webkit-print-color-adjust: exact !important; /* Force background */
   print-color-adjust: exact !important;
 }
@@ -574,7 +586,14 @@ body {
 .fullscreen-preview-mode .advertisement-manager-section { margin-bottom: 8pt !important; border: 1pt solid black !important; }
 .fullscreen-preview-mode .advertisement-manager-section input { border-bottom: 0.5pt dotted #ccc !important; padding: 1pt 0 !important; background: transparent !important; box-shadow: none !important; }
 .fullscreen-preview-mode .table-container-print { margin-bottom: 8pt !important; }
-.fullscreen-preview-mode .matter-box { margin-bottom: 8pt !important; height: 100px !important; border: 2pt solid black !important; }
+.fullscreen-preview-mode .matter-box {
+    margin-bottom: 8pt !important;
+    height: 100px !important;
+    border: 2pt solid black !important;
+    display: flex !important; /* Ensure flex layout */
+    border-radius: 0.3rem !important;
+    overflow: hidden !important;
+}
 .fullscreen-preview-mode .billing-address-box { margin-bottom: 8pt !important; border: 1pt solid black !important; }
 .fullscreen-preview-mode .notes-stamp-container { margin-bottom: 0 !important; border: 1pt solid black !important; position: relative !important; min-height: 90px !important; padding-right: 110px !important; }
 .fullscreen-preview-mode .print-only-inline-block { display: inline-block !important; visibility: visible !important; }
@@ -595,11 +614,16 @@ body {
   background-color: black !important;
   -webkit-print-color-adjust: exact !important;
   print-color-adjust: exact !important;
-  width: 6pt !important; padding: 2pt !important; font-size: 10pt !important; display: flex !important; align-items: center !important; justify-content: center !important; height: 100px !important; }
+  width: 6pt !important; padding: 2pt !important; font-size: 10pt !important; display: flex !important; align-items: center !important; justify-content: center !important; height: 100px !important; flex-shrink: 0 !important; }
 .fullscreen-preview-mode .matter-text-print {
   writing-mode: vertical-rl !important; text-orientation: mixed !important; transform: rotate(180deg) !important; font-weight: bold !important; color: white !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; background-color: transparent !important; white-space: nowrap !important; display: block !important;
 }
-.fullscreen-preview-mode .matter-content > div { font-weight: bold !important; color: black !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; white-space: pre-wrap !important; overflow-wrap: break-word !important; font-size: 9pt !important; border: none !important; padding: 1pt !important; height: 100% !important; }
+.fullscreen-preview-mode .matter-content {
+    flex: 1 !important;
+    padding: 1pt !important;
+    overflow: hidden !important;
+}
+.fullscreen-preview-mode .matter-content > div { font-weight: bold !important; color: black !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; white-space: pre-wrap !important; overflow-wrap: break-word !important; font-size: 9pt !important; border: none !important; height: 100% !important; overflow: auto !important; }
 .fullscreen-preview-mode .stamp-container-print { display: flex !important; visibility: visible !important; position: absolute !important; top: 2pt !important; right: 2pt !important; width: 100px !important; height: 80px !important; border: none !important; overflow: hidden !important; align-items: center !important; justify-content: center !important; }
 .fullscreen-preview-mode .stamp-print-image { max-width: 100% !important; max-height: 100% !important; object-fit: contain !important; display: block !important; }
 .fullscreen-preview-mode .notes-stamp-container ol { font-size: 8pt !important; margin-top: 4pt !important; padding-left: 15px !important; }
