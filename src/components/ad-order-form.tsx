@@ -219,18 +219,43 @@ export default function AdOrderForm() {
     };
   }, [caption, packageName, matter, scheduleRows, stampPreview, roNumber, orderDate, clientName, advertisementManagerLine1, advertisementManagerLine2, isClient]);
 
+   const hideInteractiveElements = useCallback(() => {
+    const interactiveElements = document.querySelectorAll(
+      'input, textarea, button, .stamp-container-interactive'
+    );
+
+    interactiveElements.forEach((element: Element) => {
+      (element as HTMLElement).classList.add('print-hidden');
+    });
+  }, []);
+
+  const showInteractiveElements = useCallback(() => {
+    const interactiveElements = document.querySelectorAll(
+      'input, textarea, button, .stamp-container-interactive'
+    );
+
+    interactiveElements.forEach((element: Element) => {
+      (element as HTMLElement).classList.remove('print-hidden');
+    });
+  }, []);
+
   // Effect to handle body class for fullscreen preview
   useEffect(() => {
     if (isFullScreenPreview) {
       document.body.classList.add('fullscreen-preview-mode');
+      hideInteractiveElements();
+
     } else {
       document.body.classList.remove('fullscreen-preview-mode');
+      showInteractiveElements();
     }
     // Cleanup function
     return () => {
       document.body.classList.remove('fullscreen-preview-mode');
+      showInteractiveElements();
     };
-  }, [isFullScreenPreview]);
+  }, [isFullScreenPreview, hideInteractiveElements, showInteractiveElements]);
+
 
 
   // --- Callback Hooks ---

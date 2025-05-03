@@ -1,8 +1,4 @@
 
-
-
-
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -179,7 +175,7 @@ body {
      font-weight: bold !important; /* Force bold on all children */
      color: black !important; /* Ensure text is black */
      border-color: black !important; /* Ensure borders are black */
-     -webkit-print-color-adjust: exact !important; /* Force colors/backgrounds on children */
+     -webkit-print-color-adjust: exact !important;
      print-color-adjust: exact !important;
      line-height: 1.2; /* Tighter line spacing */
   }
@@ -696,4 +692,10 @@ body {
 }
 .fullscreen-preview-mode .stamp-container-interactive {
    display: none !important; /* Hide interactive stamp upload area */
+}
+
+/* Ensure that input and textarea text color is always black */
+input[type="text"],
+textarea {
+    color: black !important;
 }
