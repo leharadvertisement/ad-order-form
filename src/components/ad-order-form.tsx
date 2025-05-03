@@ -16,15 +16,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
-import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon, Eye, X as CloseIcon } from 'lucide-react'; // Import X for close icon
+import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon, Expand, X as CloseIcon } from 'lucide-react'; // Changed Eye to Expand
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
+// Removed html2canvas and jspdf imports
 
 interface ScheduleRow {
   id: number;
@@ -68,15 +67,14 @@ export default function AdOrderForm() {
   const [advertisementManagerLine2, setAdvertisementManagerLine2] = useState('');
   const [isClient, setIsClient] = useState(false);
   const [displayDate, setDisplayDate] = useState<string>('');
-  const [isPreviewing, setIsPreviewing] = useState(false); // State for print preview mode
-
+  // Removed isPreviewing state
 
   // --- Ref Hooks ---
   const stampFileRef = useRef<HTMLInputElement>(null);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isInitialLoadRef = useRef(true);
   const formRef = useRef<HTMLDivElement>(null);
-  const printableAreaPlaceholderRef = useRef<HTMLDivElement>(null);
+  const printableAreaRef = useRef<HTMLDivElement>(null); // Renamed from printableAreaPlaceholderRef
 
   // --- Custom Hooks ---
   const { toast } = useToast();
@@ -93,8 +91,7 @@ export default function AdOrderForm() {
     if (isClient && orderDate === undefined) {
       setOrderDate(new Date());
     }
-  }, [isClient, orderDate]); // Re-added orderDate dependency
-
+  }, [isClient, orderDate]);
 
   // Effect to load data
   useEffect(() => {
@@ -205,88 +202,7 @@ export default function AdOrderForm() {
     };
   }, [caption, packageName, matter, scheduleRows, stampPreview, roNumber, orderDate, clientName, advertisementManagerLine1, advertisementManagerLine2, isClient]);
 
-
- // Effect to manage print preview mode
-  useEffect(() => {
-        const printableArea = document.getElementById('printable-area');
-        const placeholder = printableAreaPlaceholderRef.current;
-
-        if (isPreviewing) {
-            document.body.classList.add('print-preview-mode');
-
-            // Create wrapper if it doesn't exist
-            let wrapper = document.getElementById('printable-area-wrapper');
-            if (!wrapper) {
-                wrapper = document.createElement('div');
-                wrapper.id = 'printable-area-wrapper';
-                document.body.appendChild(wrapper);
-            }
-
-             // Move the printable area into the wrapper
-            if (printableArea && wrapper && printableArea.parentElement !== wrapper) {
-                wrapper.appendChild(printableArea);
-            }
-
-            // Add close button if it doesn't exist
-            let closeButton = document.getElementById('closePreviewButton');
-            if (!closeButton) {
-                 closeButton = document.createElement('button');
-                 closeButton.id = 'closePreviewButton';
-                 closeButton.innerText = 'Close Preview';
-                 closeButton.onclick = () => setIsPreviewing(false); // Use state setter
-                 // Apply necessary styles for visibility and positioning
-                 closeButton.style.position = 'fixed';
-                 closeButton.style.top = '10px';
-                 closeButton.style.right = '10px';
-                 closeButton.style.zIndex = '1001'; // Ensure it's above the wrapper
-                 closeButton.style.padding = '8px 16px';
-                 closeButton.style.backgroundColor = '#dc3545'; // Red
-                 closeButton.style.color = 'white';
-                 closeButton.style.border = 'none';
-                 closeButton.style.borderRadius = '4px';
-                 closeButton.style.cursor = 'pointer';
-                 closeButton.style.fontWeight = 'bold';
-                 closeButton.style.boxShadow = '0 2px 5px rgba(0,0,0,0.3)';
-                 closeButton.style.display = 'block'; // Explicitly make visible
-                 closeButton.style.visibility = 'visible'; // Explicitly make visible
-                 document.body.appendChild(closeButton);
-            }
-
-        } else {
-            document.body.classList.remove('print-preview-mode');
-
-             // Move printable area back to its placeholder
-            if (printableArea && placeholder && printableArea.parentElement !== placeholder) {
-                placeholder.appendChild(printableArea);
-            }
-
-            // Remove wrapper and button if they exist
-            const wrapper = document.getElementById('printable-area-wrapper');
-            if (wrapper) wrapper.remove();
-            const closeButton = document.getElementById('closePreviewButton');
-            if (closeButton) closeButton.remove();
-        }
-
-        // Cleanup function
-        return () => {
-            if (document.body.classList.contains('print-preview-mode')) {
-                 document.body.classList.remove('print-preview-mode');
-                 const wrapper = document.getElementById('printable-area-wrapper');
-                 const currentPrintableArea = document.getElementById('printable-area');
-                 const currentPlaceholder = printableAreaPlaceholderRef.current;
-                 const closeButton = document.getElementById('closePreviewButton');
-
-                 // Ensure printable area is returned on cleanup
-                 if (currentPrintableArea && currentPlaceholder && currentPrintableArea.parentElement !== currentPlaceholder) {
-                    currentPlaceholder.appendChild(currentPrintableArea);
-                 }
-
-                 if (wrapper) wrapper.remove();
-                 if (closeButton) closeButton.remove();
-            }
-        };
-  }, [isPreviewing]);
-
+  // Removed useEffect related to isPreviewing and print-preview-mode
 
   // --- Callback Hooks ---
   const addRow = useCallback(() => {
@@ -379,6 +295,28 @@ export default function AdOrderForm() {
     }
   }, [toast]);
 
+  // Function to handle Full Screen request
+  const handleFullScreen = useCallback(() => {
+     const element = printableAreaRef.current;
+     if (element) {
+         if (element.requestFullscreen) {
+             element.requestFullscreen().catch(err => {
+                 console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                 toast({
+                    title: "Fullscreen Failed",
+                    description: "Could not enter fullscreen mode.",
+                    variant: "destructive",
+                 });
+             });
+         } else {
+             toast({
+                 title: "Fullscreen Not Supported",
+                 description: "Your browser does not support fullscreen mode.",
+                 variant: "destructive",
+             });
+         }
+     }
+  }, [toast]);
 
 
    const safeDisplayDate = isClient && orderDate && !isNaN(orderDate.getTime()) ? displayDate : 'Loading...';
@@ -387,281 +325,58 @@ export default function AdOrderForm() {
   // --- Main Render ---
   return (
     <div className={cn("max-w-[210mm] mx-auto font-bold")}>
-       {/* Action Buttons - Hidden during preview */}
-       {!isPreviewing && (
-           <div className="flex justify-end gap-2 mb-4 no-print">
-                <Button onClick={() => setIsPreviewing(true)} variant="outline">
-                    <Eye className="mr-2 h-4 w-4" /> Preview Print
-                </Button>
-                {/*<Button onClick={handleDownloadPdf} variant="default">
-                    <FileDown className="mr-2 h-4 w-4" /> Download PDF
-                </Button>*/}
-                <Button onClick={handleClearForm} variant="destructive">
-                    <Eraser className="mr-2 h-4 w-4" /> Clear Form & Draft
-                </Button>
-           </div>
-        )}
+       {/* Action Buttons - Visible normally */}
+       <div className="flex justify-end gap-2 mb-4 no-print">
+            <Button onClick={handleFullScreen} variant="outline">
+                <Expand className="mr-2 h-4 w-4" /> Full Screen
+            </Button>
+            <Button onClick={handleClearForm} variant="destructive">
+                <Eraser className="mr-2 h-4 w-4" /> Clear Form & Draft
+            </Button>
+       </div>
 
 
-       {/* Placeholder for structure */}
-       <div id="pdf-content-area-placeholder" ref={printableAreaPlaceholderRef}>
-           {/* The #printable-area is MOVED inside #printable-area-wrapper by the useEffect when isPreviewing */}
-           <Card id="printable-area" ref={formRef} className="w-full print-border-heavy rounded-none shadow-none p-5 border-2 border-black">
-               {/* Use correct class for CardContent */}
-               <CardContent className="p-0 card-content-print-fix card-content-pdf-fix">
-                   {/* Header */}
-                   <div className="text-center bg-black text-white p-1 mb-5 header-title">
-                       <h1 className="text-xl m-0 font-bold">RELEASE ORDER</h1>
-                   </div>
+       {/* Use the ref on the actual printable area */}
+       <Card id="printable-area" ref={printableAreaRef} className="w-full print-border-heavy rounded-none shadow-none p-5 border-2 border-black bg-white">
+           {/* Use correct class for CardContent */}
+           <CardContent className="p-0 card-content-print-fix card-content-pdf-fix">
+               {/* Header */}
+               <div className="text-center bg-black text-white p-1 mb-5 header-title">
+                   <h1 className="text-xl m-0 font-bold">RELEASE ORDER</h1>
+               </div>
 
-                   {/* Address Boxes Container */}
-                   <div className="address-container flex justify-between gap-3 mb-5">
-                       {/* Left Address Box */}
-                       <div className="address-box w-[48%] print-border-heavy rounded p-2 border-2 border-black">
-                           <p className="text-xs leading-tight"> {/* Adjusted font size */}
-                               Lehar Advertising Agency Pvt. Ltd.<br />
-                               D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
-                               Alaknanda Commercial Complex,<br />
-                               New Delhi-110019<br />
-                               Tel: 49573333, 34, 35, 36<br />
-                               Fax: 26028101
-                           </p>
-                       </div>
-                       {/* Right Box: R.O., Date, Client */}
-                       <div className="ro-date-client-container w-[48%] print-border-heavy rounded p-2 space-y-1 border-2 border-black">
-                           {/* R.O. No. LN */}
-                           <div className="field-row flex items-center">
-                               <Label htmlFor="roNumber" className="w-auto text-sm shrink-0 mr-1">R.O.No.LN:</Label>
-                               <Input
-                                   id="roNumber"
-                                   type="text"
-                                   placeholder="Enter R.O. No."
-                                   className="flex-1 h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
-                                   value={roNumber}
-                                   onChange={(e) => setRoNumber(e.target.value)}
-                               />
-                           </div>
-                           {/* Date */}
-                            <div className="field-row flex items-center popover-trigger-container">
-                                <Label htmlFor="orderDateTrigger" className="w-auto text-sm shrink-0 mr-1">Date:</Label>
-                                <div className={cn(
-                                     "flex-1 justify-center text-center font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm shadow-none items-center flex",
-                                     !safeDisplayDate && "text-muted-foreground"
-                                 )}>
-                                     <span id="orderDateDisplay" className="flex-1">{safeDisplayDate}</span>
-                                 </div>
-
-                                {isClient ? (
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            <Button
-                                                variant={"ghost"}
-                                                className={cn(
-                                                    "h-6 w-6 p-0 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print ml-1",
-                                                )}
-                                                id="orderDateTrigger"
-                                            >
-                                                <CalendarIcon className="h-4 w-4" />
-                                                <span className="sr-only">Pick a date</span>
-                                            </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-0 no-print">
-                                            <Calendar
-                                                mode="single"
-                                                selected={orderDate}
-                                                onSelect={(date) => {
-                                                    if (date instanceof Date && !isNaN(date.getTime())) {
-                                                        setOrderDate(date);
-                                                    } else if (date === undefined) {
-                                                         const today = new Date();
-                                                         setOrderDate(today);
-                                                    }
-                                                }}
-                                                initialFocus
-                                            />
-                                        </PopoverContent>
-                                    </Popover>
-                                ) : (
-                                     <Button
-                                         variant={"ghost"}
-                                         className={cn(
-                                             "h-6 w-6 p-0 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print ml-1",
-                                             "text-muted-foreground"
-                                         )}
-                                         disabled
-                                     >
-                                         <CalendarIcon className="h-4 w-4" />
-                                         <span className="sr-only">Loading date picker...</span>
-                                     </Button>
-                                 )}
-                            </div>
-
-                           {/* Client */}
-                           <div className="field-row flex items-center">
-                               <Label htmlFor="clientName" className="w-auto text-sm shrink-0 mr-1">Client:</Label>
-                               <Input
-                                   id="clientName"
-                                   type="text"
-                                   placeholder="Enter Client Name"
-                                   className="flex-1 h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
-                                   value={clientName}
-                                   onChange={(e) => setClientName(e.target.value)}
-                               />
-                           </div>
-                       </div>
-                   </div>
-
-                   {/* Advertisement Manager Section */}
-                    <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
-                        <Label className="block mb-1 text-sm">The Advertisement Manager</Label>
-                        <div className="relative mb-0.5">
-                            <Input
-                                id="adManager1"
-                                type="text"
-                                placeholder="Line 1"
-                                className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                                value={advertisementManagerLine1}
-                                onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
-                            />
-                        </div>
-                        <div className="relative">
-                            <Input
-                                id="adManager2"
-                                type="text"
-                                placeholder="Line 2"
-                                className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                                value={advertisementManagerLine2}
-                                onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
-                            />
-                        </div>
-                        <p className="text-xs mt-1">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
+                {/* Heading & Package Section */}
+                <div className="heading-package-container flex gap-3 mb-5">
+                    <div className="heading-caption-box flex-1 print-border-heavy rounded p-2 border-2 border-black">
+                        <Label htmlFor="caption" className="block mb-1 text-sm">Heading/Caption:</Label>
+                        <Input
+                            id="caption"
+                            type="text"
+                            placeholder="Enter caption here"
+                            className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                            value={caption}
+                            onChange={(e) => setCaption(e.target.value)}
+                        />
                     </div>
-
-                   {/* Heading & Package Section */}
-                   <div className="heading-package-container flex gap-3 mb-5">
-                       <div className="heading-caption-box flex-1 print-border-heavy rounded p-2 border-2 border-black">
-                           <Label htmlFor="caption" className="block mb-1 text-sm">Heading/Caption:</Label>
-                           <Input
-                               id="caption"
-                               type="text"
-                               placeholder="Enter caption here"
-                               className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                               value={caption}
-                               onChange={(e) => setCaption(e.target.value)}
-                           />
-                       </div>
-                       <div className="package-box w-[30%] print-border-heavy rounded p-2 border-2 border-black">
-                           <Label htmlFor="package" className="block mb-1 text-sm">Package:</Label>
-                           <Input
-                               id="package"
-                               type="text"
-                               placeholder="Enter package name"
-                               className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                               value={packageName}
-                               onChange={(e) => setPackageName(e.target.value)}
-                           />
-                       </div>
-                   </div>
-
-                   {/* Schedule Table */}
-                    <div className="mb-5 table-container-print">
-                        <Table className="print-table print-border border border-black">
-                           <TableHeader className="bg-secondary print-table-header">
-                                <TableRow>
-                                    <TableHead className="w-[10%] print-border-thin border border-black p-1.5 text-sm font-bold">Key No.</TableHead>
-                                    <TableHead className="w-[25%] print-border-thin border border-black p-1.5 text-sm font-bold">Publication(s)</TableHead>
-                                    <TableHead className="w-[15%] print-border-thin border border-black p-1.5 text-sm font-bold">Edition(s)</TableHead>
-                                    <TableHead className="w-[15%] print-border-thin border border-black p-1.5 text-sm font-bold">Size</TableHead>
-                                    <TableHead className="w-[20%] print-border-thin border border-black p-1.5 text-sm font-bold">Scheduled Date(s)</TableHead>
-                                    <TableHead className="w-[15%] print-border-thin border border-black p-1.5 text-sm font-bold">Position</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {scheduleRows.map((row) => (
-                                    <TableRow key={row.id} className="min-h-[100px] align-top"> {/* Ensure align-top */}
-                                        <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
-                                            <Textarea
-                                                value={row.keyNo}
-                                                 onChange={(e) => handleScheduleChange(row.id, 'keyNo', e.target.value)}
-                                                className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[100px]"
-                                            />
-                                        </TableCell>
-                                        <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
-                                            <Textarea
-                                                value={row.publication}
-                                                onChange={(e) => handleScheduleChange(row.id, 'publication', e.target.value)}
-                                                className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[100px]"
-                                            />
-                                        </TableCell>
-                                        <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
-                                            <Textarea
-                                                value={row.edition}
-                                                 onChange={(e) => handleScheduleChange(row.id, 'edition', e.target.value)}
-                                                className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[100px]"
-                                            />
-                                        </TableCell>
-                                        <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
-                                            <Textarea
-                                                value={row.size}
-                                                 onChange={(e) => handleScheduleChange(row.id, 'size', e.target.value)}
-                                                className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[100px]"
-                                            />
-                                        </TableCell>
-                                        <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
-                                            <Textarea
-                                                 value={row.scheduledDate}
-                                                  onChange={(e) => handleScheduleChange(row.id, 'scheduledDate', e.target.value)}
-                                                 className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[100px]"
-                                             />
-                                        </TableCell>
-                                        <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
-                                            <Textarea
-                                                value={row.position}
-                                                 onChange={(e) => handleScheduleChange(row.id, 'position', e.target.value)}
-                                                className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[100px]"
-                                            />
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                        {/* Buttons only visible when not in preview mode */}
-                        {!isPreviewing && (
-                             <div className="flex gap-2 mt-2 no-print">
-                                 <Button variant="outline" size="sm" onClick={addRow}>
-                                     <PlusCircle className="mr-2 h-4 w-4" /> Add Row
-                                 </Button>
-                                 <Button variant="destructive" size="sm" onClick={deleteRow} disabled={scheduleRows.length <= 1}>
-                                     <Trash2 className="mr-2 h-4 w-4" /> Delete Last Row
-                                 </Button>
-                             </div>
-                         )}
+                    <div className="package-box w-[30%] print-border-heavy rounded p-2 border-2 border-black">
+                        <Label htmlFor="package" className="block mb-1 text-sm">Package:</Label>
+                        <Input
+                            id="package"
+                            type="text"
+                            placeholder="Enter package name"
+                            className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                            value={packageName}
+                            onChange={(e) => setPackageName(e.target.value)}
+                        />
                     </div>
+                </div>
 
-                   {/* Matter Section */}
-                   <div className="matter-box flex h-[100px] print-border-heavy rounded mb-5 overflow-hidden border-2 border-black">
-                        {/* Vertical Text Label */}
-                        <div className="vertical-label bg-black text-white flex items-center justify-center p-1 w-6 flex-shrink-0">
-                            <span className="text-sm font-bold whitespace-nowrap matter-text-print">
-                                MATTER
-                            </span>
-                        </div>
-                       <div className="matter-content flex-1 p-1">
-                           <Textarea
-                               id="matterArea"
-                               placeholder="Enter matter here..."
-                               className="w-full h-full resize-none border-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none p-1 align-top"
-                               value={matter}
-                               onChange={(e) => setMatter(e.target.value)}
-                           />
-                       </div>
-                   </div>
-
-
-                   {/* Billing Info */}
-                   <div className="billing-address-box print-border rounded p-2 mb-5 border border-black">
-                       <p className="font-bold mb-1 billing-title-underline text-sm">Forward all bills with relevant voucher copies to:</p>
-                       <p className="text-xs leading-tight pt-1">
+               {/* Address Boxes Container */}
+               <div className="address-container flex justify-between gap-3 mb-5">
+                   {/* Left Address Box */}
+                   <div className="address-box w-[48%] print-border-heavy rounded p-2 border-2 border-black">
+                       <p className="text-xs leading-tight">
+                           Lehar Advertising Agency Pvt. Ltd.<br />
                            D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
                            Alaknanda Commercial Complex,<br />
                            New Delhi-110019<br />
@@ -669,77 +384,284 @@ export default function AdOrderForm() {
                            Fax: 26028101
                        </p>
                    </div>
-
-                   {/* Notes & Stamp Container */}
-                   <div className="notes-stamp-container relative print-border rounded p-2 border border-black min-h-[90px]">
-                       {/* Notes Section */}
-                       <div className="notes-content flex-1 pr-[110px]">
-                           <p className="font-bold mb-1 note-title-underline text-sm">Note:</p>
-                           <ol className="list-decimal list-inside text-xs space-y-0.5 pt-1 pl-3">
-                               <li>Space reserved vide our letter No.</li>
-                               <li>No two advertisements of the same client should appear in the same issue.</li>
-                               <li>Please quote R.O. No. in all your bills and letters.</li>
-                               <li>Please send two voucher copies of good reproduction within 3 days of publishing.</li>
-                           </ol>
+                   {/* Right Box: R.O., Date, Client */}
+                   <div className="ro-date-client-container w-[48%] print-border-heavy rounded p-2 space-y-1 border-2 border-black">
+                       {/* R.O. No. LN */}
+                       <div className="field-row flex items-center">
+                           <Label htmlFor="roNumber" className="w-auto text-sm shrink-0 mr-1">R.O.No.LN:</Label>
+                           <Input
+                               id="roNumber"
+                               type="text"
+                               placeholder="Enter R.O. No."
+                               className="flex-1 h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
+                               value={roNumber}
+                               onChange={(e) => setRoNumber(e.target.value)}
+                           />
                        </div>
+                       {/* Date */}
+                        <div className="field-row flex items-center popover-trigger-container">
+                            <Label htmlFor="orderDateTrigger" className="w-auto text-sm shrink-0 mr-1">Date:</Label>
+                             <div className={cn(
+                                 "flex-1 justify-center text-center font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm shadow-none items-center flex",
+                                 !safeDisplayDate && "text-muted-foreground"
+                             )}>
+                                 <span id="orderDateDisplay" className="flex-1">{safeDisplayDate}</span>
+                             </div>
+                            {isClient ? (
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant={"ghost"}
+                                            className={cn(
+                                                "h-6 w-6 p-0 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print ml-1",
+                                            )}
+                                            id="orderDateTrigger"
+                                        >
+                                            <CalendarIcon className="h-4 w-4" />
+                                            <span className="sr-only">Pick a date</span>
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0 no-print">
+                                        <Calendar
+                                            mode="single"
+                                            selected={orderDate}
+                                            onSelect={(date) => {
+                                                if (date instanceof Date && !isNaN(date.getTime())) {
+                                                    setOrderDate(date);
+                                                } else if (date === undefined) {
+                                                     const today = new Date();
+                                                     setOrderDate(today);
+                                                }
+                                            }}
+                                            initialFocus
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                            ) : (
+                                 <Button
+                                     variant={"ghost"}
+                                     className={cn(
+                                         "h-6 w-6 p-0 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print ml-1",
+                                         "text-muted-foreground"
+                                     )}
+                                     disabled
+                                 >
+                                     <CalendarIcon className="h-4 w-4" />
+                                     <span className="sr-only">Loading date picker...</span>
+                                 </Button>
+                             )}
+                        </div>
 
-                       {/* Stamp Area - Interactive Container (Screen Only, hidden in preview) */}
-                       {!isPreviewing && (
-                           <div
-                               id="stampContainerElement"
-                               className="stamp-container-interactive absolute top-1 right-1 w-[100px] h-[80px] flex items-center justify-center cursor-pointer overflow-hidden group no-print"
-                               onClick={triggerStampUpload}
-                               onMouseEnter={triggerStampUpload}
-                           >
-                               <Input
-                                   type="file"
-                                   ref={stampFileRef}
-                                   accept="image/*"
-                                   onChange={handleStampUpload}
-                                   className="hidden"
-                                   id="stampFile"
-                               />
-                               {stampPreview ? (
-                                   <div className="relative w-full h-full flex items-center justify-center">
-                                       <Image
-                                           id="stampPreviewScreen"
-                                           src={stampPreview}
-                                           alt="Stamp Preview"
-                                           width={100}
-                                           height={80}
-                                           style={{ objectFit: 'contain' }}
-                                           className="block max-w-full max-h-full"
-                                       />
-                                       <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                           <span className="text-white text-[10px] font-bold text-center leading-tight">Click/Hover<br/>to Change</span>
-                                       </div>
-                                   </div>
-                               ) : (
-                                   <Label htmlFor="stampFile" className="text-center text-[10px] text-muted-foreground cursor-pointer p-1 group-hover:opacity-75 transition-opacity leading-tight">
-                                       Click or Hover<br /> to Upload Stamp
-                                   </Label>
-                               )}
-                           </div>
-                       )}
-                       {/* Visible Stamp Image for PDF/Screenshot/Preview Only */}
-                       {stampPreview && (
-                           <div className="stamp-container-print absolute top-[2pt] right-[2pt] w-[100px] h-[80px] hidden print-only-flex pdf-only-flex items-center justify-center border-none overflow-hidden">
+                       {/* Client */}
+                       <div className="field-row flex items-center">
+                           <Label htmlFor="clientName" className="w-auto text-sm shrink-0 mr-1">Client:</Label>
+                           <Input
+                               id="clientName"
+                               type="text"
+                               placeholder="Enter Client Name"
+                               className="flex-1 h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
+                               value={clientName}
+                               onChange={(e) => setClientName(e.target.value)}
+                           />
+                       </div>
+                   </div>
+               </div>
+
+                {/* Advertisement Manager Section */}
+                 <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
+                     <Label className="block mb-1 text-sm">The Advertisement Manager</Label>
+                     <div className="relative mb-0.5">
+                         <Input
+                             id="adManager1"
+                             type="text"
+                             placeholder="Line 1"
+                             className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                             value={advertisementManagerLine1}
+                             onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
+                         />
+                     </div>
+                     <div className="relative">
+                         <Input
+                             id="adManager2"
+                             type="text"
+                             placeholder="Line 2"
+                             className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                             value={advertisementManagerLine2}
+                             onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
+                         />
+                     </div>
+                     <p className="text-xs mt-1">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
+                 </div>
+
+               {/* Schedule Table */}
+                <div className="mb-5 table-container-print">
+                    <Table className="print-table print-border border border-black">
+                       <TableHeader className="bg-secondary print-table-header">
+                            <TableRow>
+                                <TableHead className="w-[10%] print-border-thin border border-black p-1.5 text-sm font-bold">Key No.</TableHead>
+                                <TableHead className="w-[25%] print-border-thin border border-black p-1.5 text-sm font-bold">Publication(s)</TableHead>
+                                <TableHead className="w-[15%] print-border-thin border border-black p-1.5 text-sm font-bold">Edition(s)</TableHead>
+                                <TableHead className="w-[15%] print-border-thin border border-black p-1.5 text-sm font-bold">Size</TableHead>
+                                <TableHead className="w-[20%] print-border-thin border border-black p-1.5 text-sm font-bold">Scheduled Date(s)</TableHead>
+                                <TableHead className="w-[15%] print-border-thin border border-black p-1.5 text-sm font-bold">Position</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {scheduleRows.map((row) => (
+                                <TableRow key={row.id} className="min-h-[100px] align-top">
+                                    <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
+                                        <Textarea
+                                            value={row.keyNo}
+                                             onChange={(e) => handleScheduleChange(row.id, 'keyNo', e.target.value)}
+                                            className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[100px]"
+                                        />
+                                    </TableCell>
+                                    <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
+                                        <Textarea
+                                            value={row.publication}
+                                            onChange={(e) => handleScheduleChange(row.id, 'publication', e.target.value)}
+                                            className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[100px]"
+                                        />
+                                    </TableCell>
+                                    <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
+                                        <Textarea
+                                            value={row.edition}
+                                             onChange={(e) => handleScheduleChange(row.id, 'edition', e.target.value)}
+                                            className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[100px]"
+                                        />
+                                    </TableCell>
+                                    <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
+                                        <Textarea
+                                            value={row.size}
+                                             onChange={(e) => handleScheduleChange(row.id, 'size', e.target.value)}
+                                            className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[100px]"
+                                        />
+                                    </TableCell>
+                                    <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
+                                        <Textarea
+                                             value={row.scheduledDate}
+                                              onChange={(e) => handleScheduleChange(row.id, 'scheduledDate', e.target.value)}
+                                             className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[100px]"
+                                         />
+                                    </TableCell>
+                                    <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
+                                        <Textarea
+                                            value={row.position}
+                                             onChange={(e) => handleScheduleChange(row.id, 'position', e.target.value)}
+                                            className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[100px]"
+                                        />
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                    <div className="flex gap-2 mt-2 no-print">
+                         <Button variant="outline" size="sm" onClick={addRow}>
+                             <PlusCircle className="mr-2 h-4 w-4" /> Add Row
+                         </Button>
+                         <Button variant="destructive" size="sm" onClick={deleteRow} disabled={scheduleRows.length <= 1}>
+                             <Trash2 className="mr-2 h-4 w-4" /> Delete Last Row
+                         </Button>
+                     </div>
+                </div>
+
+               {/* Matter Section */}
+               <div className="matter-box flex h-[100px] print-border-heavy rounded mb-5 overflow-hidden border-2 border-black">
+                    {/* Vertical Text Label */}
+                    <div className="vertical-label bg-black text-white flex items-center justify-center p-1 w-6 flex-shrink-0">
+                        <span className="text-sm font-bold whitespace-nowrap matter-text-print">
+                            MATTER
+                        </span>
+                    </div>
+                   <div className="matter-content flex-1 p-1">
+                       <Textarea
+                           id="matterArea"
+                           placeholder="Enter matter here..."
+                           className="w-full h-full resize-none border-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none p-1 align-top"
+                           value={matter}
+                           onChange={(e) => setMatter(e.target.value)}
+                       />
+                   </div>
+               </div>
+
+
+               {/* Billing Info */}
+               <div className="billing-address-box print-border rounded p-2 mb-5 border border-black">
+                   <p className="font-bold mb-1 billing-title-underline text-sm">Forward all bills with relevant voucher copies to:</p>
+                   <p className="text-xs leading-tight pt-1">
+                       D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
+                       Alaknanda Commercial Complex,<br />
+                       New Delhi-110019<br />
+                       Tel: 49573333, 34, 35, 36<br />
+                       Fax: 26028101
+                   </p>
+               </div>
+
+               {/* Notes & Stamp Container */}
+               <div className="notes-stamp-container relative print-border rounded p-2 border border-black min-h-[90px]">
+                   {/* Notes Section */}
+                   <div className="notes-content flex-1 pr-[110px]"> {/* Ensure space for stamp */}
+                       <p className="font-bold mb-1 note-title-underline text-sm">Note:</p>
+                       <ol className="list-decimal list-inside text-xs space-y-0.5 pt-1 pl-3">
+                           <li>Space reserved vide our letter No.</li>
+                           <li>No two advertisements of the same client should appear in the same issue.</li>
+                           <li>Please quote R.O. No. in all your bills and letters.</li>
+                           <li>Please send two voucher copies of good reproduction within 3 days of publishing.</li>
+                       </ol>
+                   </div>
+
+                   {/* Stamp Area - Interactive Container (Screen Only) */}
+                   <div
+                       id="stampContainerElement"
+                       className="stamp-container-interactive absolute top-1 right-1 w-[100px] h-[80px] flex items-center justify-center cursor-pointer overflow-hidden group no-print"
+                       onClick={triggerStampUpload}
+                       onMouseEnter={triggerStampUpload}
+                   >
+                       <Input
+                           type="file"
+                           ref={stampFileRef}
+                           accept="image/*"
+                           onChange={handleStampUpload}
+                           className="hidden"
+                           id="stampFile"
+                       />
+                       {stampPreview ? (
+                           <div className="relative w-full h-full flex items-center justify-center">
                                <Image
+                                   id="stampPreviewScreen"
                                    src={stampPreview}
-                                   alt="Stamp"
+                                   alt="Stamp Preview"
                                    width={100}
                                    height={80}
                                    style={{ objectFit: 'contain' }}
-                                   className="stamp-print-image max-w-full max-h-full"
+                                   className="block max-w-full max-h-full"
                                />
+                               <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                   <span className="text-white text-[10px] font-bold text-center leading-tight">Click/Hover<br/>to Change</span>
+                               </div>
                            </div>
+                       ) : (
+                           <Label htmlFor="stampFile" className="text-center text-[10px] text-muted-foreground cursor-pointer p-1 group-hover:opacity-75 transition-opacity leading-tight">
+                               Click or Hover<br /> to Upload Stamp
+                           </Label>
                        )}
                    </div>
-               </CardContent>
-           </Card>
-       </div> {/* End of pdf-content-area-placeholder */}
+                   {/* Visible Stamp Image for Print/PDF Only */}
+                   {stampPreview && (
+                       <div className="stamp-container-print absolute top-[2pt] right-[2pt] w-[100px] h-[80px] hidden print-only-flex pdf-only-flex items-center justify-center border-none overflow-hidden">
+                           <Image
+                               src={stampPreview}
+                               alt="Stamp"
+                               width={100}
+                               height={80}
+                               style={{ objectFit: 'contain' }}
+                               className="stamp-print-image max-w-full max-h-full"
+                           />
+                       </div>
+                   )}
+               </div>
+           </CardContent>
+       </Card>
    </div>
 );
 }
-
-    

@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -137,11 +138,20 @@ body {
 
   .no-print,
   .popover,
-  .popover-content, /* Ensure popovers are hidden */
-  button:not(.print-visible-button):not(#closePreviewButton) /* Hide most buttons, allow close btn in preview */
+  .popover-content /* Ensure popovers are hidden */
   {
     display: none !important;
     visibility: hidden !important;
+  }
+  /* Hide buttons by default for print */
+  button {
+    display: none !important;
+    visibility: hidden !important;
+  }
+  /* Allow specific buttons to be shown if needed */
+  button.print-visible-button {
+     display: inline-block !important; /* Or flex, depending on context */
+     visibility: visible !important;
   }
 
   /* Styles specifically for the printable area */
@@ -155,6 +165,7 @@ body {
     page-break-inside: avoid; /* Try to keep card content together */
     font-weight: bold !important; /* Ensure bold is applied within */
     box-sizing: border-box !important;
+    background-color: white !important; /* Ensure background is white */
   }
 
   #printable-area * {
@@ -174,8 +185,12 @@ body {
   #printable-area .card-content-print-fix > * {
        margin-bottom: 8pt !important; /* Reduce space between sections */
    }
+  /* Ensure last child has no bottom margin */
+  #printable-area .card-content-print-fix > *:last-child {
+       margin-bottom: 0 !important;
+   }
 
-  /* Explicit margins for bottom-most elements if needed */
+  /* Explicit margins for sections */
    #printable-area .header-title {
        margin-bottom: 8pt !important;
        background-color: black !important;
@@ -188,14 +203,14 @@ body {
        font-weight: bold !important;
        color: white !important;
     }
+   #printable-area .heading-package-container {
+        margin-bottom: 8pt !important;
+   }
    #printable-area .address-container {
       margin-bottom: 8pt !important;
    }
    #printable-area .advertisement-manager-section {
        margin-bottom: 8pt !important;
-   }
-   #printable-area .heading-package-container {
-        margin-bottom: 8pt !important;
    }
    #printable-area .table-container-print {
        margin-bottom: 8pt !important;
@@ -434,18 +449,20 @@ body {
   @apply p-0 m-0 box-border;
 
   body { @apply m-0 p-0 font-bold text-[9pt]; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-  .no-print, .popover, .popover-content, button:not(.print-visible-button) { @apply hidden invisible; }
-  #printable-area { @apply w-full max-w-full m-0 p-[10pt] border-[2pt] border-black shadow-none box-border; page-break-inside: avoid; font-weight: bold !important; }
+  .no-print, .popover, .popover-content, button { @apply hidden invisible; }
+  #printable-area { @apply w-full max-w-full m-0 p-[10pt] border-[2pt] border-black shadow-none box-border; page-break-inside: avoid; font-weight: bold !important; background-color: white !important;}
   #printable-area * { @apply font-bold text-black border-black; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; line-height: 1.2; }
    /* Fix for CardContent padding in PDF mode - adjusted selector */
   #printable-area .card-content-pdf-fix { @apply p-0 !important; }
   #printable-area .card-content-pdf-fix > * { @apply mb-[8pt]; }
+  /* Ensure last child has no margin */
+  #printable-area .card-content-pdf-fix > *:last-child { @apply mb-0; }
 
   #printable-area .header-title { @apply mb-[8pt] bg-black text-white p-[2pt]; }
    #printable-area .header-title h1 { @apply text-[14pt] m-0 font-bold text-white; }
+   #printable-area .heading-package-container { @apply mb-[8pt]; }
    #printable-area .address-container { @apply mb-[8pt]; }
    #printable-area .advertisement-manager-section { @apply mb-[8pt]; }
-   #printable-area .heading-package-container { @apply mb-[8pt]; }
    #printable-area .table-container-print { @apply mb-[8pt]; }
    #printable-area .matter-box { @apply mb-[8pt] h-[100px]; }
    #printable-area .billing-address-box { @apply mb-[8pt]; }
@@ -493,6 +510,7 @@ body {
   font-weight: bold !important;
   box-sizing: border-box;
   font-size: 9pt !important; /* Match print font size */
+  background-color: white !important; /* Ensure white background for PDF */
 }
 
 .pdf-generation-mode #printable-area * {
@@ -508,12 +526,16 @@ body {
 .pdf-generation-mode #printable-area .card-content-pdf-fix {
     padding: 0 !important;
 }
+/* Ensure last child has no margin */
+.pdf-generation-mode #printable-area .card-content-pdf-fix > *:last-child {
+     margin-bottom: 0 !important;
+ }
 
 
 .pdf-generation-mode .no-print,
 .pdf-generation-mode .popover,
 .pdf-generation-mode .popover-content,
-.pdf-generation-mode button:not(.print-visible-button) {
+.pdf-generation-mode button { /* Hide all buttons in PDF mode */
   display: none !important;
   visibility: hidden !important;
 }
@@ -685,307 +707,5 @@ body {
     visibility: hidden !important;
 }
 
-/* Print Preview Mode */
-body.print-preview-mode {
-  background-color: #ccc; /* Grey background */
-  display: flex;
-  justify-content: center;
-  align-items: flex-start; /* Align to top */
-  padding: 20px;
-  min-height: 100vh;
-  box-sizing: border-box;
-  overflow: auto; /* Allow scrolling if content overflows viewport */
-}
-
-body.print-preview-mode > *:not(#printable-area-wrapper):not(#closePreviewButton) {
-  display: none !important; /* Hide everything except the preview wrapper and close button */
-  visibility: hidden !important;
-}
-
-
-#printable-area-wrapper {
-  width: 210mm; /* A4 width */
-  /* min-height: 297mm; */ /* Let height be determined by content */
-  height: auto;
-  background-color: white;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-  margin: 20px auto; /* Center the paper */
-  position: relative; /* For potential absolute elements inside */
-  overflow: visible; /* Allow content to flow naturally if it exceeds A4 bounds */
-  box-sizing: border-box;
-}
-
-/* Apply print styles within the preview wrapper */
-#printable-area-wrapper #printable-area {
-  /* Apply print styles defined above - manually apply key styles */
-   border: 2pt solid black !important;
-   box-shadow: none !important;
-   margin: 0 !important;
-   padding: 10pt !important; /* Use same padding as PDF/print for consistency */
-   width: 100% !important;
-   max-width: 100% !important;
-   font-weight: bold !important;
-   box-sizing: border-box !important;
-   font-size: 9pt !important;
-}
-
-#printable-area-wrapper #printable-area * {
-   font-weight: bold !important;
-   color: black !important;
-   border-color: black !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-    line-height: 1.2;
-}
-
-/* Correctly target direct children of CardContent within the wrapper */
-#printable-area-wrapper #printable-area .card-content-print-fix {
-    padding: 0 !important;
-}
-#printable-area-wrapper #printable-area .card-content-print-fix > * {
-     margin-bottom: 8pt !important;
-}
-/* Ensure last child has no margin */
-#printable-area-wrapper #printable-area .card-content-print-fix > *:last-child {
-     margin-bottom: 0 !important;
-}
-
-
-#printable-area-wrapper .no-print,
-#printable-area-wrapper .popover,
-#printable-area-wrapper .popover-content,
-#printable-area-wrapper button:not(.print-visible-button):not(#closePreviewButton) /* Allow close button */
-{
-  display: none !important;
-  visibility: hidden !important;
-}
-
-/* Ensure print-only elements ARE visible in preview */
-#printable-area-wrapper .print-only-inline-block,
-#printable-area-wrapper .pdf-only-inline-block {
-  display: inline-block !important;
-  visibility: visible !important;
-}
-#printable-area-wrapper .print-only-flex,
-#printable-area-wrapper .pdf-only-flex {
-   display: flex !important;
-   visibility: visible !important;
-}
-
-/* Input/Textarea Styles for Preview */
-#printable-area-wrapper input[type="text"],
-#printable-area-wrapper textarea {
-  border: none !important;
-  border-bottom: 0.5pt solid black !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  background-color: transparent !important;
-  box-shadow: none !important;
-  font-weight: bold !important;
-  color: black !important;
-  font-size: 9pt !important;
-  white-space: pre-wrap !important;
-  overflow-wrap: break-word !important;
-  height: auto !important;
-  min-height: 1.1em;
-  display: block !important;
-  overflow: hidden !important;
-  resize: none !important;
-}
-#printable-area-wrapper .print-table .print-table-cell textarea {
-    min-height: 100px !important; /* Consistent height */
-    height: auto !important;
-    border: none !important;
-    padding: 1pt !important;
-    vertical-align: top !important;
-    display: block !important;
-    box-sizing: border-box !important;
-    font-size: 8pt !important;
-    line-height: 1.1;
-}
-
-
-/* Table Styles for Preview */
-#printable-area-wrapper .print-table {
-  width: 100% !important;
-  border-collapse: collapse !important;
-  border: 1pt solid black !important;
-}
-#printable-area-wrapper .print-table-header {
-    background-color: #f0f0f0 !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-}
-
-#printable-area-wrapper .print-table th,
-#printable-area-wrapper .print-table td {
-  border: 0.5pt solid black !important;
-  padding: 2pt !important;
-  vertical-align: top !important;
-  font-weight: bold !important;
-  color: black !important;
-  font-size: 8pt !important;
-  box-sizing: border-box !important;
-}
-#printable-area-wrapper .print-table tr {
-    height: auto !important;
-    min-height: 100px !important;
-}
-
-/* Ensure vertical matter text shows correctly in preview */
-#printable-area-wrapper .vertical-label {
-   background-color: black !important;
-   -webkit-print-color-adjust: exact !important;
-   print-color-adjust: exact !important;
-   width: 6pt !important;
-   padding: 2pt !important;
-   display: flex !important;
-   align-items: center !important;
-   justify-content: center !important;
-}
-#printable-area-wrapper .vertical-label .matter-text-print {
-   writing-mode: vertical-rl !important;
-   text-orientation: mixed !important;
-   transform: rotate(180deg) !important;
-   font-weight: bold !important;
-   color: white !important;
-   background-color: transparent !important; /* Match PDF */
-   -webkit-print-color-adjust: exact !important;
-   print-color-adjust: exact !important;
-   display: block !important;
-   white-space: nowrap !important;
-   font-size: 10pt !important;
-}
-#printable-area-wrapper .matter-box {
-    height: 100px !important;
-}
-#printable-area-wrapper .matter-content textarea {
-    border: none !important;
-    padding: 1pt !important;
-}
-
-/* Stamp Image for Preview */
-#printable-area-wrapper .stamp-container-print {
-    display: flex !important;
-    visibility: visible !important;
-    position: absolute !important;
-    top: 2pt !important;
-    right: 2pt !important;
-    width: 100px !important;
-    height: 80px !important;
-    border: none !important;
-    overflow: hidden !important;
-    align-items: center !important;
-    justify-content: center !important;
-}
-#printable-area-wrapper .stamp-print-image {
-    max-width: 100% !important;
-    max-height: 100% !important;
-    object-fit: contain !important;
-    display: block !important;
-}
-#printable-area-wrapper .notes-stamp-container {
-   border: 1pt solid black !important;
-   position: relative !important;
-   min-height: 90px !important;
-   padding-right: 110px !important;
-   padding-top: 2pt !important;
-   padding-bottom: 2pt !important;
-   padding-left: 4pt !important;
-}
-#printable-area-wrapper .notes-stamp-container ol {
-   font-size: 8pt !important;
-   margin-top: 4pt !important;
-   padding-left: 15px !important;
-}
-
-
-/* Ensure underlines are visible in Preview */
-#printable-area-wrapper .note-title-underline,
-#printable-area-wrapper .billing-title-underline {
-   border-bottom: 1pt solid black !important;
-   padding-bottom: 0px !important;
-   margin-bottom: 2pt !important;
-   display: inline-block !important;
-   border-color: black !important; /* Explicitly set black color */
-}
-
-/* General text legibility in Preview */
-#printable-area-wrapper p,
-#printable-area-wrapper li,
-#printable-area-wrapper label {
-    font-weight: bold !important;
-    color: black !important;
-    line-height: 1.2 !important;
-    font-size: 9pt !important;
-}
-#printable-area-wrapper .address-box p,
-#printable-area-wrapper .billing-address-box p {
-    font-size: 8pt !important;
-    line-height: 1.1 !important;
-}
-
-/* Style for the close button in preview */
-#closePreviewButton {
-    position: fixed; /* Position relative to viewport */
-    top: 10px;
-    right: 10px;
-    z-index: 1000; /* Ensure it's above the preview */
-    padding: 8px 16px;
-    background-color: #dc3545; /* Red */
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-    /* Ensure it's visible even when body has specific styles */
-    display: block !important;
-    visibility: visible !important;
-}
-
-#closePreviewButton:hover {
-    background-color: #c82333; /* Darker red */
-}
-
-/* Ensure Release Order Header styles apply in preview */
-#printable-area-wrapper .header-title {
-    background-color: black !important;
-    color: white !important;
-    font-weight: bold !important;
-    padding: 2pt !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-    margin-bottom: 8pt !important; /* Consistent margin */
-}
-#printable-area-wrapper .header-title h1 {
-    font-size: 14pt !important; /* Adjust size if needed */
-    margin: 0 !important;
-    font-weight: bold !important;
-    color: white !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-}
-
-/* Ensure address containers have consistent margins */
-#printable-area-wrapper .address-container {
-   margin-bottom: 8pt !important;
-}
-#printable-area-wrapper .advertisement-manager-section {
-   margin-bottom: 8pt !important;
-}
-#printable-area-wrapper .heading-package-container {
-   margin-bottom: 8pt !important;
-}
-#printable-area-wrapper .table-container-print {
-   margin-bottom: 8pt !important;
-}
-#printable-area-wrapper .matter-box {
-   margin-bottom: 8pt !important;
-}
-#printable-area-wrapper .billing-address-box {
-   margin-bottom: 8pt !important;
-}
-#printable-area-wrapper .notes-stamp-container {
-   margin-bottom: 0 !important; /* No margin at bottom */
-}
+/* Remove Print Preview Mode styles */
+/* Styles for body.print-preview-mode, #printable-area-wrapper, #closePreviewButton are removed */
