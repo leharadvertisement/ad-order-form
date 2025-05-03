@@ -127,14 +127,20 @@ body {
 
 /* General Print Styles */
 @media print {
+  @page {
+    size: A4;
+    margin: 10mm; /* Adjust margins for A4 */
+  }
+
   body {
-    margin: 0;
-    padding: 0;
+    margin: 0 !important;
+    padding: 0 !important;
     -webkit-print-color-adjust: exact !important; /* Chrome, Safari, Edge */
     print-color-adjust: exact !important; /* Firefox */
     font-weight: bold !important; /* Ensure bold is applied */
-    font-size: 9pt; /* Smaller base font for print */
+    font-size: 9pt !important; /* Smaller base font for print */
     background-color: white !important; /* Force white background */
+    color: black !important;
   }
 
   /* Hide elements not meant for printing */
@@ -159,7 +165,7 @@ body {
     width: 100% !important; /* Take full width of parent */
     max-width: 100% !important;
     margin: 0 !important;
-    padding: 10pt !important; /* Reduced padding */
+    padding: 8pt !important; /* Reduced padding for A4 */
     border: 2pt solid black !important; /* Ensure border prints */
     box-shadow: none !important; /* Remove shadows for print */
     page-break-inside: avoid; /* Try to keep card content together */
@@ -177,7 +183,7 @@ body {
      border-color: black !important; /* Ensure borders are black */
      -webkit-print-color-adjust: exact !important;
      print-color-adjust: exact !important;
-     line-height: 1.2; /* Tighter line spacing */
+     line-height: 1.15 !important; /* Slightly tighter line spacing for print */
   }
 
   /* Ensure correct CardContent padding handling in print */
@@ -188,7 +194,7 @@ body {
    /* Target direct children of the corrected CardContent for margin */
   .card-content-print-fix > *,
   .card-content-pdf-fix > * {
-       margin-bottom: 8pt !important; /* Reduce space between sections */
+       margin-bottom: 6pt !important; /* Reduce space between sections further */
    }
   /* Ensure last child has no bottom margin */
   .card-content-print-fix > *:last-child,
@@ -198,7 +204,7 @@ body {
 
   /* Explicit margins for sections */
    .header-title {
-       margin-bottom: 8pt !important;
+       margin-bottom: 6pt !important;
        background-color: black !important;
        color: white !important;
        padding: 2pt !important;
@@ -208,30 +214,72 @@ body {
        print-color-adjust: exact !important;
    }
     .header-title h1 {
-       font-size: 14pt !important;
+       font-size: 12pt !important; /* Slightly smaller header */
        margin: 0 !important;
        font-weight: bold !important;
        color: white !important; /* Force text color */
        -webkit-print-color-adjust: exact !important;
        print-color-adjust: exact !important;
     }
+    .advertisement-manager-section {
+       margin-bottom: 6pt !important;
+       padding: 4pt !important; /* Reduce padding */
+       border: 1pt solid black !important; /* Thinner border */
+    }
+    .advertisement-manager-section p, .advertisement-manager-section label {
+       font-size: 8pt !important; /* Smaller font */
+       line-height: 1.1 !important;
+    }
+    .advertisement-manager-section .min-h-\[1\.5em\] {
+        min-height: 1.2em !important; /* Adjust min height */
+    }
    .heading-package-container {
-        margin-bottom: 8pt !important;
+        margin-bottom: 6pt !important;
+        gap: 8pt !important; /* Reduce gap */
+   }
+   .heading-package-container > div {
+       padding: 4pt !important; /* Reduce padding */
+       border-width: 1pt !important; /* Thinner border */
+   }
+   .heading-package-container label {
+       font-size: 8pt !important;
+       margin-bottom: 0.5pt !important;
+   }
+   .heading-package-container p {
+       font-size: 8pt !important;
+       min-height: 1.2em !important;
    }
    .address-container {
-      margin-bottom: 8pt !important;
+      margin-bottom: 6pt !important;
+      gap: 8pt !important; /* Reduce gap */
    }
-   .advertisement-manager-section {
-       margin-bottom: 8pt !important;
+   .address-container > div {
+       padding: 4pt !important; /* Reduce padding */
+       border-width: 1pt !important; /* Thinner border */
+   }
+   .address-container .address-box p {
+      font-size: 7pt !important; /* Smaller address font */
+      line-height: 1.1 !important;
+   }
+   .ro-date-client-container {
+       padding: 4pt !important;
+       space-y-0.5 !important;
+   }
+   .ro-date-client-container .field-row label,
+   .ro-date-client-container .field-row p {
+       font-size: 8pt !important;
+       height: auto !important;
+       min-height: 1.2em !important;
+       padding: 0.5pt 0 !important;
    }
    .table-container-print {
-       margin-bottom: 8pt !important;
+       margin-bottom: 6pt !important;
    }
    .matter-box {
-       margin-bottom: 8pt !important;
-       height: 100px !important; /* Match original height */
+       margin-bottom: 6pt !important;
+       height: 80px !important; /* Reduce height slightly if needed */
        display: flex !important; /* Ensure flex layout for horizontal text */
-       border: 2pt solid black !important; /* Make sure border is visible */
+       border: 1pt solid black !important; /* Make sure border is visible */
        border-radius: 0.3rem !important; /* Match form border radius */
        overflow: hidden !important; /* Ensure content stays within box */
    }
@@ -243,14 +291,14 @@ body {
        color: white !important;
        -webkit-print-color-adjust: exact !important;
        print-color-adjust: exact !important;
-       padding: 2pt 4pt !important; /* Adjusted padding */
+       padding: 1pt 3pt !important; /* Adjusted padding */
        display: flex !important;
        align-items: center !important;
        justify-content: center !important;
-       height: 100px !important; /* Match parent height */
+       height: 80px !important; /* Match parent height */
        flex-shrink: 0 !important;
        width: auto !important; /* Adjust width based on content */
-       min-width: 30px; /* Ensure minimum width */
+       min-width: 25px; /* Ensure minimum width */
    }
    .matter-label span {
        font-weight: bold !important;
@@ -260,16 +308,27 @@ body {
        background-color: transparent !important;
        white-space: nowrap !important;
        display: block !important;
-       font-size: 10pt !important; /* Consistent font size */
+       font-size: 9pt !important; /* Consistent font size */
        writing-mode: initial !important; /* Ensure horizontal */
        text-orientation: initial !important; /* Ensure horizontal */
    }
 
     .billing-address-box {
-       margin-bottom: 8pt !important;
+       margin-bottom: 6pt !important;
+       padding: 4pt !important; /* Reduce padding */
+       border: 1pt solid black !important; /* Thinner border */
     }
+     .billing-address-box p {
+         font-size: 7pt !important; /* Smaller billing address font */
+         line-height: 1.1 !important;
+     }
    .notes-stamp-container {
        margin-bottom: 0 !important; /* No margin at the very bottom */
+       border: 1pt solid black !important;
+       position: relative !important; /* Needed for absolute positioning of stamp */
+       min-height: 70px !important; /* Ensure min height accommodates smaller stamp */
+       padding: 2pt !important; /* Minimal padding overall */
+       padding-right: 90px !important; /* Space for smaller stamp */
    }
 
 
@@ -284,23 +343,17 @@ body {
   }
 
   /* Adjust borders for print */
-  .print-border, .print-border-heavy {
-     border: 1pt solid black !important;
-  }
-  .print-border-heavy {
-     border-width: 2pt !important;
-  }
-  .print-border-thin {
-    border: 0.5pt solid black !important; /* Thinner border for table cells */
-  }
+  .print-border { border: 1pt solid black !important; }
+  .print-border-heavy { border-width: 1pt !important; } /* Use 1pt for consistency */
+  .print-border-thin { border: 0.5pt solid black !important; }
 
   /* Input and Textarea appearance for print (display as static text) */
   input[type="text"],
   textarea {
      border: none !important; /* Remove borders */
-     border-bottom: 0.5pt dotted #ccc !important; /* Optional: subtle underline for clarity */
+     border-bottom: 0.5pt dotted #999 !important; /* Optional: subtle underline */
      border-radius: 0 !important;
-     padding: 1pt 0 !important; /* Minimal vertical padding */
+     padding: 0.5pt 0 !important; /* Minimal vertical padding */
      margin: 0 !important;
      background-color: transparent !important; /* No background */
      box-shadow: none !important;
@@ -312,14 +365,16 @@ body {
      overflow-wrap: break-word !important;
      height: auto !important; /* Allow height to adjust */
      min-height: 1.1em; /* Minimum height for visibility */
-     font-size: 9pt !important; /* Match body font size */
+     font-size: 8pt !important; /* Match body font size */
      display: block !important; /* Behave like a block element */
      width: 100% !important; /* Take full width */
-     line-height: 1.2 !important; /* Match body line-height */
-     min-height: 100px !important; /* Match original height */
+     line-height: 1.1 !important; /* Match body line-height */
      vertical-align: top !important; /* Align text top */
   }
-  /* Hide the actual input/textarea element visually but keep content for screen readers/scraping if needed */
+  /* Apply min-height specifically to table textareas */
+  .print-table textarea {
+      min-height: 80px !important; /* Keep min height for table rows */
+  }
    input[type="text"]::placeholder,
    textarea::placeholder {
        color: transparent !important; /* Hide placeholder text */
@@ -336,33 +391,38 @@ body {
      font-weight: bold !important;
   }
   .print-table-header {
-    background-color: #f0f0f0 !important; /* Use hex for better print consistency */
+    background-color: #e0e0e0 !important; /* Lighter gray for print */
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
   .print-table th, .print-table td {
      border: 0.5pt solid black !important; /* Use thin border */
-     padding: 2pt !important; /* Minimal padding */
+     padding: 1pt !important; /* Minimal padding */
      vertical-align: top !important; /* Align text top */
      font-weight: bold !important;
      color: black !important;
-     font-size: 8pt !important; /* Smaller font in table */
+     font-size: 7pt !important; /* Smaller font in table */
      -webkit-print-color-adjust: exact !important;
      print-color-adjust: exact !important;
      page-break-inside: avoid; /* Try to keep cell content together */
      height: auto !important; /* Let content determine height */
-     min-height: 100px !important; /* Keep minimum height */
+     min-height: 80px !important; /* Keep minimum height */
   }
+   .print-table th {
+       font-size: 8pt !important; /* Slightly larger header font */
+       padding: 2pt 1pt !important;
+   }
+
 
   /* Ensure the div inside table cells displays correctly */
   .print-table-cell > div {
-       min-height: 100px !important; /* Match original height */
+       min-height: 80px !important; /* Match original height */
        height: auto !important;
        border: none !important;
        padding: 1pt !important;
        font-weight: bold !important;
        color: black !important;
-       font-size: 8pt !important;
+       font-size: 7pt !important;
        -webkit-print-color-adjust: exact !important;
        print-color-adjust: exact !important;
        white-space: pre-wrap !important;
@@ -374,7 +434,7 @@ body {
   }
    .print-table tr {
        height: auto !important; /* Let content determine height */
-       min-height: 100px !important; /* Keep minimum height */
+       min-height: 80px !important; /* Keep minimum height */
        page-break-inside: avoid; /* Try to keep rows on one page */
    }
 
@@ -392,10 +452,10 @@ body {
      print-color-adjust: exact !important;
      white-space: pre-wrap !important;
      overflow-wrap: break-word !important;
-     font-size: 9pt !important;
+     font-size: 8pt !important;
      border: none !important; /* No border on the div itself */
      height: 100% !important; /* Fill the container height */
-     overflow: auto !important; /* Allow scrolling if needed, though hidden usually */
+     overflow: hidden !important;
   }
 
   /* Stamp image for print */
@@ -403,10 +463,10 @@ body {
     display: flex !important; /* Ensure it's visible */
     visibility: visible !important;
     position: absolute !important; /* Ensure positioning */
-    top: 2pt !important;
-    right: 2pt !important;
-    width: 100px !important; /* Match original size */
-    height: 80px !important; /* Match original size */
+    top: 1pt !important;
+    right: 1pt !important;
+    width: 85px !important; /* Slightly smaller stamp */
+    height: 65px !important; /* Slightly smaller stamp */
     border: none !important; /* No border around the container itself */
     overflow: hidden; /* Ensure image stays within bounds */
     align-items: center !important; /* Vertically center */
@@ -420,28 +480,27 @@ body {
    }
 
    /* Notes container - ensure border is visible */
-   .notes-stamp-container {
-       border: 1pt solid black !important;
-       position: relative !important; /* Needed for absolute positioning of stamp */
-       min-height: 90px !important; /* Ensure min height accommodates smaller stamp */
-       padding-right: 110px !important; /* Space for smaller stamp */
-       padding-top: 2pt !important; /* Minimal padding */
-       padding-bottom: 2pt !important;
-       padding-left: 4pt !important;
-   }
+    .notes-stamp-container .notes-content {
+        padding-right: 90px !important; /* Ensure space for stamp */
+    }
+    .notes-stamp-container .note-title-underline {
+        font-size: 9pt !important; /* Match body */
+    }
     .notes-stamp-container ol {
-       font-size: 8pt !important; /* Smaller font for notes */
-       margin-top: 4pt !important;
-       padding-left: 15px !important; /* Adjust list indent */
+       font-size: 7pt !important; /* Smaller font for notes */
+       margin-top: 2pt !important;
+       padding-left: 12pt !important; /* Adjust list indent */
+       line-height: 1.1 !important;
     }
 
   /* Ensure underlines print correctly */
   .note-title-underline, .billing-title-underline {
-     border-bottom: 1pt solid black !important; /* Thinner underline */
+     border-bottom: 0.5pt solid black !important; /* Thinner underline */
      padding-bottom: 0px !important;
-     margin-bottom: 2pt !important;
+     margin-bottom: 1pt !important;
      display: inline-block !important; /* Ensure it behaves correctly */
      border-color: black !important; /* Explicitly set black color */
+     font-size: 9pt !important; /* Match body */
   }
 
   /* Address box specific styles */
@@ -449,35 +508,34 @@ body {
      font-weight: bold !important;
      color: black !important;
      line-height: 1.1 !important; /* Tighter line height */
-     font-size: 8pt !important; /* Smaller font */
+     font-size: 7pt !important; /* Smaller font */
   }
-   .address-container .address-box, .address-container .ro-date-client-container {
-      padding: 4pt !important; /* Reduced padding */
-   }
+
 
   /* RO/Date/Client Box specific - Display as static text */
   .ro-date-client-container .field-row label {
      font-weight: bold !important;
      color: black !important;
-     font-size: 9pt !important;
+     font-size: 8pt !important;
      width: auto !important; /* Allow label to shrink */
-     margin-right: 4pt !important;
+     margin-right: 3pt !important;
      flex-shrink: 0 !important; /* Prevent label shrinking too much */
   }
   .ro-date-client-container .field-row p { /* Target the <p> tags used for display */
       font-weight: bold !important;
       color: black !important;
-      border-bottom: 0.5pt dotted #ccc !important; /* Optional subtle underline */
-      font-size: 9pt !important;
+      border-bottom: 0.5pt dotted #999 !important; /* Optional subtle underline */
+      font-size: 8pt !important;
       flex: 1 !important; /* Allow text to fill space */
       min-height: 1.1em !important; /* Ensure visibility */
-      padding: 1pt 0 !important;
+      padding: 0.5pt 0 !important;
+      margin: 0 !important;
   }
    #orderDateDisplay { /* Specifically target the date display span if needed */
       display: inline !important; /* Ensure date is visible */
       font-weight: bold !important;
       color: black !important;
-      font-size: 9pt !important;
+      font-size: 8pt !important;
       margin-left: 0 !important;
       padding-left: 2pt !important;
    }
@@ -509,7 +567,7 @@ body {
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 2rem; /* Add padding around the content */
+  padding: 1rem; /* Add padding around the content */
   box-sizing: border-box;
 }
 
@@ -517,7 +575,8 @@ body {
   position: relative; /* Needed for absolute positioning of buttons */
   background-color: white; /* Background for the content area */
   width: 210mm; /* A4 width */
-  max-height: calc(100vh - 4rem); /* Max height with padding */
+  max-width: calc(100vw - 2rem); /* Ensure it doesn't exceed viewport width */
+  max-height: calc(100vh - 2rem); /* Max height with padding */
   overflow-y: auto; /* Allow scrolling if content exceeds height */
   border: 1px solid #ccc; /* Optional border */
   box-shadow: 0 0 20px rgba(0,0,0,0.5);
@@ -528,39 +587,43 @@ body {
   margin: 0 auto !important; /* Center the card */
   border: 2pt solid black !important; /* Ensure border is visible */
   box-shadow: none !important;
-  padding: 10pt !important; /* Use print padding */
+  padding: 8pt !important; /* Use print padding */
   background-color: white !important;
   width: 100% !important; /* Ensure it takes full width of wrapper */
   max-width: 100% !important;
   height: auto !important; /* Adjust height based on content */
   font-weight: bold !important;
-  font-size: 9pt !important;
+  font-size: 9pt !important; /* Base print font size */
   box-sizing: border-box !important;
   /* Apply print-like styles */
   -webkit-print-color-adjust: exact !important;
   print-color-adjust: exact !important;
 }
+/* Apply print styles directly within fullscreen mode */
 .fullscreen-preview-mode #printable-area * {
    font-weight: bold !important;
    color: black !important;
    border-color: black !important;
    -webkit-print-color-adjust: exact !important;
    print-color-adjust: exact !important;
-   line-height: 1.2 !important;
+   line-height: 1.15 !important; /* Match print line-height */
 }
 
 /* Hide form elements not needed in preview */
 .fullscreen-preview-mode #printable-area-form {
   display: none !important;
 }
-.fullscreen-preview-mode .no-print, /* Hide elements marked no-print */
-.fullscreen-preview-mode button:not(.print-hidden) /* Hide most buttons */
-{
+/* Ensure preview-specific buttons are visible and interactive ones hidden*/
+.fullscreen-preview-mode .no-print {
    display: none !important;
    visibility: hidden !important;
 }
-/* Ensure preview-specific buttons are visible */
-.fullscreen-preview-mode .print-hidden { /* Overrides the general button hide */
+.fullscreen-preview-mode button:not(.print-hidden) { /* Hide most buttons */
+   display: none !important;
+   visibility: hidden !important;
+}
+
+.fullscreen-preview-mode .print-hidden { /* Show buttons explicitly marked as print-hidden in fullscreen */
    display: inline-flex !important; /* Or flex, block, etc. */
    visibility: visible !important;
 }
@@ -568,10 +631,10 @@ body {
 
 /* Apply print styles directly within fullscreen mode */
 .fullscreen-preview-mode .card-content-print-fix { padding: 0 !important; }
-.fullscreen-preview-mode .card-content-print-fix > * { margin-bottom: 8pt !important; }
+.fullscreen-preview-mode .card-content-print-fix > * { margin-bottom: 6pt !important; }
 .fullscreen-preview-mode .card-content-print-fix > *:last-child { margin-bottom: 0 !important; }
 .fullscreen-preview-mode .header-title {
-  margin-bottom: 8pt !important;
+  margin-bottom: 6pt !important;
   background-color: black !important;
   color: white !important;
   padding: 2pt !important;
@@ -581,22 +644,46 @@ body {
   print-color-adjust: exact !important;
 }
 .fullscreen-preview-mode .header-title h1 {
-  font-size: 14pt !important;
+  font-size: 12pt !important;
   margin: 0 !important;
   font-weight: bold !important;
   color: white !important;
   -webkit-print-color-adjust: exact !important; /* Force text color */
   print-color-adjust: exact !important;
 }
-.fullscreen-preview-mode .heading-package-container { margin-bottom: 8pt !important; }
-.fullscreen-preview-mode .address-container { margin-bottom: 8pt !important; }
-.fullscreen-preview-mode .advertisement-manager-section { margin-bottom: 8pt !important; border: 1pt solid black !important; }
-.fullscreen-preview-mode .advertisement-manager-section input { border-bottom: 0.5pt dotted #ccc !important; padding: 1pt 0 !important; background: transparent !important; box-shadow: none !important; }
-.fullscreen-preview-mode .table-container-print { margin-bottom: 8pt !important; }
+.fullscreen-preview-mode .advertisement-manager-section { margin-bottom: 6pt !important; border: 1pt solid black !important; padding: 4pt !important; }
+.fullscreen-preview-mode .advertisement-manager-section p,
+.fullscreen-preview-mode .advertisement-manager-section label { font-size: 8pt !important; line-height: 1.1 !important;}
+.fullscreen-preview-mode .advertisement-manager-section .min-h-\[1\.5em\] { min-height: 1.2em !important; }
+
+.fullscreen-preview-mode .heading-package-container { margin-bottom: 6pt !important; gap: 8pt !important; }
+.fullscreen-preview-mode .heading-package-container > div { padding: 4pt !important; border-width: 1pt !important; }
+.fullscreen-preview-mode .heading-package-container label { font-size: 8pt !important; margin-bottom: 0.5pt !important; }
+.fullscreen-preview-mode .heading-package-container p { font-size: 8pt !important; min-height: 1.2em !important; border-bottom: 0.5pt dotted #999 !important; }
+
+.fullscreen-preview-mode .address-container { margin-bottom: 6pt !important; gap: 8pt !important; }
+.fullscreen-preview-mode .address-container > div { padding: 4pt !important; border-width: 1pt !important; }
+.fullscreen-preview-mode .address-container .address-box p { font-size: 7pt !important; line-height: 1.1 !important; }
+.fullscreen-preview-mode .ro-date-client-container { padding: 4pt !important; space-y-0.5 !important; }
+.fullscreen-preview-mode .ro-date-client-container .field-row label,
+.fullscreen-preview-mode .ro-date-client-container .field-row p { font-size: 8pt !important; height: auto !important; min-height: 1.2em !important; padding: 0.5pt 0 !important; border-bottom: 0.5pt dotted #999 !important; }
+
+.fullscreen-preview-mode .table-container-print { margin-bottom: 6pt !important; }
+.fullscreen-preview-mode .print-table { width: 100% !important; border-collapse: collapse !important; border: 1pt solid black !important; font-weight: bold !important; }
+.fullscreen-preview-mode .print-table-header {
+  background-color: #e0e0e0 !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+.fullscreen-preview-mode .print-table th, .fullscreen-preview-mode .print-table td { border: 0.5pt solid black !important; padding: 1pt !important; vertical-align: top !important; font-weight: bold !important; color: black !important; font-size: 7pt !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; page-break-inside: avoid; height: auto !important; min-height: 80px !important; }
+.fullscreen-preview-mode .print-table th { font-size: 8pt !important; padding: 2pt 1pt !important; }
+.fullscreen-preview-mode .print-table-cell > div { min-height: 80px !important; height: auto !important; border: none !important; padding: 1pt !important; font-weight: bold !important; color: black !important; font-size: 7pt !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; white-space: pre-wrap !important; overflow-wrap: break-word !important; display: block; overflow: hidden; line-height: 1.1; vertical-align: top !important; }
+.fullscreen-preview-mode .print-table tr { height: auto !important; min-height: 80px !important; page-break-inside: avoid; }
+
 .fullscreen-preview-mode .matter-box {
-    margin-bottom: 8pt !important;
-    height: 100px !important;
-    border: 2pt solid black !important;
+    margin-bottom: 6pt !important;
+    height: 80px !important;
+    border: 1pt solid black !important;
     display: flex !important; /* Ensure flex layout */
     border-radius: 0.3rem !important;
     overflow: hidden !important;
@@ -609,14 +696,14 @@ body {
     color: white !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-    padding: 2pt 4pt !important; /* Adjusted padding */
+    padding: 1pt 3pt !important; /* Adjusted padding */
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    height: 100px !important; /* Match parent height */
+    height: 80px !important; /* Match parent height */
     flex-shrink: 0 !important;
     width: auto !important; /* Adjust width based on content */
-    min-width: 30px; /* Ensure minimum width */
+    min-width: 25px; /* Ensure minimum width */
 }
 .fullscreen-preview-mode .matter-label span {
     font-weight: bold !important;
@@ -626,28 +713,10 @@ body {
     background-color: transparent !important;
     white-space: nowrap !important;
     display: block !important;
-    font-size: 10pt !important;
+    font-size: 9pt !important;
     writing-mode: initial !important; /* Ensure horizontal */
     text-orientation: initial !important; /* Ensure horizontal */
 }
-
-.fullscreen-preview-mode .billing-address-box { margin-bottom: 8pt !important; border: 1pt solid black !important; }
-.fullscreen-preview-mode .notes-stamp-container { margin-bottom: 0 !important; border: 1pt solid black !important; position: relative !important; min-height: 90px !important; padding-right: 110px !important; }
-.fullscreen-preview-mode .print-only-inline-block { display: inline-block !important; visibility: visible !important; }
-.fullscreen-preview-mode .print-only-flex { display: flex !important; visibility: visible !important; }
-.fullscreen-preview-mode .print-border { border: 1pt solid black !important; }
-.fullscreen-preview-mode .print-border-heavy { border-width: 2pt !important; }
-.fullscreen-preview-mode .print-border-thin { border: 0.5pt solid black !important; }
-.fullscreen-preview-mode .print-table { width: 100% !important; border-collapse: collapse !important; border: 1pt solid black !important; font-weight: bold !important; }
-.fullscreen-preview-mode .print-table-header {
-  background-color: #f0f0f0 !important;
-  -webkit-print-color-adjust: exact !important;
-  print-color-adjust: exact !important;
-}
-.fullscreen-preview-mode .print-table th, .fullscreen-preview-mode .print-table td { border: 0.5pt solid black !important; padding: 2pt !important; vertical-align: top !important; font-weight: bold !important; color: black !important; font-size: 8pt !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; page-break-inside: avoid; height: auto !important; min-height: 100px !important; }
-.fullscreen-preview-mode .print-table-cell > div { min-height: 100px !important; height: auto !important; border: none !important; padding: 1pt !important; font-weight: bold !important; color: black !important; font-size: 8pt !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; white-space: pre-wrap !important; overflow-wrap: break-word !important; display: block; overflow: hidden; line-height: 1.1; vertical-align: top !important; }
-.fullscreen-preview-mode .print-table tr { height: auto !important; min-height: 100px !important; page-break-inside: avoid; }
-
 .fullscreen-preview-mode .matter-content {
     flex: 1 !important;
     padding: 1pt !important;
@@ -660,31 +729,37 @@ body {
    print-color-adjust: exact !important;
    white-space: pre-wrap !important;
    overflow-wrap: break-word !important;
-   font-size: 9pt !important;
+   font-size: 8pt !important;
    border: none !important;
    height: 100% !important;
    overflow: hidden !important; /* Prevent scrollbars in preview */
  }
-.fullscreen-preview-mode .stamp-container-print { display: flex !important; visibility: visible !important; position: absolute !important; top: 2pt !important; right: 2pt !important; width: 100px !important; height: 80px !important; border: none !important; overflow: hidden !important; align-items: center !important; justify-content: center !important; }
+
+.fullscreen-preview-mode .billing-address-box { margin-bottom: 6pt !important; border: 1pt solid black !important; padding: 4pt !important;}
+.fullscreen-preview-mode .billing-address-box p { font-size: 7pt !important; line-height: 1.1 !important; }
+
+.fullscreen-preview-mode .notes-stamp-container { margin-bottom: 0 !important; border: 1pt solid black !important; position: relative !important; min-height: 70px !important; padding: 2pt !important; padding-right: 90px !important; }
+.fullscreen-preview-mode .notes-stamp-container .notes-content { padding-right: 90px !important; }
+.fullscreen-preview-mode .notes-stamp-container .note-title-underline { font-size: 9pt !important; }
+.fullscreen-preview-mode .notes-stamp-container ol { font-size: 7pt !important; margin-top: 2pt !important; padding-left: 12pt !important; line-height: 1.1 !important; }
+
+.fullscreen-preview-mode .stamp-container-print { display: flex !important; visibility: visible !important; position: absolute !important; top: 1pt !important; right: 1pt !important; width: 85px !important; height: 65px !important; border: none !important; overflow: hidden !important; align-items: center !important; justify-content: center !important; }
 .fullscreen-preview-mode .stamp-print-image { max-width: 100% !important; max-height: 100% !important; object-fit: contain !important; display: block !important; }
-.fullscreen-preview-mode .notes-stamp-container ol { font-size: 8pt !important; margin-top: 4pt !important; padding-left: 15px !important; }
-.fullscreen-preview-mode .note-title-underline, .fullscreen-preview-mode .billing-title-underline { border-bottom: 1pt solid black !important; padding-bottom: 0px !important; margin-bottom: 2pt !important; display: inline-block !important; border-color: black !important; }
-.fullscreen-preview-mode .address-box p, .fullscreen-preview-mode .billing-address-box p { font-weight: bold !important; color: black !important; line-height: 1.1 !important; font-size: 8pt !important; }
-.fullscreen-preview-mode .address-container .address-box, .fullscreen-preview-mode .address-container .ro-date-client-container { padding: 4pt !important; border: 2pt solid black !important; }
-.fullscreen-preview-mode .ro-date-client-container .field-row label { font-weight: bold !important; color: black !important; font-size: 9pt !important; width: auto !important; margin-right: 4pt !important; flex-shrink: 0 !important; }
-.fullscreen-preview-mode .ro-date-client-container .field-row p { font-weight: bold !important; color: black !important; border-bottom: 0.5pt dotted #ccc !important; font-size: 9pt !important; flex: 1 !important; min-height: 1.1em !important; padding: 1pt 0 !important; text-align: left; }
-.fullscreen-preview-mode .ro-date-client-container .field-row p:nth-child(2) { /* Specifically target date paragraph if needed */ text-align: center !important; }
+
+.fullscreen-preview-mode .print-only-inline-block { display: inline-block !important; visibility: visible !important; }
+.fullscreen-preview-mode .print-only-flex { display: flex !important; visibility: visible !important; }
+.fullscreen-preview-mode .print-border { border: 1pt solid black !important; }
+.fullscreen-preview-mode .print-border-heavy { border-width: 1pt !important; }
+.fullscreen-preview-mode .print-border-thin { border: 0.5pt solid black !important; }
 
 
-/* Remove PDF generation specific styles if no longer needed */
-/* .pdf-generation-mode { ... } */
 
 /* Ensure interactive elements are not interactive in preview */
 .fullscreen-preview-mode input,
 .fullscreen-preview-mode textarea {
    pointer-events: none !important;
-   border-bottom: 0.5pt dotted #ccc !important; /* Display as underlined text */
-   padding: 1pt 0 !important;
+   border-bottom: 0.5pt dotted #999 !important; /* Display as underlined text */
+   padding: 0.5pt 0 !important;
    background: transparent !important;
    box-shadow: none !important;
    -webkit-print-color-adjust: exact !important; /* Ensure text prints */
@@ -705,4 +780,21 @@ textarea {
   display: flex;
   justify-content: flex-end;
   margin-bottom: 1rem; /* Consistent margin below button */
+}
+
+/* Additional styles for stamp container hover effect */
+.stamp-container-interactive:hover label {
+  opacity: 0.75 !important;
+}
+
+/* Ensure print-hidden class overrides display */
+.print-hidden {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+/* Make sure .print-visible-button overrides .print-hidden if both are applied */
+button.print-visible-button {
+     display: inline-flex !important; /* Or flex, block, etc. */
+     visibility: visible !important;
 }
