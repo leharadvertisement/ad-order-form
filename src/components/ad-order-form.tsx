@@ -16,14 +16,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
-import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon, Expand, X as CloseIcon } from 'lucide-react'; // Changed Eye to Expand
+import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon, Printer } from 'lucide-react'; // Changed Expand to Printer
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-// Removed html2canvas and jspdf imports
+
 
 interface ScheduleRow {
   id: number;
@@ -67,14 +67,14 @@ export default function AdOrderForm() {
   const [advertisementManagerLine2, setAdvertisementManagerLine2] = useState('');
   const [isClient, setIsClient] = useState(false);
   const [displayDate, setDisplayDate] = useState<string>('');
-  // Removed isPreviewing state
+
 
   // --- Ref Hooks ---
   const stampFileRef = useRef<HTMLInputElement>(null);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isInitialLoadRef = useRef(true);
   const formRef = useRef<HTMLDivElement>(null);
-  const printableAreaRef = useRef<HTMLDivElement>(null); // Renamed from printableAreaPlaceholderRef
+  const printableAreaRef = useRef<HTMLDivElement>(null);
 
   // --- Custom Hooks ---
   const { toast } = useToast();
@@ -202,7 +202,6 @@ export default function AdOrderForm() {
     };
   }, [caption, packageName, matter, scheduleRows, stampPreview, roNumber, orderDate, clientName, advertisementManagerLine1, advertisementManagerLine2, isClient]);
 
-  // Removed useEffect related to isPreviewing and print-preview-mode
 
   // --- Callback Hooks ---
   const addRow = useCallback(() => {
@@ -295,28 +294,10 @@ export default function AdOrderForm() {
     }
   }, [toast]);
 
-  // Function to handle Full Screen request
-  const handleFullScreen = useCallback(() => {
-     const element = printableAreaRef.current;
-     if (element) {
-         if (element.requestFullscreen) {
-             element.requestFullscreen().catch(err => {
-                 console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
-                 toast({
-                    title: "Fullscreen Failed",
-                    description: "Could not enter fullscreen mode.",
-                    variant: "destructive",
-                 });
-             });
-         } else {
-             toast({
-                 title: "Fullscreen Not Supported",
-                 description: "Your browser does not support fullscreen mode.",
-                 variant: "destructive",
-             });
-         }
-     }
-  }, [toast]);
+   // Function to trigger browser's print dialog
+   const handlePrint = useCallback(() => {
+     window.print();
+   }, []);
 
 
    const safeDisplayDate = isClient && orderDate && !isNaN(orderDate.getTime()) ? displayDate : 'Loading...';
@@ -327,8 +308,8 @@ export default function AdOrderForm() {
     <div className={cn("max-w-[210mm] mx-auto font-bold")}>
        {/* Action Buttons - Visible normally */}
        <div className="flex justify-end gap-2 mb-4 no-print">
-            <Button onClick={handleFullScreen} variant="outline">
-                <Expand className="mr-2 h-4 w-4" /> Full Screen
+            <Button onClick={handlePrint} variant="outline">
+                <Printer className="mr-2 h-4 w-4" /> Print Order
             </Button>
             <Button onClick={handleClearForm} variant="destructive">
                 <Eraser className="mr-2 h-4 w-4" /> Clear Form & Draft
@@ -344,6 +325,32 @@ export default function AdOrderForm() {
                <div className="text-center bg-black text-white p-1 mb-5 header-title">
                    <h1 className="text-xl m-0 font-bold">RELEASE ORDER</h1>
                </div>
+
+                {/* Advertisement Manager Section */}
+                 <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
+                     <Label className="block mb-1 text-sm">The Advertisement Manager</Label>
+                     <div className="relative mb-0.5">
+                         <Input
+                             id="adManager1"
+                             type="text"
+                             placeholder="Line 1"
+                             className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                             value={advertisementManagerLine1}
+                             onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
+                         />
+                     </div>
+                     <div className="relative">
+                         <Input
+                             id="adManager2"
+                             type="text"
+                             placeholder="Line 2"
+                             className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                             value={advertisementManagerLine2}
+                             onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
+                         />
+                     </div>
+                     <p className="text-xs mt-1">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
+                 </div>
 
                 {/* Heading & Package Section */}
                 <div className="heading-package-container flex gap-3 mb-5">
@@ -467,31 +474,7 @@ export default function AdOrderForm() {
                    </div>
                </div>
 
-                {/* Advertisement Manager Section */}
-                 <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
-                     <Label className="block mb-1 text-sm">The Advertisement Manager</Label>
-                     <div className="relative mb-0.5">
-                         <Input
-                             id="adManager1"
-                             type="text"
-                             placeholder="Line 1"
-                             className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                             value={advertisementManagerLine1}
-                             onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
-                         />
-                     </div>
-                     <div className="relative">
-                         <Input
-                             id="adManager2"
-                             type="text"
-                             placeholder="Line 2"
-                             className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                             value={advertisementManagerLine2}
-                             onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
-                         />
-                     </div>
-                     <p className="text-xs mt-1">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
-                 </div>
+
 
                {/* Schedule Table */}
                 <div className="mb-5 table-container-print">
@@ -665,4 +648,3 @@ export default function AdOrderForm() {
    </div>
 );
 }
-
