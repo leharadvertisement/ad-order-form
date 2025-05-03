@@ -1,6 +1,7 @@
 
 
 
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -231,14 +232,37 @@ body {
    .matter-box {
        margin-bottom: 8pt !important;
        height: 100px !important; /* Match original height */
-       display: flex !important; /* Ensure flex layout for vertical text */
+       display: flex !important; /* Ensure flex layout for horizontal text */
        border: 2pt solid black !important; /* Make sure border is visible */
        border-radius: 0.3rem !important; /* Match form border radius */
        overflow: hidden !important; /* Ensure content stays within box */
    }
+   /* Horizontal label for print */
+   .matter-label {
+       background-color: black !important;
+       -webkit-print-color-adjust: exact !important;
+       print-color-adjust: exact !important;
+       padding: 2pt 4pt !important; /* Adjusted padding */
+       display: flex !important;
+       align-items: center !important;
+       justify-content: center !important;
+       height: 100px !important; /* Match parent height */
+       flex-shrink: 0 !important;
+   }
+   .matter-label span {
+       font-weight: bold !important;
+       color: white !important;
+       -webkit-print-color-adjust: exact !important;
+       print-color-adjust: exact !important;
+       background-color: transparent !important;
+       white-space: nowrap !important;
+       display: block !important;
+       font-size: 10pt !important; /* Consistent font size */
+   }
+
     .billing-address-box {
        margin-bottom: 8pt !important;
-   }
+    }
    .notes-stamp-container {
        margin-bottom: 0 !important; /* No margin at the very bottom */
    }
@@ -347,32 +371,11 @@ body {
    }
 
 
-  /* Matter box vertical text for print */
-   .vertical-label {
-     background-color: black !important; /* Ensure background prints */
-     -webkit-print-color-adjust: exact !important;
-     print-color-adjust: exact !important;
-     width: 6pt !important; /* Thinner label */
-     padding: 2pt !important;
-     font-size: 10pt !important; /* Smaller font */
-     display: flex !important; /* Ensure flex works for alignment */
-     align-items: center !important;
-     justify-content: center !important;
-     height: 100px !important; /* Match parent height */
-     flex-shrink: 0 !important; /* Prevent shrinking */
-   }
-  .matter-text-print {
-    writing-mode: vertical-rl !important;
-    text-orientation: mixed !important;
-    transform: rotate(180deg) !important;
-    font-weight: bold !important;
-    color: white !important; /* Ensure it's white on black bg */
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-    background-color: transparent !important; /* Text itself has no background */
-    white-space: nowrap !important; /* Prevent wrapping */
-    display: block !important; /* Ensure it takes space */
-  }
+  /* Matter box vertical text REMOVED for print */
+  /*
+   .vertical-label { ... }
+   .matter-text-print { ... }
+   */
 
   /* Ensure matter content displays correctly */
   .matter-content {
@@ -595,6 +598,29 @@ body {
     border-radius: 0.3rem !important;
     overflow: hidden !important;
 }
+/* Horizontal label for fullscreen preview */
+.fullscreen-preview-mode .matter-label {
+    background-color: black !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    padding: 2pt 4pt !important; /* Adjusted padding */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 100px !important; /* Match parent height */
+    flex-shrink: 0 !important;
+}
+.fullscreen-preview-mode .matter-label span {
+    font-weight: bold !important;
+    color: white !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    background-color: transparent !important;
+    white-space: nowrap !important;
+    display: block !important;
+    font-size: 10pt !important;
+}
+
 .fullscreen-preview-mode .billing-address-box { margin-bottom: 8pt !important; border: 1pt solid black !important; }
 .fullscreen-preview-mode .notes-stamp-container { margin-bottom: 0 !important; border: 1pt solid black !important; position: relative !important; min-height: 90px !important; padding-right: 110px !important; }
 .fullscreen-preview-mode .print-only-inline-block { display: inline-block !important; visibility: visible !important; }
@@ -611,31 +637,11 @@ body {
 .fullscreen-preview-mode .print-table th, .fullscreen-preview-mode .print-table td { border: 0.5pt solid black !important; padding: 2pt !important; vertical-align: top !important; font-weight: bold !important; color: black !important; font-size: 8pt !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; page-break-inside: avoid; height: auto !important; min-height: 100px !important; }
 .fullscreen-preview-mode .print-table-cell > div { min-height: 100px !important; height: auto !important; border: none !important; padding: 1pt !important; font-weight: bold !important; color: black !important; font-size: 8pt !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; white-space: pre-wrap !important; overflow-wrap: break-word !important; display: block; overflow: hidden; line-height: 1.1; vertical-align: top !important; }
 .fullscreen-preview-mode .print-table tr { height: auto !important; min-height: 100px !important; page-break-inside: avoid; }
-.fullscreen-preview-mode .vertical-label {
-  background-color: black !important;
-  -webkit-print-color-adjust: exact !important;
-  print-color-adjust: exact !important;
-  width: 6pt !important;
-  padding: 2pt !important;
-  font-size: 10pt !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  height: 100px !important; /* Ensure height matches parent */
-  flex-shrink: 0 !important;
-}
-.fullscreen-preview-mode .matter-text-print {
-  writing-mode: vertical-rl !important;
-  text-orientation: mixed !important;
-  transform: rotate(180deg) !important;
-  font-weight: bold !important;
-  color: white !important;
-  -webkit-print-color-adjust: exact !important;
-  print-color-adjust: exact !important;
-  background-color: transparent !important;
-  white-space: nowrap !important;
-  display: block !important;
-}
+/* Matter vertical text REMOVED for fullscreen preview */
+/*
+.fullscreen-preview-mode .vertical-label { ... }
+.fullscreen-preview-mode .matter-text-print { ... }
+*/
 .fullscreen-preview-mode .matter-content {
     flex: 1 !important;
     padding: 1pt !important;
@@ -681,3 +687,4 @@ body {
 .fullscreen-preview-mode .stamp-container-interactive {
    display: none !important; /* Hide interactive stamp upload area */
 }
+

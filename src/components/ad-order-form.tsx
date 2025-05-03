@@ -89,17 +89,35 @@ export default function AdOrderForm() {
   }, []);
 
   // Initialize date on client-side mount
-  useEffect(() => {
-    if (isClient && orderDate === undefined) {
-      setOrderDate(new Date());
-    }
-  }, [isClient, orderDate]);
+   useEffect(() => {
+     if (isClient && orderDate === undefined) {
+       // Check local storage first, then default to today
+       try {
+         const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+         let initialDate = new Date(); // Default to today
+         if (savedData) {
+           const parsedData: Partial<FormData> = JSON.parse(savedData);
+           if (parsedData.orderDate) {
+             const savedDateObj = new Date(parsedData.orderDate);
+             if (!isNaN(savedDateObj.getTime())) {
+               initialDate = savedDateObj;
+             }
+           }
+         }
+         setOrderDate(initialDate);
+       } catch (error) {
+         console.error("Error reading initial date from localStorage:", error);
+         setOrderDate(new Date()); // Fallback to today on error
+       }
+     }
+   }, [isClient, orderDate]); // Depend only on isClient
 
   // Effect to load data
   useEffect(() => {
     if (!isClient) return;
 
-    let initialDate = new Date();
+    // Date is handled in the effect above, no need to repeat here
+
     try {
       const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (savedData) {
@@ -117,28 +135,21 @@ export default function AdOrderForm() {
         setStampPreview(parsedData.stampPreview || null);
         setRoNumber(parsedData.roNumber || '');
 
-        if (parsedData.orderDate) {
-           const savedDateObj = new Date(parsedData.orderDate);
-           if (!isNaN(savedDateObj.getTime())) {
-               initialDate = savedDateObj;
-           } else {
-                console.warn("Invalid date found in localStorage, using today's date instead.");
-           }
-        }
+        // Date loading is handled in the dedicated effect
+        // if (parsedData.orderDate) {
+        //    const savedDateObj = new Date(parsedData.orderDate);
+        //    if (!isNaN(savedDateObj.getTime())) {
+        //        initialDate = savedDateObj;
+        //    } else {
+        //         console.warn("Invalid date found in localStorage, using today's date instead.");
+        //    }
+        // }
 
         setClientName(parsedData.clientName || '');
         setAdvertisementManagerLine1(parsedData.advertisementManagerLine1 || '');
         setAdvertisementManagerLine2(parsedData.advertisementManagerLine2 || '');
-      } else {
-           // If no saved data, set date to today
-           if (orderDate === undefined) {
-               setOrderDate(initialDate);
-           }
       }
-      // Set orderDate state (either loaded or default today) only if it's still undefined
-       if (orderDate === undefined) {
-         setOrderDate(initialDate);
-       }
+      // No else needed here as date is set by the other effect
 
     } catch (error) {
       console.error("Failed to load data from localStorage:", error);
@@ -147,14 +158,10 @@ export default function AdOrderForm() {
         description: "Could not recover previous draft data. Using defaults.",
         variant: "destructive",
       });
-       // Ensure date is set to today even if loading fails and it wasn't set before
-       if (orderDate === undefined) {
-           setOrderDate(initialDate);
-       }
     } finally {
         isInitialLoadRef.current = false;
     }
-  }, [isClient, toast]); // Remove orderDate from deps here to avoid re-running on programmatic set
+  }, [isClient, toast]);
 
 
    // Effect to update displayDate whenever orderDate changes (client-side only)
@@ -165,7 +172,6 @@ export default function AdOrderForm() {
          setDisplayDate(format(orderDate, "dd.MM.yyyy"));
      } catch (error) {
          console.error("Error formatting date:", error);
-         // Re-set to ensure validity if format fails, though this shouldn't happen often
          const today = new Date();
          setOrderDate(today); // Consider if this is the desired fallback
          setDisplayDate(format(today, "dd.MM.yyyy"));
@@ -176,14 +182,11 @@ export default function AdOrderForm() {
   // Effect to save data to localStorage (debounced, client-side only)
   useEffect(() => {
     if (isInitialLoadRef.current || !isClient) {
-       // Prevent saving during initial load or if not on client
         return;
     }
 
     // Proceed with saving only if orderDate is defined and valid
     if (orderDate === undefined || isNaN(orderDate.getTime())) {
-      // Optionally log or handle the case where date is invalid/undefined before saving attempt
-      // console.warn("Attempted to save with undefined or invalid date. Skipping save.");
       return;
     }
 
@@ -199,7 +202,6 @@ export default function AdOrderForm() {
           scheduleRows,
           stampPreview,
           roNumber,
-          // Ensure orderDate is valid before converting to ISO string
           orderDate: orderDate && !isNaN(orderDate.getTime()) ? orderDate.toISOString() : null,
           clientName,
           advertisementManagerLine1,
@@ -334,13 +336,10 @@ export default function AdOrderForm() {
 
    // Function to trigger browser's print dialog
    const handlePrint = useCallback(() => {
-      // Ensure fullscreen mode is exited before printing
-      // handleExitFullScreenPreview(); // Keep fullscreen for printing the preview
-      // Add a slight delay to allow DOM to update before printing
       setTimeout(() => {
          window.print();
       }, 100);
-   }, []); // Removed handleExitFullScreenPreview dependency
+   }, []);
 
    const safeDisplayDate = isClient && orderDate && !isNaN(orderDate.getTime()) ? displayDate : 'Loading...';
 
@@ -373,14 +372,12 @@ export default function AdOrderForm() {
 
 
                   {/* Render the printable area inside the fullscreen overlay */}
-                  {/* Use a separate div for the preview content instead of Card */}
                   <div
                       id="printable-area"
                       ref={printableAreaRef}
-                      className="w-full print-border-heavy rounded-none shadow-none p-5 border-2 border-black bg-white overflow-auto" // Added overflow-auto
-                      style={{ height: 'calc(100vh - 4rem)' }} // Example height, adjust as needed
+                      className="w-full print-border-heavy rounded-none shadow-none p-5 border-2 border-black bg-white overflow-auto"
+                      style={{ height: 'calc(100vh - 4rem)' }}
                   >
-                      {/* Content identical to the normal view - Removed CardContent */}
                         {/* Header */}
                         <div className="text-center bg-black text-white p-1 mb-5 header-title">
                           <h1 className="text-xl m-0 font-bold">RELEASE ORDER</h1>
@@ -390,11 +387,9 @@ export default function AdOrderForm() {
                          <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
                            <Label className="block mb-1 text-sm">The Advertisement Manager</Label>
                            <div className="relative mb-0.5">
-                             {/* Display as simple text */}
                              <p className="w-full px-1 py-0.5 text-sm font-bold min-h-[1.5em] border-b border-black">{advertisementManagerLine1 || <span className="text-muted-foreground italic">Not entered</span>}</p>
                            </div>
                            <div className="relative">
-                             {/* Display as simple text */}
                              <p className="w-full px-1 py-0.5 text-sm font-bold min-h-[1.5em] border-b border-black">{advertisementManagerLine2 || <span className="text-muted-foreground italic">Not entered</span>}</p>
                            </div>
                            <p className="text-xs mt-1">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
@@ -405,12 +400,10 @@ export default function AdOrderForm() {
                        <div className="heading-package-container flex gap-3 mb-5">
                          <div className="heading-caption-box flex-1 print-border-heavy rounded p-2 border-2 border-black">
                            <Label htmlFor="captionPreview" className="block mb-1 text-sm">Heading/Caption:</Label>
-                           {/* Display value instead of input */}
                            <p id="captionPreview" className="w-full px-1 py-0.5 text-sm font-bold min-h-[1.5em] border-b border-black">{caption || <span className="text-muted-foreground italic">Not entered</span>}</p>
                          </div>
                          <div className="package-box w-[30%] print-border-heavy rounded p-2 border-2 border-black">
                            <Label htmlFor="packagePreview" className="block mb-1 text-sm">Package:</Label>
-                            {/* Display value instead of input */}
                             <p id="packagePreview" className="w-full px-1 py-0.5 text-sm font-bold min-h-[1.5em] border-b border-black">{packageName || <span className="text-muted-foreground italic">Not entered</span>}</p>
                          </div>
                        </div>
@@ -504,15 +497,15 @@ export default function AdOrderForm() {
                         </div>
 
                         {/* Matter Section */}
-                         <div className="matter-box flex h-[100px] print-border-heavy rounded mb-5 overflow-hidden border-2 border-black">
-                           {/* Vertical Text Label */}
-                           <div className="vertical-label bg-black text-white flex items-center justify-center p-1 w-6 flex-shrink-0">
-                             <span className="text-sm font-bold whitespace-nowrap matter-text-print">
-                               MATTER
-                             </span>
+                        <div className="matter-box flex h-[100px] print-border-heavy rounded mb-5 overflow-hidden border-2 border-black">
+                            {/* Keep the label horizontal for preview */}
+                           <div className="matter-label bg-black text-white flex items-center justify-center px-2 py-1 flex-shrink-0">
+                               <span className="text-sm font-bold whitespace-nowrap">
+                                  MATTER
+                               </span>
                            </div>
-                           {/* Display matter content */}
-                           <div className="matter-content flex-1 p-1 overflow-hidden"> {/* Changed overflow-auto to overflow-hidden */}
+                           {/* Display matter content horizontally */}
+                           <div className="matter-content flex-1 p-1 overflow-hidden">
                               <div className="whitespace-pre-wrap break-words text-sm font-bold h-full">
                                   {matter}
                               </div>
@@ -694,10 +687,6 @@ export default function AdOrderForm() {
                            onSelect={(date) => {
                              if (date instanceof Date && !isNaN(date.getTime())) {
                                setOrderDate(date);
-                             } else if (date === undefined) {
-                               // Keep existing date if undefined is selected (or set to today if needed)
-                               // const today = new Date();
-                               // setOrderDate(today);
                              }
                            }}
                            initialFocus
@@ -910,3 +899,4 @@ export default function AdOrderForm() {
     </div>
   );
 }
+
