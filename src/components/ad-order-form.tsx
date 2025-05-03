@@ -16,13 +16,15 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
-import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon, Printer } from 'lucide-react'; // Changed Expand to Printer
+import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon, Printer, X, Expand } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 
 interface ScheduleRow {
@@ -127,6 +129,11 @@ export default function AdOrderForm() {
         setClientName(parsedData.clientName || '');
         setAdvertisementManagerLine1(parsedData.advertisementManagerLine1 || '');
         setAdvertisementManagerLine2(parsedData.advertisementManagerLine2 || '');
+      } else {
+           // If no saved data, set date to today
+           if (orderDate === undefined) {
+               setOrderDate(initialDate);
+           }
       }
       // Set orderDate state (either loaded or default today) only if it's still undefined
        if (orderDate === undefined) {
@@ -147,7 +154,7 @@ export default function AdOrderForm() {
     } finally {
         isInitialLoadRef.current = false;
     }
-  }, [isClient, toast, orderDate]); // Ensure orderDate is in dependency array
+  }, [isClient, toast]); // Remove orderDate from deps here to avoid re-running on programmatic set
 
 
    // Effect to update displayDate whenever orderDate changes (client-side only)
@@ -158,21 +165,28 @@ export default function AdOrderForm() {
          setDisplayDate(format(orderDate, "dd.MM.yyyy"));
      } catch (error) {
          console.error("Error formatting date:", error);
+         // Re-set to ensure validity if format fails, though this shouldn't happen often
          const today = new Date();
-         setOrderDate(today);
+         setOrderDate(today); // Consider if this is the desired fallback
+         setDisplayDate(format(today, "dd.MM.yyyy"));
      }
    }, [orderDate, isClient]);
 
 
   // Effect to save data to localStorage (debounced, client-side only)
   useEffect(() => {
-    if (isInitialLoadRef.current || !isClient || orderDate === undefined) {
-       if (!isInitialLoadRef.current && isClient && orderDate !== undefined) {
-           // Allow saving past initial load if client and date is defined
-       } else {
-           return;
-       }
+    if (isInitialLoadRef.current || !isClient) {
+       // Prevent saving during initial load or if not on client
+        return;
     }
+
+    // Proceed with saving only if orderDate is defined and valid
+    if (orderDate === undefined || isNaN(orderDate.getTime())) {
+      // Optionally log or handle the case where date is invalid/undefined before saving attempt
+      // console.warn("Attempted to save with undefined or invalid date. Skipping save.");
+      return;
+    }
+
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
     }
@@ -185,6 +199,7 @@ export default function AdOrderForm() {
           scheduleRows,
           stampPreview,
           roNumber,
+          // Ensure orderDate is valid before converting to ISO string
           orderDate: orderDate && !isNaN(orderDate.getTime()) ? orderDate.toISOString() : null,
           clientName,
           advertisementManagerLine1,
@@ -306,345 +321,346 @@ export default function AdOrderForm() {
   // --- Main Render ---
   return (
     <div className={cn("max-w-[210mm] mx-auto font-bold")}>
-       {/* Action Buttons - Visible normally */}
-       <div className="flex justify-end gap-2 mb-4 no-print">
-            <Button onClick={handlePrint} variant="outline">
-                <Printer className="mr-2 h-4 w-4" /> Print Order
-            </Button>
-            <Button onClick={handleClearForm} variant="destructive">
-                <Eraser className="mr-2 h-4 w-4" /> Clear Form & Draft
-            </Button>
-       </div>
+      {/* Action Buttons - Visible normally */}
+      <div className="flex justify-end gap-2 mb-4 no-print">
+        <Button onClick={handlePrint} variant="outline">
+          <Printer className="mr-2 h-4 w-4" /> Print Order
+        </Button>
+        <Button onClick={handleClearForm} variant="destructive">
+          <Eraser className="mr-2 h-4 w-4" /> Clear Form & Draft
+        </Button>
+      </div>
 
 
-       {/* Use the ref on the actual printable area */}
-       <Card id="printable-area" ref={printableAreaRef} className="w-full print-border-heavy rounded-none shadow-none p-5 border-2 border-black bg-white">
-           {/* Use correct class for CardContent */}
-           <CardContent className="p-0 card-content-print-fix card-content-pdf-fix">
-               {/* Header */}
-               <div className="text-center bg-black text-white p-1 mb-5 header-title">
-                   <h1 className="text-xl m-0 font-bold">RELEASE ORDER</h1>
-               </div>
+      {/* Use the ref on the actual printable area */}
+      <Card id="printable-area" ref={printableAreaRef} className="w-full print-border-heavy rounded-none shadow-none p-5 border-2 border-black bg-white">
+        {/* Use correct class for CardContent */}
+        <CardContent className="p-0 card-content-print-fix card-content-pdf-fix">
+          {/* Header */}
+          <div className="text-center bg-black text-white p-1 mb-5 header-title">
+            <h1 className="text-xl m-0 font-bold">RELEASE ORDER</h1>
+          </div>
 
-                {/* Advertisement Manager Section */}
-                 <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
-                     <Label className="block mb-1 text-sm">The Advertisement Manager</Label>
-                     <div className="relative mb-0.5">
-                         <Input
-                             id="adManager1"
-                             type="text"
-                             placeholder="Line 1"
-                             className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                             value={advertisementManagerLine1}
-                             onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
-                         />
-                     </div>
-                     <div className="relative">
-                         <Input
-                             id="adManager2"
-                             type="text"
-                             placeholder="Line 2"
-                             className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                             value={advertisementManagerLine2}
-                             onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
-                         />
-                     </div>
-                     <p className="text-xs mt-1">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
-                 </div>
+          {/* Advertisement Manager Section */}
+          <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
+            <Label className="block mb-1 text-sm">The Advertisement Manager</Label>
+            <div className="relative mb-0.5">
+              <Input
+                id="adManager1"
+                type="text"
+                placeholder="Line 1"
+                className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                value={advertisementManagerLine1}
+                onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
+              />
+            </div>
+            <div className="relative">
+              <Input
+                id="adManager2"
+                type="text"
+                placeholder="Line 2"
+                className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                value={advertisementManagerLine2}
+                onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
+              />
+            </div>
+            <p className="text-xs mt-1">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
+          </div>
 
-                {/* Heading & Package Section */}
-                <div className="heading-package-container flex gap-3 mb-5">
-                    <div className="heading-caption-box flex-1 print-border-heavy rounded p-2 border-2 border-black">
-                        <Label htmlFor="caption" className="block mb-1 text-sm">Heading/Caption:</Label>
-                        <Input
-                            id="caption"
-                            type="text"
-                            placeholder="Enter caption here"
-                            className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                            value={caption}
-                            onChange={(e) => setCaption(e.target.value)}
+          {/* Heading & Package Section */}
+          <div className="heading-package-container flex gap-3 mb-5">
+            <div className="heading-caption-box flex-1 print-border-heavy rounded p-2 border-2 border-black">
+              <Label htmlFor="caption" className="block mb-1 text-sm">Heading/Caption:</Label>
+              <Input
+                id="caption"
+                type="text"
+                placeholder="Enter caption here"
+                className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                value={caption}
+                onChange={(e) => setCaption(e.target.value)}
+              />
+            </div>
+            <div className="package-box w-[30%] print-border-heavy rounded p-2 border-2 border-black">
+              <Label htmlFor="package" className="block mb-1 text-sm">Package:</Label>
+              <Input
+                id="package"
+                type="text"
+                placeholder="Enter package name"
+                className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                value={packageName}
+                onChange={(e) => setPackageName(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Address Boxes Container */}
+          <div className="address-container flex justify-between gap-3 mb-5">
+            {/* Left Address Box */}
+            <div className="address-box w-[48%] print-border-heavy rounded p-2 border-2 border-black">
+              <p className="text-xs leading-tight">
+                Lehar Advertising Agency Pvt. Ltd.<br />
+                D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
+                Alaknanda Commercial Complex,<br />
+                New Delhi-110019<br />
+                Tel: 49573333, 34, 35, 36<br />
+                Fax: 26028101
+              </p>
+            </div>
+            {/* Right Box: R.O., Date, Client */}
+            <div className="ro-date-client-container w-[48%] print-border-heavy rounded p-2 space-y-1 border-2 border-black">
+              {/* R.O. No. LN */}
+              <div className="field-row flex items-center">
+                <Label htmlFor="roNumber" className="w-auto text-sm shrink-0 mr-1">R.O.No.LN:</Label>
+                <Input
+                  id="roNumber"
+                  type="text"
+                  placeholder="Enter R.O. No."
+                  className="flex-1 h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
+                  value={roNumber}
+                  onChange={(e) => setRoNumber(e.target.value)}
+                />
+              </div>
+              {/* Date */}
+              <div className="field-row flex items-center popover-trigger-container">
+                <Label htmlFor="orderDateTrigger" className="w-auto text-sm shrink-0 mr-1">Date:</Label>
+                <div className={cn(
+                  "flex-1 justify-center text-center font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm shadow-none items-center flex",
+                  !safeDisplayDate && "text-muted-foreground"
+                )}>
+                  <span id="orderDateDisplay" className="flex-1">{safeDisplayDate}</span>
+                  {isClient ? (
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"ghost"}
+                          className={cn(
+                            "h-6 w-6 p-0 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print ml-1",
+                          )}
+                          id="orderDateTrigger"
+                        >
+                          <CalendarIcon className="h-4 w-4" />
+                          <span className="sr-only">Pick a date</span>
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 no-print">
+                        <Calendar
+                          mode="single"
+                          selected={orderDate}
+                          onSelect={(date) => {
+                            if (date instanceof Date && !isNaN(date.getTime())) {
+                              setOrderDate(date);
+                            } else if (date === undefined) {
+                              // Keep existing date if undefined is selected (or set to today if needed)
+                              // const today = new Date();
+                              // setOrderDate(today);
+                            }
+                          }}
+                          initialFocus
                         />
-                    </div>
-                    <div className="package-box w-[30%] print-border-heavy rounded p-2 border-2 border-black">
-                        <Label htmlFor="package" className="block mb-1 text-sm">Package:</Label>
-                        <Input
-                            id="package"
-                            type="text"
-                            placeholder="Enter package name"
-                            className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                            value={packageName}
-                            onChange={(e) => setPackageName(e.target.value)}
-                        />
-                    </div>
+                      </PopoverContent>
+                    </Popover>
+                  ) : (
+                    <Button
+                      variant={"ghost"}
+                      className={cn(
+                        "h-6 w-6 p-0 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print ml-1",
+                        "text-muted-foreground"
+                      )}
+                      disabled
+                    >
+                      <CalendarIcon className="h-4 w-4" />
+                      <span className="sr-only">Loading date picker...</span>
+                    </Button>
+                  )}
                 </div>
+              </div>
 
-               {/* Address Boxes Container */}
-               <div className="address-container flex justify-between gap-3 mb-5">
-                   {/* Left Address Box */}
-                   <div className="address-box w-[48%] print-border-heavy rounded p-2 border-2 border-black">
-                       <p className="text-xs leading-tight">
-                           Lehar Advertising Agency Pvt. Ltd.<br />
-                           D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
-                           Alaknanda Commercial Complex,<br />
-                           New Delhi-110019<br />
-                           Tel: 49573333, 34, 35, 36<br />
-                           Fax: 26028101
-                       </p>
-                   </div>
-                   {/* Right Box: R.O., Date, Client */}
-                   <div className="ro-date-client-container w-[48%] print-border-heavy rounded p-2 space-y-1 border-2 border-black">
-                       {/* R.O. No. LN */}
-                       <div className="field-row flex items-center">
-                           <Label htmlFor="roNumber" className="w-auto text-sm shrink-0 mr-1">R.O.No.LN:</Label>
-                           <Input
-                               id="roNumber"
-                               type="text"
-                               placeholder="Enter R.O. No."
-                               className="flex-1 h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
-                               value={roNumber}
-                               onChange={(e) => setRoNumber(e.target.value)}
-                           />
-                       </div>
-                       {/* Date */}
-                        <div className="field-row flex items-center popover-trigger-container">
-                            <Label htmlFor="orderDateTrigger" className="w-auto text-sm shrink-0 mr-1">Date:</Label>
-                             <div className={cn(
-                                 "flex-1 justify-center text-center font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm shadow-none items-center flex",
-                                 !safeDisplayDate && "text-muted-foreground"
-                             )}>
-                                 <span id="orderDateDisplay" className="flex-1">{safeDisplayDate}</span>
-                             </div>
-                            {isClient ? (
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                            variant={"ghost"}
-                                            className={cn(
-                                                "h-6 w-6 p-0 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print ml-1",
-                                            )}
-                                            id="orderDateTrigger"
-                                        >
-                                            <CalendarIcon className="h-4 w-4" />
-                                            <span className="sr-only">Pick a date</span>
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0 no-print">
-                                        <Calendar
-                                            mode="single"
-                                            selected={orderDate}
-                                            onSelect={(date) => {
-                                                if (date instanceof Date && !isNaN(date.getTime())) {
-                                                    setOrderDate(date);
-                                                } else if (date === undefined) {
-                                                     const today = new Date();
-                                                     setOrderDate(today);
-                                                }
-                                            }}
-                                            initialFocus
-                                        />
-                                    </PopoverContent>
-                                </Popover>
-                            ) : (
-                                 <Button
-                                     variant={"ghost"}
-                                     className={cn(
-                                         "h-6 w-6 p-0 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print ml-1",
-                                         "text-muted-foreground"
-                                     )}
-                                     disabled
-                                 >
-                                     <CalendarIcon className="h-4 w-4" />
-                                     <span className="sr-only">Loading date picker...</span>
-                                 </Button>
-                             )}
-                        </div>
-
-                       {/* Client */}
-                       <div className="field-row flex items-center">
-                           <Label htmlFor="clientName" className="w-auto text-sm shrink-0 mr-1">Client:</Label>
-                           <Input
-                               id="clientName"
-                               type="text"
-                               placeholder="Enter Client Name"
-                               className="flex-1 h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
-                               value={clientName}
-                               onChange={(e) => setClientName(e.target.value)}
-                           />
-                       </div>
-                   </div>
-               </div>
+              {/* Client */}
+              <div className="field-row flex items-center">
+                <Label htmlFor="clientName" className="w-auto text-sm shrink-0 mr-1">Client:</Label>
+                <Input
+                  id="clientName"
+                  type="text"
+                  placeholder="Enter Client Name"
+                  className="flex-1 h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
+                  value={clientName}
+                  onChange={(e) => setClientName(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
 
 
 
-               {/* Schedule Table */}
-                <div className="mb-5 table-container-print">
-                    <Table className="print-table print-border border border-black">
-                       <TableHeader className="bg-secondary print-table-header">
-                            <TableRow>
-                                <TableHead className="w-[10%] print-border-thin border border-black p-1.5 text-sm font-bold">Key No.</TableHead>
-                                <TableHead className="w-[25%] print-border-thin border border-black p-1.5 text-sm font-bold">Publication(s)</TableHead>
-                                <TableHead className="w-[15%] print-border-thin border border-black p-1.5 text-sm font-bold">Edition(s)</TableHead>
-                                <TableHead className="w-[15%] print-border-thin border border-black p-1.5 text-sm font-bold">Size</TableHead>
-                                <TableHead className="w-[20%] print-border-thin border border-black p-1.5 text-sm font-bold">Scheduled Date(s)</TableHead>
-                                <TableHead className="w-[15%] print-border-thin border border-black p-1.5 text-sm font-bold">Position</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {scheduleRows.map((row) => (
-                                <TableRow key={row.id} className="min-h-[100px] align-top">
-                                    <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
-                                        <Textarea
-                                            value={row.keyNo}
-                                             onChange={(e) => handleScheduleChange(row.id, 'keyNo', e.target.value)}
-                                            className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[100px]"
-                                        />
-                                    </TableCell>
-                                    <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
-                                        <Textarea
-                                            value={row.publication}
-                                            onChange={(e) => handleScheduleChange(row.id, 'publication', e.target.value)}
-                                            className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[100px]"
-                                        />
-                                    </TableCell>
-                                    <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
-                                        <Textarea
-                                            value={row.edition}
-                                             onChange={(e) => handleScheduleChange(row.id, 'edition', e.target.value)}
-                                            className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[100px]"
-                                        />
-                                    </TableCell>
-                                    <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
-                                        <Textarea
-                                            value={row.size}
-                                             onChange={(e) => handleScheduleChange(row.id, 'size', e.target.value)}
-                                            className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[100px]"
-                                        />
-                                    </TableCell>
-                                    <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
-                                        <Textarea
-                                             value={row.scheduledDate}
-                                              onChange={(e) => handleScheduleChange(row.id, 'scheduledDate', e.target.value)}
-                                             className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[100px]"
-                                         />
-                                    </TableCell>
-                                    <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
-                                        <Textarea
-                                            value={row.position}
-                                             onChange={(e) => handleScheduleChange(row.id, 'position', e.target.value)}
-                                            className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[100px]"
-                                        />
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                    <div className="flex gap-2 mt-2 no-print">
-                         <Button variant="outline" size="sm" onClick={addRow}>
-                             <PlusCircle className="mr-2 h-4 w-4" /> Add Row
-                         </Button>
-                         <Button variant="destructive" size="sm" onClick={deleteRow} disabled={scheduleRows.length <= 1}>
-                             <Trash2 className="mr-2 h-4 w-4" /> Delete Last Row
-                         </Button>
-                     </div>
+          {/* Schedule Table */}
+          <div className="mb-5 table-container-print">
+            <Table className="print-table print-border border border-black">
+              <TableHeader className="bg-secondary print-table-header">
+                <TableRow>
+                  <TableHead className="w-[10%] print-border-thin border border-black p-1.5 text-sm font-bold">Key No.</TableHead>
+                  <TableHead className="w-[25%] print-border-thin border border-black p-1.5 text-sm font-bold">Publication(s)</TableHead>
+                  <TableHead className="w-[15%] print-border-thin border border-black p-1.5 text-sm font-bold">Edition(s)</TableHead>
+                  <TableHead className="w-[15%] print-border-thin border border-black p-1.5 text-sm font-bold">Size</TableHead>
+                  <TableHead className="w-[20%] print-border-thin border border-black p-1.5 text-sm font-bold">Scheduled Date(s)</TableHead>
+                  <TableHead className="w-[15%] print-border-thin border border-black p-1.5 text-sm font-bold">Position</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {scheduleRows.map((row) => (
+                  <TableRow key={row.id} className="min-h-[100px] align-top">
+                    <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
+                      <Textarea
+                        value={row.keyNo}
+                        onChange={(e) => handleScheduleChange(row.id, 'keyNo', e.target.value)}
+                        className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[100px]"
+                      />
+                    </TableCell>
+                    <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
+                      <Textarea
+                        value={row.publication}
+                        onChange={(e) => handleScheduleChange(row.id, 'publication', e.target.value)}
+                        className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[100px]"
+                      />
+                    </TableCell>
+                    <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
+                      <Textarea
+                        value={row.edition}
+                        onChange={(e) => handleScheduleChange(row.id, 'edition', e.target.value)}
+                        className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[100px]"
+                      />
+                    </TableCell>
+                    <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
+                      <Textarea
+                        value={row.size}
+                        onChange={(e) => handleScheduleChange(row.id, 'size', e.target.value)}
+                        className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[100px]"
+                      />
+                    </TableCell>
+                    <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
+                      <Textarea
+                        value={row.scheduledDate}
+                        onChange={(e) => handleScheduleChange(row.id, 'scheduledDate', e.target.value)}
+                        className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[100px]"
+                      />
+                    </TableCell>
+                    <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
+                      <Textarea
+                        value={row.position}
+                        onChange={(e) => handleScheduleChange(row.id, 'position', e.target.value)}
+                        className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[100px]"
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <div className="flex gap-2 mt-2 no-print">
+              <Button variant="outline" size="sm" onClick={addRow}>
+                <PlusCircle className="mr-2 h-4 w-4" /> Add Row
+              </Button>
+              <Button variant="destructive" size="sm" onClick={deleteRow} disabled={scheduleRows.length <= 1}>
+                <Trash2 className="mr-2 h-4 w-4" /> Delete Last Row
+              </Button>
+            </div>
+          </div>
+
+          {/* Matter Section */}
+          <div className="matter-box flex h-[100px] print-border-heavy rounded mb-5 overflow-hidden border-2 border-black">
+            {/* Vertical Text Label */}
+            <div className="vertical-label bg-black text-white flex items-center justify-center p-1 w-6 flex-shrink-0">
+              <span className="text-sm font-bold whitespace-nowrap matter-text-print">
+                MATTER
+              </span>
+            </div>
+            <div className="matter-content flex-1 p-1">
+              <Textarea
+                id="matterArea"
+                placeholder="Enter matter here..."
+                className="w-full h-full resize-none border-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none p-1 align-top"
+                value={matter}
+                onChange={(e) => setMatter(e.target.value)}
+              />
+            </div>
+          </div>
+
+
+          {/* Billing Info */}
+          <div className="billing-address-box print-border rounded p-2 mb-5 border border-black">
+            <p className="font-bold mb-1 billing-title-underline text-sm">Forward all bills with relevant voucher copies to:</p>
+            <p className="text-xs leading-tight pt-1">
+              D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
+              Alaknanda Commercial Complex,<br />
+              New Delhi-110019<br />
+              Tel: 49573333, 34, 35, 36<br />
+              Fax: 26028101
+            </p>
+          </div>
+
+          {/* Notes & Stamp Container */}
+          <div className="notes-stamp-container relative print-border rounded p-2 border border-black min-h-[90px]">
+            {/* Notes Section */}
+            <div className="notes-content flex-1 pr-[110px]"> {/* Ensure space for stamp */}
+              <p className="font-bold mb-1 note-title-underline text-sm">Note:</p>
+              <ol className="list-decimal list-inside text-xs space-y-0.5 pt-1 pl-3">
+                <li>Space reserved vide our letter No.</li>
+                <li>No two advertisements of the same client should appear in the same issue.</li>
+                <li>Please quote R.O. No. in all your bills and letters.</li>
+                <li>Please send two voucher copies of good reproduction within 3 days of publishing.</li>
+              </ol>
+            </div>
+
+            {/* Stamp Area - Interactive Container (Screen Only) */}
+            <div
+              id="stampContainerElement"
+              className="stamp-container-interactive absolute top-1 right-1 w-[100px] h-[80px] flex items-center justify-center cursor-pointer overflow-hidden group no-print"
+              onClick={triggerStampUpload}
+              onMouseEnter={triggerStampUpload}
+            >
+              <Input
+                type="file"
+                ref={stampFileRef}
+                accept="image/*"
+                onChange={handleStampUpload}
+                className="hidden"
+                id="stampFile"
+              />
+              {stampPreview ? (
+                <div className="relative w-full h-full flex items-center justify-center">
+                  <Image
+                    id="stampPreviewScreen"
+                    src={stampPreview}
+                    alt="Stamp Preview"
+                    width={100}
+                    height={80}
+                    style={{ objectFit: 'contain' }}
+                    className="block max-w-full max-h-full"
+                  />
+                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="text-white text-[10px] font-bold text-center leading-tight">Click/Hover<br />to Change</span>
+                  </div>
                 </div>
-
-               {/* Matter Section */}
-               <div className="matter-box flex h-[100px] print-border-heavy rounded mb-5 overflow-hidden border-2 border-black">
-                    {/* Vertical Text Label */}
-                    <div className="vertical-label bg-black text-white flex items-center justify-center p-1 w-6 flex-shrink-0">
-                        <span className="text-sm font-bold whitespace-nowrap matter-text-print">
-                            MATTER
-                        </span>
-                    </div>
-                   <div className="matter-content flex-1 p-1">
-                       <Textarea
-                           id="matterArea"
-                           placeholder="Enter matter here..."
-                           className="w-full h-full resize-none border-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none p-1 align-top"
-                           value={matter}
-                           onChange={(e) => setMatter(e.target.value)}
-                       />
-                   </div>
-               </div>
-
-
-               {/* Billing Info */}
-               <div className="billing-address-box print-border rounded p-2 mb-5 border border-black">
-                   <p className="font-bold mb-1 billing-title-underline text-sm">Forward all bills with relevant voucher copies to:</p>
-                   <p className="text-xs leading-tight pt-1">
-                       D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
-                       Alaknanda Commercial Complex,<br />
-                       New Delhi-110019<br />
-                       Tel: 49573333, 34, 35, 36<br />
-                       Fax: 26028101
-                   </p>
-               </div>
-
-               {/* Notes & Stamp Container */}
-               <div className="notes-stamp-container relative print-border rounded p-2 border border-black min-h-[90px]">
-                   {/* Notes Section */}
-                   <div className="notes-content flex-1 pr-[110px]"> {/* Ensure space for stamp */}
-                       <p className="font-bold mb-1 note-title-underline text-sm">Note:</p>
-                       <ol className="list-decimal list-inside text-xs space-y-0.5 pt-1 pl-3">
-                           <li>Space reserved vide our letter No.</li>
-                           <li>No two advertisements of the same client should appear in the same issue.</li>
-                           <li>Please quote R.O. No. in all your bills and letters.</li>
-                           <li>Please send two voucher copies of good reproduction within 3 days of publishing.</li>
-                       </ol>
-                   </div>
-
-                   {/* Stamp Area - Interactive Container (Screen Only) */}
-                   <div
-                       id="stampContainerElement"
-                       className="stamp-container-interactive absolute top-1 right-1 w-[100px] h-[80px] flex items-center justify-center cursor-pointer overflow-hidden group no-print"
-                       onClick={triggerStampUpload}
-                       onMouseEnter={triggerStampUpload}
-                   >
-                       <Input
-                           type="file"
-                           ref={stampFileRef}
-                           accept="image/*"
-                           onChange={handleStampUpload}
-                           className="hidden"
-                           id="stampFile"
-                       />
-                       {stampPreview ? (
-                           <div className="relative w-full h-full flex items-center justify-center">
-                               <Image
-                                   id="stampPreviewScreen"
-                                   src={stampPreview}
-                                   alt="Stamp Preview"
-                                   width={100}
-                                   height={80}
-                                   style={{ objectFit: 'contain' }}
-                                   className="block max-w-full max-h-full"
-                               />
-                               <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                   <span className="text-white text-[10px] font-bold text-center leading-tight">Click/Hover<br/>to Change</span>
-                               </div>
-                           </div>
-                       ) : (
-                           <Label htmlFor="stampFile" className="text-center text-[10px] text-muted-foreground cursor-pointer p-1 group-hover:opacity-75 transition-opacity leading-tight">
-                               Click or Hover<br /> to Upload Stamp
-                           </Label>
-                       )}
-                   </div>
-                   {/* Visible Stamp Image for Print/PDF Only */}
-                   {stampPreview && (
-                       <div className="stamp-container-print absolute top-[2pt] right-[2pt] w-[100px] h-[80px] hidden print-only-flex pdf-only-flex items-center justify-center border-none overflow-hidden">
-                           <Image
-                               src={stampPreview}
-                               alt="Stamp"
-                               width={100}
-                               height={80}
-                               style={{ objectFit: 'contain' }}
-                               className="stamp-print-image max-w-full max-h-full"
-                           />
-                       </div>
-                   )}
-               </div>
-           </CardContent>
-       </Card>
-   </div>
-);
+              ) : (
+                <Label htmlFor="stampFile" className="text-center text-[10px] text-muted-foreground cursor-pointer p-1 group-hover:opacity-75 transition-opacity leading-tight">
+                  Click or Hover<br /> to Upload Stamp
+                </Label>
+              )}
+            </div>
+            {/* Visible Stamp Image for Print/PDF Only */}
+            {stampPreview && (
+              <div className="stamp-container-print absolute top-[2pt] right-[2pt] w-[100px] h-[80px] hidden print-only-flex pdf-only-flex items-center justify-center border-none overflow-hidden">
+                <Image
+                  src={stampPreview}
+                  alt="Stamp"
+                  width={100}
+                  height={80}
+                  style={{ objectFit: 'contain' }}
+                  className="stamp-print-image max-w-full max-h-full"
+                />
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
