@@ -504,7 +504,7 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.8); /* Dim background */
+  background-color: rgba(0, 0, 0, 0.8) !important; /* Dim background */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -698,4 +698,11 @@ body {
 input[type="text"],
 textarea {
     color: black !important;
+}
+
+/* Correct placement for fullscreen preview button */
+.button-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem; /* Consistent margin below button */
 }

@@ -582,7 +582,7 @@ export default function AdOrderForm() {
       )}
 
       {/* Action Buttons - Visible normally */}
-      <div className="flex justify-end gap-2 mb-4 no-print">
+      <div className="flex justify-end gap-2 mb-4 button-container no-print">
          <Button onClick={handleFullScreenPreview} variant="outline">
              <Expand className="mr-2 h-4 w-4" /> Full Display
          </Button>
