@@ -69,6 +69,7 @@ export default function AdOrderForm() {
   const [advertisementManagerLine2, setAdvertisementManagerLine2] = useState('');
   const [isClient, setIsClient] = useState(false);
   const [displayDate, setDisplayDate] = useState<string>('');
+  const [isFullScreenPreview, setIsFullScreenPreview] = useState(false); // State for fullscreen preview
 
 
   // --- Ref Hooks ---
@@ -217,6 +218,19 @@ export default function AdOrderForm() {
     };
   }, [caption, packageName, matter, scheduleRows, stampPreview, roNumber, orderDate, clientName, advertisementManagerLine1, advertisementManagerLine2, isClient]);
 
+  // Effect to handle body class for fullscreen preview
+  useEffect(() => {
+    if (isFullScreenPreview) {
+      document.body.classList.add('fullscreen-preview-mode');
+    } else {
+      document.body.classList.remove('fullscreen-preview-mode');
+    }
+    // Cleanup function
+    return () => {
+      document.body.classList.remove('fullscreen-preview-mode');
+    };
+  }, [isFullScreenPreview]);
+
 
   // --- Callback Hooks ---
   const addRow = useCallback(() => {
@@ -309,23 +323,269 @@ export default function AdOrderForm() {
     }
   }, [toast]);
 
-   // Function to trigger browser's print dialog
-   const handlePrint = useCallback(() => {
-     window.print();
+   // Function to enter fullscreen preview
+   const handleFullScreenPreview = useCallback(() => {
+     setIsFullScreenPreview(true);
    }, []);
 
+   // Function to exit fullscreen preview
+   const handleExitFullScreenPreview = useCallback(() => {
+       setIsFullScreenPreview(false);
+   }, []);
+
+   // Function to trigger browser's print dialog
+   const handlePrint = useCallback(() => {
+      // Ensure fullscreen mode is exited before printing
+      handleExitFullScreenPreview();
+      // Add a slight delay to allow DOM to update before printing
+      setTimeout(() => {
+         window.print();
+      }, 100);
+   }, [handleExitFullScreenPreview]);
 
    const safeDisplayDate = isClient && orderDate && !isNaN(orderDate.getTime()) ? displayDate : 'Loading...';
 
 
   // --- Main Render ---
   return (
-    <div className={cn("max-w-[210mm] mx-auto font-bold")}>
+    <div className={cn("max-w-[210mm] mx-auto font-bold", isFullScreenPreview ? 'fullscreen-container' : '')}>
+      {/* Fullscreen Preview Mode */}
+      {isFullScreenPreview && (
+          <div className="fullscreen-overlay">
+              <div className="fullscreen-content-wrapper">
+                  {/* Close Button for Fullscreen */}
+                   <Button
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-4 right-4 z-50 print-hidden"
+                      onClick={handleExitFullScreenPreview}
+                   >
+                       <X className="h-4 w-4" />
+                       <span className="sr-only">Close Preview</span>
+                   </Button>
+                   {/* Print Button within Fullscreen */}
+                  <Button
+                     variant="outline"
+                     className="absolute top-4 left-4 z-50 print-hidden"
+                     onClick={handlePrint}
+                   >
+                     <Printer className="mr-2 h-4 w-4" /> Print
+                   </Button>
+
+
+                  {/* Render the printable area inside the fullscreen overlay */}
+                  <Card
+                      id="printable-area"
+                      ref={printableAreaRef}
+                      className="w-full print-border-heavy rounded-none shadow-none p-5 border-2 border-black bg-white overflow-auto" // Added overflow-auto
+                      style={{ height: 'calc(100vh - 4rem)' }} // Example height, adjust as needed
+                  >
+                      {/* Content identical to the normal view */}
+                     <CardContent className="p-0 card-content-print-fix card-content-pdf-fix">
+                        {/* Header */}
+                        <div className="text-center bg-black text-white p-1 mb-5 header-title">
+                          <h1 className="text-xl m-0 font-bold">RELEASE ORDER</h1>
+                        </div>
+
+                        {/* Advertisement Manager Section */}
+                         <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
+                           <Label className="block mb-1 text-sm">The Advertisement Manager</Label>
+                           <div className="relative mb-0.5">
+                             <Input
+                               id="adManager1"
+                               type="text"
+                               placeholder="Line 1"
+                               className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                               value={advertisementManagerLine1}
+                               onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
+                               readOnly // Make inputs read-only in preview
+                             />
+                           </div>
+                           <div className="relative">
+                             <Input
+                               id="adManager2"
+                               type="text"
+                               placeholder="Line 2"
+                               className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                               value={advertisementManagerLine2}
+                               onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
+                               readOnly // Make inputs read-only in preview
+                             />
+                           </div>
+                           <p className="text-xs mt-1">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
+                         </div>
+
+
+                       {/* Heading & Package Section */}
+                       <div className="heading-package-container flex gap-3 mb-5">
+                         <div className="heading-caption-box flex-1 print-border-heavy rounded p-2 border-2 border-black">
+                           <Label htmlFor="captionPreview" className="block mb-1 text-sm">Heading/Caption:</Label>
+                           {/* Display value instead of input */}
+                           <p id="captionPreview" className="w-full px-1 py-0.5 text-sm font-bold min-h-[1.5em] border-b border-black">{caption || <span className="text-muted-foreground italic">Not entered</span>}</p>
+                         </div>
+                         <div className="package-box w-[30%] print-border-heavy rounded p-2 border-2 border-black">
+                           <Label htmlFor="packagePreview" className="block mb-1 text-sm">Package:</Label>
+                            {/* Display value instead of input */}
+                            <p id="packagePreview" className="w-full px-1 py-0.5 text-sm font-bold min-h-[1.5em] border-b border-black">{packageName || <span className="text-muted-foreground italic">Not entered</span>}</p>
+                         </div>
+                       </div>
+
+
+                       {/* Address Boxes Container */}
+                       <div className="address-container flex justify-between gap-3 mb-5">
+                         {/* Left Address Box */}
+                         <div className="address-box w-[48%] print-border-heavy rounded p-2 border-2 border-black">
+                           <p className="text-xs leading-tight">
+                             Lehar Advertising Agency Pvt. Ltd.<br />
+                             D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
+                             Alaknanda Commercial Complex,<br />
+                             New Delhi-110019<br />
+                             Tel: 49573333, 34, 35, 36<br />
+                             Fax: 26028101
+                           </p>
+                         </div>
+                          {/* Right Box: R.O., Date, Client */}
+                           <div className="ro-date-client-container w-[48%] print-border-heavy rounded p-2 space-y-1 border-2 border-black">
+                             {/* R.O. No. LN */}
+                             <div className="field-row flex items-center">
+                               <Label className="w-auto text-sm shrink-0 mr-1">R.O.No.LN:</Label>
+                               <p className="flex-1 h-6 px-1 py-0.5 text-sm font-bold border-b border-black">{roNumber || <span className="text-muted-foreground italic">Not entered</span>}</p>
+                             </div>
+                             {/* Date */}
+                             <div className="field-row flex items-center">
+                               <Label className="w-auto text-sm shrink-0 mr-1">Date:</Label>
+                               <p className="flex-1 h-6 px-1 py-0.5 text-sm font-bold border-b border-black text-center">{safeDisplayDate}</p>
+                             </div>
+                             {/* Client */}
+                             <div className="field-row flex items-center">
+                               <Label className="w-auto text-sm shrink-0 mr-1">Client:</Label>
+                               <p className="flex-1 h-6 px-1 py-0.5 text-sm font-bold border-b border-black">{clientName || <span className="text-muted-foreground italic">Not entered</span>}</p>
+                             </div>
+                           </div>
+                       </div>
+
+
+
+                        {/* Schedule Table */}
+                        <div className="mb-5 table-container-print">
+                          <Table className="print-table print-border border border-black">
+                            <TableHeader className="bg-secondary print-table-header">
+                              <TableRow>
+                                <TableHead className="w-[10%] print-border-thin border border-black p-1.5 text-sm font-bold">Key No.</TableHead>
+                                <TableHead className="w-[25%] print-border-thin border border-black p-1.5 text-sm font-bold">Publication(s)</TableHead>
+                                <TableHead className="w-[15%] print-border-thin border border-black p-1.5 text-sm font-bold">Edition(s)</TableHead>
+                                <TableHead className="w-[15%] print-border-thin border border-black p-1.5 text-sm font-bold">Size</TableHead>
+                                <TableHead className="w-[20%] print-border-thin border border-black p-1.5 text-sm font-bold">Scheduled Date(s)</TableHead>
+                                <TableHead className="w-[15%] print-border-thin border border-black p-1.5 text-sm font-bold">Position</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                             <TableBody>
+                               {scheduleRows.map((row) => (
+                                 <TableRow key={row.id + '-preview'} className="min-h-[100px] align-top">
+                                   <TableCell className="print-border-thin border border-black p-1 print-table-cell align-top">
+                                     <div className="w-full h-full text-xs font-bold align-top whitespace-pre-wrap break-words min-h-[100px]">
+                                       {row.keyNo}
+                                     </div>
+                                   </TableCell>
+                                   <TableCell className="print-border-thin border border-black p-1 print-table-cell align-top">
+                                     <div className="w-full h-full text-xs font-bold align-top whitespace-pre-wrap break-words min-h-[100px]">
+                                       {row.publication}
+                                     </div>
+                                   </TableCell>
+                                   <TableCell className="print-border-thin border border-black p-1 print-table-cell align-top">
+                                     <div className="w-full h-full text-xs font-bold align-top whitespace-pre-wrap break-words min-h-[100px]">
+                                       {row.edition}
+                                     </div>
+                                   </TableCell>
+                                   <TableCell className="print-border-thin border border-black p-1 print-table-cell align-top">
+                                     <div className="w-full h-full text-xs font-bold align-top whitespace-pre-wrap break-words min-h-[100px]">
+                                       {row.size}
+                                     </div>
+                                   </TableCell>
+                                   <TableCell className="print-border-thin border border-black p-1 print-table-cell align-top">
+                                     <div className="w-full h-full text-xs font-bold align-top whitespace-pre-wrap break-words min-h-[100px]">
+                                       {row.scheduledDate}
+                                     </div>
+                                   </TableCell>
+                                   <TableCell className="print-border-thin border border-black p-1 print-table-cell align-top">
+                                     <div className="w-full h-full text-xs font-bold align-top whitespace-pre-wrap break-words min-h-[100px]">
+                                       {row.position}
+                                     </div>
+                                   </TableCell>
+                                 </TableRow>
+                               ))}
+                             </TableBody>
+                          </Table>
+                        </div>
+
+                        {/* Matter Section */}
+                         <div className="matter-box flex h-[100px] print-border-heavy rounded mb-5 overflow-hidden border-2 border-black">
+                           {/* Vertical Text Label */}
+                           <div className="vertical-label bg-black text-white flex items-center justify-center p-1 w-6 flex-shrink-0">
+                             <span className="text-sm font-bold whitespace-nowrap matter-text-print">
+                               MATTER
+                             </span>
+                           </div>
+                           {/* Display matter content */}
+                           <div className="matter-content flex-1 p-1 overflow-auto">
+                              <div className="whitespace-pre-wrap break-words text-sm font-bold h-full">
+                                  {matter}
+                              </div>
+                           </div>
+                         </div>
+
+
+                        {/* Billing Info */}
+                        <div className="billing-address-box print-border rounded p-2 mb-5 border border-black">
+                           <p className="font-bold mb-1 billing-title-underline text-sm">Forward all bills with relevant voucher copies to:</p>
+                           <p className="text-xs leading-tight pt-1">
+                             D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
+                             Alaknanda Commercial Complex,<br />
+                             New Delhi-110019<br />
+                             Tel: 49573333, 34, 35, 36<br />
+                             Fax: 26028101
+                           </p>
+                         </div>
+
+
+                         {/* Notes & Stamp Container */}
+                          <div className="notes-stamp-container relative print-border rounded p-2 border border-black min-h-[90px]">
+                            {/* Notes Section */}
+                             <div className="notes-content flex-1 pr-[110px]"> {/* Ensure space for stamp */}
+                               <p className="font-bold mb-1 note-title-underline text-sm">Note:</p>
+                               <ol className="list-decimal list-inside text-xs space-y-0.5 pt-1 pl-3">
+                                 <li>Space reserved vide our letter No.</li>
+                                 <li>No two advertisements of the same client should appear in the same issue.</li>
+                                 <li>Please quote R.O. No. in all your bills and letters.</li>
+                                 <li>Please send two voucher copies of good reproduction within 3 days of publishing.</li>
+                               </ol>
+                             </div>
+
+                             {/* Visible Stamp Image for Print/PDF Only */}
+                             {stampPreview && (
+                               <div className="stamp-container-print absolute top-[2pt] right-[2pt] w-[100px] h-[80px] flex items-center justify-center border-none overflow-hidden">
+                                 <Image
+                                   src={stampPreview}
+                                   alt="Stamp"
+                                   width={100}
+                                   height={80}
+                                   style={{ objectFit: 'contain' }}
+                                   className="stamp-print-image max-w-full max-h-full"
+                                 />
+                               </div>
+                             )}
+                          </div>
+                      </CardContent>
+                  </Card>
+              </div>
+          </div>
+      )}
+
       {/* Action Buttons - Visible normally */}
       <div className="flex justify-end gap-2 mb-4 no-print">
-        <Button onClick={handlePrint} variant="outline">
-          <Printer className="mr-2 h-4 w-4" /> Print Order
-        </Button>
+         <Button onClick={handleFullScreenPreview} variant="outline">
+             <Expand className="mr-2 h-4 w-4" /> Full Display
+         </Button>
         <Button onClick={handleClearForm} variant="destructive">
           <Eraser className="mr-2 h-4 w-4" /> Clear Form & Draft
         </Button>
@@ -333,7 +593,7 @@ export default function AdOrderForm() {
 
 
       {/* Use the ref on the actual printable area */}
-      <Card id="printable-area" ref={printableAreaRef} className="w-full print-border-heavy rounded-none shadow-none p-5 border-2 border-black bg-white">
+      <Card id="printable-area-form" ref={formRef} className="w-full print-border-heavy rounded-none shadow-none p-5 border-2 border-black bg-white">
         {/* Use correct class for CardContent */}
         <CardContent className="p-0 card-content-print-fix card-content-pdf-fix">
           {/* Header */}
@@ -341,31 +601,32 @@ export default function AdOrderForm() {
             <h1 className="text-xl m-0 font-bold">RELEASE ORDER</h1>
           </div>
 
-          {/* Advertisement Manager Section */}
-          <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
-            <Label className="block mb-1 text-sm">The Advertisement Manager</Label>
-            <div className="relative mb-0.5">
-              <Input
-                id="adManager1"
-                type="text"
-                placeholder="Line 1"
-                className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                value={advertisementManagerLine1}
-                onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
-              />
-            </div>
-            <div className="relative">
-              <Input
-                id="adManager2"
-                type="text"
-                placeholder="Line 2"
-                className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                value={advertisementManagerLine2}
-                onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
-              />
-            </div>
-            <p className="text-xs mt-1">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
-          </div>
+           {/* Advertisement Manager Section */}
+           <div className="advertisement-manager-section print-border rounded p-2 mb-5 border border-black">
+             <Label className="block mb-1 text-sm">The Advertisement Manager</Label>
+             <div className="relative mb-0.5">
+               <Input
+                 id="adManager1"
+                 type="text"
+                 placeholder="Line 1"
+                 className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                 value={advertisementManagerLine1}
+                 onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
+               />
+             </div>
+             <div className="relative">
+               <Input
+                 id="adManager2"
+                 type="text"
+                 placeholder="Line 2"
+                 className="w-full border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                 value={advertisementManagerLine2}
+                 onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
+               />
+             </div>
+             <p className="text-xs mt-1">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
+           </div>
+
 
           {/* Heading & Package Section */}
           <div className="heading-package-container flex gap-3 mb-5">
@@ -407,87 +668,87 @@ export default function AdOrderForm() {
               </p>
             </div>
             {/* Right Box: R.O., Date, Client */}
-            <div className="ro-date-client-container w-[48%] print-border-heavy rounded p-2 space-y-1 border-2 border-black">
-              {/* R.O. No. LN */}
-              <div className="field-row flex items-center">
-                <Label htmlFor="roNumber" className="w-auto text-sm shrink-0 mr-1">R.O.No.LN:</Label>
-                <Input
-                  id="roNumber"
-                  type="text"
-                  placeholder="Enter R.O. No."
-                  className="flex-1 h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
-                  value={roNumber}
-                  onChange={(e) => setRoNumber(e.target.value)}
-                />
-              </div>
-              {/* Date */}
-              <div className="field-row flex items-center popover-trigger-container">
-                <Label htmlFor="orderDateTrigger" className="w-auto text-sm shrink-0 mr-1">Date:</Label>
-                <div className={cn(
-                  "flex-1 justify-center text-center font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm shadow-none items-center flex",
-                  !safeDisplayDate && "text-muted-foreground"
-                )}>
-                  <span id="orderDateDisplay" className="flex-1">{safeDisplayDate}</span>
-                  {isClient ? (
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant={"ghost"}
-                          className={cn(
-                            "h-6 w-6 p-0 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print ml-1",
-                          )}
-                          id="orderDateTrigger"
-                        >
-                          <CalendarIcon className="h-4 w-4" />
-                          <span className="sr-only">Pick a date</span>
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 no-print">
-                        <Calendar
-                          mode="single"
-                          selected={orderDate}
-                          onSelect={(date) => {
-                            if (date instanceof Date && !isNaN(date.getTime())) {
-                              setOrderDate(date);
-                            } else if (date === undefined) {
-                              // Keep existing date if undefined is selected (or set to today if needed)
-                              // const today = new Date();
-                              // setOrderDate(today);
-                            }
-                          }}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  ) : (
-                    <Button
-                      variant={"ghost"}
-                      className={cn(
-                        "h-6 w-6 p-0 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print ml-1",
-                        "text-muted-foreground"
-                      )}
-                      disabled
-                    >
-                      <CalendarIcon className="h-4 w-4" />
-                      <span className="sr-only">Loading date picker...</span>
-                    </Button>
-                  )}
-                </div>
-              </div>
+             <div className="ro-date-client-container w-[48%] print-border-heavy rounded p-2 space-y-1 border-2 border-black">
+               {/* R.O. No. LN */}
+               <div className="field-row flex items-center">
+                 <Label htmlFor="roNumber" className="w-auto text-sm shrink-0 mr-1">R.O.No.LN:</Label>
+                 <Input
+                   id="roNumber"
+                   type="text"
+                   placeholder="Enter R.O. No."
+                   className="flex-1 h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
+                   value={roNumber}
+                   onChange={(e) => setRoNumber(e.target.value)}
+                 />
+               </div>
+               {/* Date */}
+               <div className="field-row flex items-center popover-trigger-container">
+                 <Label htmlFor="orderDateTrigger" className="w-auto text-sm shrink-0 mr-1">Date:</Label>
+                 <div className={cn(
+                   "flex-1 justify-center text-center font-bold h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm shadow-none items-center flex",
+                   !safeDisplayDate && "text-muted-foreground"
+                 )}>
+                   <span id="orderDateDisplay" className="flex-1">{safeDisplayDate}</span>
+                   {isClient ? (
+                     <Popover>
+                       <PopoverTrigger asChild>
+                         <Button
+                           variant={"ghost"}
+                           className={cn(
+                             "h-6 w-6 p-0 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print ml-1",
+                           )}
+                           id="orderDateTrigger"
+                         >
+                           <CalendarIcon className="h-4 w-4" />
+                           <span className="sr-only">Pick a date</span>
+                         </Button>
+                       </PopoverTrigger>
+                       <PopoverContent className="w-auto p-0 no-print">
+                         <Calendar
+                           mode="single"
+                           selected={orderDate}
+                           onSelect={(date) => {
+                             if (date instanceof Date && !isNaN(date.getTime())) {
+                               setOrderDate(date);
+                             } else if (date === undefined) {
+                               // Keep existing date if undefined is selected (or set to today if needed)
+                               // const today = new Date();
+                               // setOrderDate(today);
+                             }
+                           }}
+                           initialFocus
+                         />
+                       </PopoverContent>
+                     </Popover>
+                   ) : (
+                     <Button
+                       variant={"ghost"}
+                       className={cn(
+                         "h-6 w-6 p-0 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print ml-1",
+                         "text-muted-foreground"
+                       )}
+                       disabled
+                     >
+                       <CalendarIcon className="h-4 w-4" />
+                       <span className="sr-only">Loading date picker...</span>
+                     </Button>
+                   )}
+                 </div>
+               </div>
 
-              {/* Client */}
-              <div className="field-row flex items-center">
-                <Label htmlFor="clientName" className="w-auto text-sm shrink-0 mr-1">Client:</Label>
-                <Input
-                  id="clientName"
-                  type="text"
-                  placeholder="Enter Client Name"
-                  className="flex-1 h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
-                  value={clientName}
-                  onChange={(e) => setClientName(e.target.value)}
-                />
-              </div>
-            </div>
+               {/* Client */}
+               <div className="field-row flex items-center">
+                 <Label htmlFor="clientName" className="w-auto text-sm shrink-0 mr-1">Client:</Label>
+                 <Input
+                   id="clientName"
+                   type="text"
+                   placeholder="Enter Client Name"
+                   className="flex-1 h-6 border-0 border-b border-black rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
+                   value={clientName}
+                   onChange={(e) => setClientName(e.target.value)}
+                 />
+               </div>
+             </div>
           </div>
 
 
@@ -586,79 +847,80 @@ export default function AdOrderForm() {
 
           {/* Billing Info */}
           <div className="billing-address-box print-border rounded p-2 mb-5 border border-black">
-            <p className="font-bold mb-1 billing-title-underline text-sm">Forward all bills with relevant voucher copies to:</p>
-            <p className="text-xs leading-tight pt-1">
-              D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
-              Alaknanda Commercial Complex,<br />
-              New Delhi-110019<br />
-              Tel: 49573333, 34, 35, 36<br />
-              Fax: 26028101
-            </p>
-          </div>
+             <p className="font-bold mb-1 billing-title-underline text-sm">Forward all bills with relevant voucher copies to:</p>
+             <p className="text-xs leading-tight pt-1">
+               D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
+               Alaknanda Commercial Complex,<br />
+               New Delhi-110019<br />
+               Tel: 49573333, 34, 35, 36<br />
+               Fax: 26028101
+             </p>
+           </div>
 
-          {/* Notes & Stamp Container */}
-          <div className="notes-stamp-container relative print-border rounded p-2 border border-black min-h-[90px]">
-            {/* Notes Section */}
-            <div className="notes-content flex-1 pr-[110px]"> {/* Ensure space for stamp */}
-              <p className="font-bold mb-1 note-title-underline text-sm">Note:</p>
-              <ol className="list-decimal list-inside text-xs space-y-0.5 pt-1 pl-3">
-                <li>Space reserved vide our letter No.</li>
-                <li>No two advertisements of the same client should appear in the same issue.</li>
-                <li>Please quote R.O. No. in all your bills and letters.</li>
-                <li>Please send two voucher copies of good reproduction within 3 days of publishing.</li>
-              </ol>
-            </div>
 
-            {/* Stamp Area - Interactive Container (Screen Only) */}
-            <div
-              id="stampContainerElement"
-              className="stamp-container-interactive absolute top-1 right-1 w-[100px] h-[80px] flex items-center justify-center cursor-pointer overflow-hidden group no-print"
-              onClick={triggerStampUpload}
-              onMouseEnter={triggerStampUpload}
-            >
-              <Input
-                type="file"
-                ref={stampFileRef}
-                accept="image/*"
-                onChange={handleStampUpload}
-                className="hidden"
-                id="stampFile"
-              />
-              {stampPreview ? (
-                <div className="relative w-full h-full flex items-center justify-center">
+           {/* Notes & Stamp Container */}
+            <div className="notes-stamp-container relative print-border rounded p-2 border border-black min-h-[90px]">
+              {/* Notes Section */}
+               <div className="notes-content flex-1 pr-[110px]"> {/* Ensure space for stamp */}
+                 <p className="font-bold mb-1 note-title-underline text-sm">Note:</p>
+                 <ol className="list-decimal list-inside text-xs space-y-0.5 pt-1 pl-3">
+                   <li>Space reserved vide our letter No.</li>
+                   <li>No two advertisements of the same client should appear in the same issue.</li>
+                   <li>Please quote R.O. No. in all your bills and letters.</li>
+                   <li>Please send two voucher copies of good reproduction within 3 days of publishing.</li>
+                 </ol>
+               </div>
+
+              {/* Stamp Area - Interactive Container (Screen Only) */}
+              <div
+                id="stampContainerElement"
+                className="stamp-container-interactive absolute top-1 right-1 w-[100px] h-[80px] flex items-center justify-center cursor-pointer overflow-hidden group no-print"
+                onClick={triggerStampUpload}
+                onMouseEnter={triggerStampUpload}
+              >
+                <Input
+                  type="file"
+                  ref={stampFileRef}
+                  accept="image/*"
+                  onChange={handleStampUpload}
+                  className="hidden"
+                  id="stampFile"
+                />
+                {stampPreview ? (
+                  <div className="relative w-full h-full flex items-center justify-center">
+                    <Image
+                      id="stampPreviewScreen"
+                      src={stampPreview}
+                      alt="Stamp Preview"
+                      width={100}
+                      height={80}
+                      style={{ objectFit: 'contain' }}
+                      className="block max-w-full max-h-full"
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="text-white text-[10px] font-bold text-center leading-tight">Click/Hover<br />to Change</span>
+                    </div>
+                  </div>
+                ) : (
+                  <Label htmlFor="stampFile" className="text-center text-[10px] text-muted-foreground cursor-pointer p-1 group-hover:opacity-75 transition-opacity leading-tight">
+                    Click or Hover<br /> to Upload Stamp
+                  </Label>
+                )}
+              </div>
+              {/* Visible Stamp Image for Print/PDF Only */}
+              {stampPreview && (
+                <div className="stamp-container-print absolute top-[2pt] right-[2pt] w-[100px] h-[80px] hidden print-only-flex pdf-only-flex items-center justify-center border-none overflow-hidden">
                   <Image
-                    id="stampPreviewScreen"
                     src={stampPreview}
-                    alt="Stamp Preview"
+                    alt="Stamp"
                     width={100}
                     height={80}
                     style={{ objectFit: 'contain' }}
-                    className="block max-w-full max-h-full"
+                    className="stamp-print-image max-w-full max-h-full"
                   />
-                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="text-white text-[10px] font-bold text-center leading-tight">Click/Hover<br />to Change</span>
-                  </div>
                 </div>
-              ) : (
-                <Label htmlFor="stampFile" className="text-center text-[10px] text-muted-foreground cursor-pointer p-1 group-hover:opacity-75 transition-opacity leading-tight">
-                  Click or Hover<br /> to Upload Stamp
-                </Label>
               )}
             </div>
-            {/* Visible Stamp Image for Print/PDF Only */}
-            {stampPreview && (
-              <div className="stamp-container-print absolute top-[2pt] right-[2pt] w-[100px] h-[80px] hidden print-only-flex pdf-only-flex items-center justify-center border-none overflow-hidden">
-                <Image
-                  src={stampPreview}
-                  alt="Stamp"
-                  width={100}
-                  height={80}
-                  style={{ objectFit: 'contain' }}
-                  className="stamp-print-image max-w-full max-h-full"
-                />
-              </div>
-            )}
-          </div>
         </CardContent>
       </Card>
     </div>
