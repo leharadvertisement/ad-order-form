@@ -8,10 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { DatePicker } from '@/components/ui/date-picker';
-// import { Card, CardContent } from '@/components/ui/card'; // Not used
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Image from 'next/image';
-import { Printer, PlusSquare, MinusSquare, Eye, Expand, Download } from 'lucide-react'; 
+import { Printer, PlusSquare, MinusSquare, Eye, Expand, Download, Save, FileText, Trash2, Copy } from 'lucide-react'; 
 import { format } from 'date-fns';
 
 const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://picsum.photos/178/98?random&data-ai-hint=signature+placeholder';
@@ -64,11 +63,11 @@ const AdOrderForm: FC = () => {
       textarea.style.height = 'auto';
       const computedStyle = typeof window !== 'undefined' ? getComputedStyle(textarea) : null;
       
-      let minHeightScreen = 120; // Default min height for table textareas on screen
+      let minHeightScreen = 120; 
       if (textarea.id === 'matterTextarea') {
-        minHeightScreen = 100; // Default min height for matter textarea on screen
+        minHeightScreen = 100; 
       }
-      // Use min-height from CSS if it's larger
+      
       minHeightScreen = computedStyle ? Math.max(parseFloat(computedStyle.minHeight) || 0, minHeightScreen) : minHeightScreen;
 
       const isPrintingOrPdfContext = typeof window !== 'undefined' &&
@@ -81,7 +80,6 @@ const AdOrderForm: FC = () => {
       
       if (isPrintingOrPdfContext) {
         if (document.body.classList.contains('pdf-export-active')) {
-            // PDF Export specific sizing (uses CSS variables)
             const pdfMinHeightVar = textarea.classList.contains('print-textarea') ? '--pdf-table-textarea-min-height' : '--pdf-matter-textarea-min-height';
             const pdfMaxHeightVar = textarea.classList.contains('print-textarea') ? '--pdf-table-textarea-max-height' : '--pdf-matter-textarea-max-height';
             const pdfMinHeight = parseFloat(computedStyle?.getPropertyValue(pdfMinHeightVar) || '20');
@@ -92,20 +90,17 @@ const AdOrderForm: FC = () => {
             textarea.style.height = `${Math.min(newHeight, pdfMaxHeight)}px`;
             textarea.style.overflowY = newHeight > pdfMaxHeight ? 'hidden' : 'hidden';
         } else { 
-            // General print (window.print, print preview)
-            // For print, allow scrollHeight unless it's a table textarea, which should be more constrained
             let newHeight = textarea.scrollHeight;
-            if (textarea.classList.contains('print-textarea') && computedStyle) { // Table textareas in print
+            if (textarea.classList.contains('print-textarea') && computedStyle) { 
                 const printTableMinHeight = parseFloat(computedStyle.getPropertyValue('--print-table-textarea-min-height') || 'auto');
                 if (!isNaN(printTableMinHeight) && newHeight < printTableMinHeight) newHeight = printTableMinHeight;
             }
             textarea.style.height = `${newHeight}px`;
-            textarea.style.overflowY = 'visible'; // Allow content to flow for print if needed
+            textarea.style.overflowY = 'visible'; 
         }
       } else { 
-        // Screen sizing
         textarea.style.height = `${Math.max(textarea.scrollHeight, minHeightScreen)}px`;
-        textarea.style.overflowY = 'auto'; // Allow scroll on screen if content exceeds max calculated height
+        textarea.style.overflowY = 'auto'; 
       }
     }
   }, []);
@@ -332,7 +327,7 @@ const AdOrderForm: FC = () => {
         } else if (placeholderDiv) {
             // Placeholder styling will be handled by CSS
         } else if (!imgInStamp) { 
-            stampContainerClone.textContent = ''; // Stamp area will be blank if no image and no placeholder logic
+            stampContainerClone.textContent = ''; 
         }
     }
     const tableClone = clonedElement.querySelector('.main-table-bordered');
@@ -359,6 +354,7 @@ const AdOrderForm: FC = () => {
             onclone: (documentClone: Document) => {
                 const clonedBody = documentClone.body;
                 clonedBody.classList.add('pdf-export-active'); 
+                
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 const _ = clonedBody.offsetHeight; 
 
@@ -464,18 +460,10 @@ const AdOrderForm: FC = () => {
                 console.warn("Could not copy stylesheet for printing:", styleSheet.href, e);
             }
         });
-        iframeDoc.write('</head><body class="printing-from-preview">'); // Add class to iframe body
+        iframeDoc.write('</head><body class="printing-from-preview">'); 
         
-        // Clone the content to print into the iframe
-        // For preview, contentSourceElement is 'printPreviewContent' which contains the already cloned and styled form
-        // For direct print, contentSourceElement is 'printableAreaRef.current'
         const clonedContent = contentSourceElement.cloneNode(true) as HTMLElement;
         
-        // If printing from preview, the content is already what we want.
-        // If printing directly, we might need to convert inputs/textareas like in PDF generation or print preview setup.
-        // For simplicity in this direct `window.print` path, we rely on `@media print` styles for inputs/textareas.
-        // The `printing-from-preview` or `direct-print-active` class should trigger these styles.
-
         iframeDoc.body.appendChild(clonedContent);
         iframeDoc.write('</body></html>');
         iframeDoc.close();
@@ -515,7 +503,7 @@ const AdOrderForm: FC = () => {
         if (wasFullScreen && document.fullscreenElement) {
             document.exitFullscreen().then(exitFullscreenAndPrint).catch(err => {
                 console.error("Error exiting fullscreen:", err);
-                exitFullscreenAndPrint(); // Fallback to printing even if fullscreen exit fails
+                exitFullscreenAndPrint(); 
             });
         } else if (isPreviewing) { 
             handleClosePrintPreview(); 
@@ -613,12 +601,12 @@ const AdOrderForm: FC = () => {
                  stampContainer.appendChild(newImg);
             } else if (placeholderDiv) { 
                 // Placeholder div is already there, CSS will style it.
-            } else if (!imgElement) { // If no image and no explicit placeholder div, make one
+            } else if (!imgElement) { 
                  const pDiv = document.createElement('div');
-                 pDiv.className = "w-full h-full flex items-center justify-center bg-gray-50"; // Match original placeholder style
-                 pDiv.innerHTML = `<Image src="${DEFAULT_STAMP_IMAGE_PLACEHOLDER}" alt="Upload Stamp Placeholder" width={178} height={98} className="object-contain" data-ai-hint="upload placeholder"/>`; // This won't render Next Image here
+                 pDiv.className = "w-full h-full flex items-center justify-center bg-gray-50"; 
+                 pDiv.innerHTML = `<Image src="${DEFAULT_STAMP_IMAGE_PLACEHOLDER}" alt="Upload Stamp Placeholder" width={178} height={98} className="object-contain" data-ai-hint="upload placeholder"/>`; 
                  stampContainer.innerHTML = '';
-                 stampContainer.appendChild(pDiv); // Or simply leave it blank or with text
+                 stampContainer.appendChild(pDiv); 
             }
         }
 
@@ -738,18 +726,7 @@ const AdOrderForm: FC = () => {
     <div className="max-w-[210mm] mx-auto p-1 print-root-container bg-background" id="main-application-container">
       
       <div className="flex justify-end items-center gap-2 p-2 mb-2 no-print no-pdf-export action-buttons-container">
-        <Button onClick={() => handleActualPrint(false)} variant="outline" size="sm" aria-label="Print Document">
-            <Printer className="mr-2" /> Print
-        </Button>
-        <Button onClick={handlePrintPreview} variant="outline" size="sm" aria-label="Print Preview">
-            <Eye className="mr-2" /> Preview
-        </Button>
-        <Button onClick={generatePdf} variant="outline" size="sm" aria-label="Download PDF">
-            <Download className="mr-2" /> Download PDF
-        </Button>
-        <Button onClick={handleFullScreenPreviewToggle} variant="outline" size="sm" aria-label={isFullScreenPreview ? "Exit Fullscreen" : "Enter Fullscreen"}>
-            <Expand className="mr-2" /> {isFullScreenPreview ? "Exit Fullscreen" : "Fullscreen"}
-        </Button>
+         {/* Buttons removed as per user request */}
       </div>
 
       <div id="printable-area-pdf" ref={printableAreaRef} className={`w-full print-target bg-card text-card-foreground shadow-sm p-2 md:p-4 rounded-lg border-4 border-black ${isFullScreenPreview ? 'fullscreen-preview-active' : ''}`}>
@@ -759,13 +736,7 @@ const AdOrderForm: FC = () => {
 
         <div className="flex flex-col md:flex-row gap-4 mb-5 print-header-box">
             <div className="w-full md:w-[35%] p-3 border-2 border-black rounded box-decoration-clone">
-                <h3 className="text-lg font-bold">Lehar</h3>
-                <h4 className="text-md font-semibold">ADVERTISING PVT.LTD.</h4>
-                <p className="text-xs mt-1 leading-snug">D-9 &amp; D-10, 1st Floor, Pushpa Bhawan,</p>
-                <p className="text-xs leading-snug">Alaknanda Commercial complex, <br /> New Delhi-110019</p>
-                <p className="text-xs mt-1 leading-snug">Tel.: 49573333, 34, 35, 36</p>
-                <p className="text-xs leading-snug">Fax: 26028101</p>
-                <p className="text-xs mt-1 leading-snug"><strong>GSTIN:</strong> 07AABCL5406F1ZU</p>
+                <Image src="https://picsum.photos/300/200" alt="Lehar Advertising" width={300} height={200} data-ai-hint="company logo address" className="w-full h-auto object-contain"/>
             </div>
             <div className="flex-1 flex flex-col gap-3 p-3 border-2 border-black rounded">
                 <div className="flex gap-3 items-center">
