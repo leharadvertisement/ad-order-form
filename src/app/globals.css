@@ -258,7 +258,13 @@ body {
    }
    .ro-date-client-container {
        padding: 4pt !important;
-       space-y-0.5 !important;
+       /* space-y-0.5 !important; - Replaced with margin on child elements */
+   }
+   .ro-date-client-container .field-row {
+       margin-bottom: 2pt !important; /* Add small margin between rows */
+   }
+   .ro-date-client-container .field-row:last-child {
+       margin-bottom: 0 !important;
    }
    .ro-date-client-container .field-row label,
    .ro-date-client-container .field-row p {
@@ -281,7 +287,6 @@ body {
    /* Horizontal label for print */
    .matter-label {
         writing-mode: vertical-lr !important; /* Make text vertical */
-        /* text-orientation: mixed !important; */
         background-color: black !important;
         color: white !important;
         -webkit-print-color-adjust: exact !important;
@@ -308,7 +313,6 @@ body {
         font-size: 9pt !important; /* Consistent font size */
         transform: rotate(180deg); /* Rotate the text to read top-down */
         writing-mode: vertical-lr !important; /* Keep vertical */
-        /* text-orientation: mixed !important; */
     }
 
     .billing-address-box {
@@ -663,7 +667,9 @@ body {
 .fullscreen-preview-mode .address-container { margin-bottom: 6pt !important; gap: 8pt !important; }
 .fullscreen-preview-mode .address-container > div { padding: 4pt !important; border-width: 1pt !important; }
 .fullscreen-preview-mode .address-container .address-box p { font-size: 7pt !important; line-height: 1.1 !important; }
-.fullscreen-preview-mode .ro-date-client-container { padding: 4pt !important; space-y-0.5 !important; }
+.fullscreen-preview-mode .ro-date-client-container { padding: 4pt !important; /*space-y-0.5 !important;*/ }
+.fullscreen-preview-mode .ro-date-client-container .field-row { margin-bottom: 2pt !important; }
+.fullscreen-preview-mode .ro-date-client-container .field-row:last-child { margin-bottom: 0 !important; }
 .fullscreen-preview-mode .ro-date-client-container .field-row label,
 .fullscreen-preview-mode .ro-date-client-container .field-row p { font-size: 8pt !important; height: auto !important; min-height: 1.2em !important; padding: 0.5pt 0 !important; border-bottom: 0.5pt dotted #999 !important; }
 
@@ -690,7 +696,6 @@ body {
 /* Vertical label for fullscreen preview */
 .fullscreen-preview-mode .matter-label {
     writing-mode: vertical-lr !important; /* Make text vertical */
-    /* text-orientation: mixed !important; */
     background-color: black !important;
     color: white !important;
     -webkit-print-color-adjust: exact !important;
@@ -715,7 +720,6 @@ body {
     font-size: 9pt !important;
     transform: rotate(180deg); /* Rotate the text to read top-down */
     writing-mode: vertical-lr !important; /* Keep vertical */
-    /* text-orientation: mixed !important; */
 }
 .fullscreen-preview-mode .matter-content {
     flex: 1 !important;
@@ -799,8 +803,19 @@ button.print-visible-button {
      visibility: visible !important;
 }
 
-/* Remove the nested CSS that was causing the error */
-/* This block might need further review based on the desired styling */
-/* .print-table-cell > div { */
-    /* Remove apply rules here */
-/* } */
+/* Ensure .ro-date-client-container uses Tailwind's space-y utility correctly */
+.ro-date-client-container > .field-row + .field-row {
+    @apply mt-0.5; /* Equivalent to space-y-0.5 for print/fullscreen */
+}
+.ro-date-client-container.form-active > .field-row + .field-row {
+    @apply mt-1; /* Equivalent to space-y-1 for form */
+}
+
+/*
+@apply for nested rules is not supported. This was causing the error:
+.print-table-cell > div {
+    @apply min-h-[80px] h-auto border-none p-[1pt] font-bold text-black text-[7pt] whitespace-pre-wrap break-words block overflow-hidden leading-[1.1] align-top;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+}
+*/
