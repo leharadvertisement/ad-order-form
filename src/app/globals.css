@@ -373,9 +373,9 @@
 }
 
 .stamp-container-screen {
-  width: 200px; /* Slightly increased width */
-  height: 120px; /* Slightly increased height */
-  border: 0px; /* Removed border for screen view */
+  width: 160px; 
+  height: 90px; 
+  border: 0px; /* No border for screen view of stamp */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -695,7 +695,7 @@ body.pdf-export-active #printable-area-pdf .main-table-bordered td textarea.prin
 /* Ensure table textareas take full height and align text to top */
 .main-table-bordered td textarea.print-textarea {
     height: 100%; /* Make textarea fill cell height */
-    min-height: 70px; /* Keep min-height as defined in component */
+    min-height: 110px; 
     display: block; /* Ensure it behaves as a block element */
 }
 

@@ -19,7 +19,7 @@ const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://picsum.photos/200/120?random&da
 
 const AdOrderForm: FC = () => {
   const [ron, setRon] = useState<string>('');
-  const [orderDate, setOrderDate] = useState<Date | undefined>(new Date());
+  const [orderDate, setOrderDate] = useState<Date | undefined>(undefined);
   const [clientName, setClientName] = useState<string>('');
   const [advManagerInput1, setAdvManagerInput1] = useState<string>('');
   const [advManagerInput2, setAdvManagerInput2] = useState<string>('');
@@ -60,7 +60,7 @@ const AdOrderForm: FC = () => {
     if (textarea) {
       textarea.style.height = 'auto';
       const computedStyle = typeof window !== 'undefined' ? getComputedStyle(textarea) : null;
-      const minHeight = computedStyle ? parseFloat(computedStyle.minHeight) : 90; // Updated default to 90
+      const minHeight = computedStyle ? parseFloat(computedStyle.minHeight) : 110; 
 
       const isPrintingOrPdfContext = typeof window !== 'undefined' &&
                                      (document.body.classList.contains('pdf-export-active') ||
@@ -624,7 +624,7 @@ const AdOrderForm: FC = () => {
             div.style.color = 'black'; 
             div.style.backgroundColor = 'transparent'; 
             div.style.height = 'auto'; 
-            div.style.minHeight = getComputedStyle(textarea).minHeight || (textarea.id === 'matterTextarea' ? '100px' :'90px');
+            div.style.minHeight = getComputedStyle(textarea).minHeight || (textarea.id === 'matterTextarea' ? '100px' :'110px');
             div.style.overflow = 'visible'; 
             div.style.whiteSpace = 'pre-wrap'; 
             div.style.wordWrap = 'break-word'; 
@@ -663,14 +663,7 @@ const AdOrderForm: FC = () => {
 
   return (
     <div className="max-w-[210mm] mx-auto p-1 print-root-container bg-background" id="main-application-container">
-      <div className="flex justify-end space-x-2 mb-4 p-2 action-buttons-container no-print no-pdf-export">
-        <Button onClick={clearForm} variant="destructive" size="sm"><Eraser className="mr-2" />Clear Form</Button>
-        <Button onClick={saveDraft} variant="outline" size="sm"><Save className="mr-2"/>Save Draft</Button>
-        <Button onClick={loadDraft} variant="outline" size="sm"><UploadCloud className="mr-2"/>Load Draft</Button>
-        <Button onClick={generatePdf} variant="default" size="sm"><FileDown className="mr-2"/>Download PDF</Button>
-        <Button onClick={handlePrintPreview} variant="outline" size="sm"><Eye className="mr-2"/>Preview Print</Button>
-        <Button onClick={handleFullScreenPreview} variant="outline" size="sm"><Maximize className="mr-2"/>Full Screen</Button>
-      </div>
+      {/* Action buttons removed as per user request */}
 
       <div id="printable-area-pdf" ref={printableAreaRef} className={`w-full print-target bg-card text-card-foreground shadow-sm p-2 md:p-4 rounded-lg border-4 border-black ${isFullScreenPreview ? 'fullscreen-preview-active' : ''}`}>
         <div className="text-center mt-2 mb-4 release-order-title-screen">
@@ -740,16 +733,16 @@ const AdOrderForm: FC = () => {
              {rowsData.map((row, index) => (
                <TableRow key={index} className="print-table-row">
                  <TableCell className="main-table-bordered p-0 align-top print-border border border-black">
-                   <Textarea value={row.keyNo as string} onChange={(e) => handleTextareaInput(e, index, 'keyNo')} placeholder="Key" className="text-xs p-1 border-0 rounded-none resize-none min-h-[90px] h-auto no-shadow-outline print-textarea textarea-align-top" />
+                   <Textarea value={row.keyNo as string} onChange={(e) => handleTextareaInput(e, index, 'keyNo')} placeholder="Key" className="text-xs p-1 border-0 rounded-none resize-none min-h-[110px] h-auto no-shadow-outline print-textarea textarea-align-top" />
                  </TableCell>
                  <TableCell className="main-table-bordered p-0 align-top print-border border border-black">
-                   <Textarea value={row.publication as string} onChange={(e) => handleTextareaInput(e, index, 'publication')} placeholder="Publication" className="text-xs p-1 border-0 rounded-none resize-none min-h-[90px] h-auto no-shadow-outline print-textarea textarea-align-top" />
+                   <Textarea value={row.publication as string} onChange={(e) => handleTextareaInput(e, index, 'publication')} placeholder="Publication" className="text-xs p-1 border-0 rounded-none resize-none min-h-[110px] h-auto no-shadow-outline print-textarea textarea-align-top" />
                  </TableCell>
                  <TableCell className="main-table-bordered p-0 align-top print-border border border-black">
-                   <Textarea value={row.edition as string} onChange={(e) => handleTextareaInput(e, index, 'edition')} placeholder="Edition" className="text-xs p-1 border-0 rounded-none resize-none min-h-[90px] h-auto no-shadow-outline print-textarea textarea-align-top" />
+                   <Textarea value={row.edition as string} onChange={(e) => handleTextareaInput(e, index, 'edition')} placeholder="Edition" className="text-xs p-1 border-0 rounded-none resize-none min-h-[110px] h-auto no-shadow-outline print-textarea textarea-align-top" />
                  </TableCell>
                  <TableCell className="main-table-bordered p-0 align-top print-border border border-black">
-                   <Textarea value={row.size as string} onChange={(e) => handleTextareaInput(e, index, 'size')} placeholder="Size" className="text-xs p-1 border-0 rounded-none resize-none min-h-[90px] h-auto no-shadow-outline print-textarea textarea-align-top" />
+                   <Textarea value={row.size as string} onChange={(e) => handleTextareaInput(e, index, 'size')} placeholder="Size" className="text-xs p-1 border-0 rounded-none resize-none min-h-[110px] h-auto no-shadow-outline print-textarea textarea-align-top" />
                  </TableCell>
                  <TableCell className="main-table-bordered p-0 align-top print-border border border-black table-date-picker-wrapper">
                     <DatePicker
@@ -761,7 +754,7 @@ const AdOrderForm: FC = () => {
                     />
                  </TableCell>
                  <TableCell className="main-table-bordered p-0 align-top print-border border border-black">
-                   <Textarea value={row.position as string} onChange={(e) => handleTextareaInput(e, index, 'position')} placeholder="Position" className="text-xs p-1 border-0 rounded-none resize-none min-h-[90px] h-auto no-shadow-outline print-textarea textarea-align-top" />
+                   <Textarea value={row.position as string} onChange={(e) => handleTextareaInput(e, index, 'position')} placeholder="Position" className="text-xs p-1 border-0 rounded-none resize-none min-h-[110px] h-auto no-shadow-outline print-textarea textarea-align-top" />
                  </TableCell>
                </TableRow>
              ))}
@@ -805,19 +798,19 @@ const AdOrderForm: FC = () => {
                 </ol>
             </div>
 
-            <div
+             <div
                 className="w-[35%] flex flex-col items-center justify-end stamp-parent-container mt-2 md:mt-0 self-end"
             >
                 <div
-                  className="stamp-container-screen w-[200px] h-[120px] flex items-center justify-center text-xs text-gray-500 bg-transparent rounded cursor-pointer hover:opacity-80"
+                  className="stamp-container-screen w-[160px] h-[90px] flex items-center justify-center text-xs text-gray-500 bg-transparent rounded cursor-pointer hover:opacity-80"
                   onClick={triggerStampUpload}
                   title="Click to upload stamp image"
                 >
                 {stampImage ? (
-                     <Image src={stampImage} alt="Stamp" width={196} height={116} className="object-contain max-w-full max-h-full" data-ai-hint="signature company stamp" />
+                     <Image src={stampImage} alt="Stamp" width={158} height={88} className="object-contain" data-ai-hint="signature company stamp" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gray-50 border-0">
-                    <Image src={DEFAULT_STAMP_IMAGE_PLACEHOLDER} alt="Upload Stamp Placeholder" width={196} height={116} className="object-contain" data-ai-hint="upload placeholder"/>
+                    <Image src={DEFAULT_STAMP_IMAGE_PLACEHOLDER} alt="Upload Stamp Placeholder" width={158} height={88} className="object-contain" data-ai-hint="upload placeholder"/>
                   </div>
                 )}
                 <Input type="file" ref={stampInputRef} onChange={handleStampUpload} accept="image/*" className="hidden" />
