@@ -1,961 +1,536 @@
-'use client';
+"use client";
 
-import type { ChangeEvent } from 'react';
-import React, { useState, useRef, useCallback, useEffect } from 'react';
-import Image from 'next/image';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Card, CardContent } from '@/components/ui/card';
-import { PlusCircle, Trash2, Eraser, Calendar as CalendarIcon, Printer, X, Expand } from 'lucide-react';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm, Controller } from 'react-hook-form';
+import { z } from 'zod';
 import { format } from 'date-fns';
+import { CalendarIcon, Download, Trash2, UploadCloud, Save, FolderOpen, Printer, XCircle, Eye } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Textarea } from '@/components/ui/textarea';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
+const formSchema = z.object({
+  heading: z.string().optional(),
+  packageDeal: z.string().optional(),
+  roNoLn: z.string().optional(),
+  orderDate: z.date().optional(),
+  clientName: z.string().optional(),
+  advertisementManagerLine1: z.string().optional(),
+  advertisementManagerLine2: z.string().optional(),
+  tableData: z.array(z.object({
+    keyNo: z.string().optional(),
+    publication: z.string().optional(),
+    size: z.string().optional(),
+    position: z.string().optional(),
+    premium: z.string().optional(),
+    rate: z.string().optional(),
+    insertionDate: z.string().optional(),
+    amount: z.string().optional(),
+  })).optional(),
+  matter: z.string().optional(),
+  billingAddress: z.string().optional(),
+  notes: z.string().optional(),
+});
 
-interface ScheduleRow {
-  id: number;
-  keyNo: string;
-  publication: string;
-  edition: string;
-  size: string;
-  scheduledDate: string;
-  position: string;
-}
+type FormData = z.infer<typeof formSchema>;
 
-interface FormData {
-  caption: string;
-  packageName: string;
-  matter: string;
-  scheduleRows: ScheduleRow[];
-  stampPreview: string | null;
-  roNumber: string;
-  orderDate: string | null; // Store as ISO string
-  clientName: string;
-  advertisementManagerLine1: string;
-  advertisementManagerLine2: string;
-}
-
-const LOCAL_STORAGE_KEY = 'adOrderFormData';
-const DEBOUNCE_DELAY = 500; // milliseconds
+const initialTableData = Array(5).fill({}).map(() => ({
+  keyNo: '', publication: '', size: '', position: '', premium: '', rate: '', insertionDate: '', amount: ''
+}));
 
 export default function AdOrderForm() {
-  // --- State Hooks ---
-  const [caption, setCaption] = useState('');
-  const [packageName, setPackageName] = useState('');
-  const [matter, setMatter] = useState('');
-  const [scheduleRows, setScheduleRows] = useState<ScheduleRow[]>([
-    { id: Date.now(), keyNo: '', publication: '', edition: '', size: '', scheduledDate: '', position: '' },
-  ]);
-  const [stampPreview, setStampPreview] = useState<string | null>(null);
-  const [roNumber, setRoNumber] = useState('');
-  const [orderDate, setOrderDate] = useState<Date | undefined>(new Date()); // Initialize with today's date
-  const [clientName, setClientName] = useState('');
-  const [advertisementManagerLine1, setAdvertisementManagerLine1] = useState('');
-  const [advertisementManagerLine2, setAdvertisementManagerLine2] = useState('');
-  const [isClient, setIsClient] = useState(false);
-  const [displayDate, setDisplayDate] = useState<string>('');
-  const [isFullScreenPreview, setIsFullScreenPreview] = useState(false); // State for fullscreen preview
-
-
-  // --- Ref Hooks ---
-  const stampFileRef = useRef<HTMLInputElement>(null);
-  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const isInitialLoadRef = useRef(true);
-  const formRef = useRef<HTMLDivElement>(null);
-  const printableAreaRef = useRef<HTMLDivElement>(null); // Ref for the preview area
-
-  // --- Custom Hooks ---
   const { toast } = useToast();
+  const [formData, setFormData] = useState<FormData>({
+    heading: '',
+    packageDeal: '',
+    roNoLn: '',
+    orderDate: new Date(),
+    clientName: '',
+    advertisementManagerLine1: '',
+    advertisementManagerLine2: '',
+    tableData: initialTableData,
+    matter: '',
+    billingAddress: '',
+    notes: '',
+  });
 
-  // --- Effect Hooks ---
+  const [stampImage, setStampImage] = useState<string | null>(null);
+  const [stampFileName, setStampFileName] = useState<string>('');
+  const [isPreviewing, setIsPreviewing] = useState(false);
+  const [orderDateForDisplay, setOrderDateForDisplay] = useState(format(new Date(), "dd.MM.yyyy"));
 
-  // Set client flag after mount
+  const formRef = useRef<HTMLDivElement>(null);
+  const stampInputRef = useRef<HTMLInputElement>(null);
+
+
+  const { control, setValue, watch } = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: formData,
+  });
+
+  const watchedOrderDate = watch("orderDate");
+
   useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  // Initialize date on client-side mount
-   useEffect(() => {
-     if (isClient) {
-       const today = new Date();
-       // Check local storage first, then default to today
-       try {
-         const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
-         let initialDate = today; // Default to today
-         if (savedData) {
-           const parsedData: Partial<FormData> = JSON.parse(savedData);
-           if (parsedData.orderDate) {
-             const savedDateObj = new Date(parsedData.orderDate);
-             if (!isNaN(savedDateObj.getTime())) {
-               initialDate = savedDateObj;
-             }
-           }
-         }
-         setOrderDate(initialDate);
-         setDisplayDate(format(initialDate, "dd.MM.yyyy"));
-
-       } catch (error) {
-         console.error("Error reading initial date from localStorage:", error);
-         setOrderDate(today); // Fallback to today on error
-         setDisplayDate(format(today, "dd.MM.yyyy"));
-       }
-     }
-   }, [isClient]);
-
-  // Effect to load data
+    if (watchedOrderDate) {
+      setOrderDateForDisplay(format(watchedOrderDate, "dd.MM.yyyy"));
+      setFormData(prev => ({...prev, orderDate: watchedOrderDate}));
+    }
+  }, [watchedOrderDate]);
+  
   useEffect(() => {
-    if (!isClient) return;
-
-    try {
-      const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (savedData) {
-        const parsedData: FormData = JSON.parse(savedData);
-        setCaption(parsedData.caption || '');
-        setPackageName(parsedData.packageName || '');
-        setMatter(parsedData.matter || '');
-        const loadedRows = Array.isArray(parsedData.scheduleRows) && parsedData.scheduleRows.length > 0
-          ? parsedData.scheduleRows.map(row => ({
-              ...row,
-              id: row.id || Date.now() + Math.random()
-            }))
-          : [{ id: Date.now(), keyNo: '', publication: '', edition: '', size: '', scheduledDate: '', position: '' }];
-        setScheduleRows(loadedRows);
-        setStampPreview(parsedData.stampPreview || null);
-        setRoNumber(parsedData.roNumber || '');
-
-        if (parsedData.orderDate) {
-           const savedDateObj = new Date(parsedData.orderDate);
-           if (!isNaN(savedDateObj.getTime())) {
-               setOrderDate(savedDateObj);
-               setDisplayDate(format(savedDateObj, "dd.MM.yyyy"));
-           } else {
-                console.warn("Invalid date found in localStorage, using today's date instead.");
-                const today = new Date();
-                setOrderDate(today);
-                setDisplayDate(format(today, "dd.MM.yyyy"));
-           }
-        } else {
-            const today = new Date();
-            setOrderDate(today);
-            setDisplayDate(format(today, "dd.MM.yyyy"));
-        }
+    const today = new Date();
+    setValue('orderDate', today);
+    setFormData(prev => ({ ...prev, orderDate: today }));
+    setOrderDateForDisplay(format(today, "dd.MM.yyyy"));
+  }, [setValue]);
 
 
-        setClientName(parsedData.clientName || '');
-        setAdvertisementManagerLine1(parsedData.advertisementManagerLine1 || '');
-        setAdvertisementManagerLine2(parsedData.advertisementManagerLine2 || '');
-      } else {
-        const today = new Date();
-        setOrderDate(today);
-        setDisplayDate(format(today, "dd.MM.yyyy"));
-      }
-
-    } catch (error) {
-      console.error("Failed to load data from localStorage:", error);
-      toast({
-        title: "Recovery Failed",
-        description: "Could not recover previous draft data. Using defaults.",
-        variant: "destructive",
-      });
-      const today = new Date();
-      setOrderDate(today);
-      setDisplayDate(format(today, "dd.MM.yyyy"));
-    } finally {
-        isInitialLoadRef.current = false;
-    }
-  }, [isClient, toast]);
-
-
-   // Effect to update displayDate whenever orderDate changes (client-side only)
-   useEffect(() => {
-     if (!isClient || !orderDate || isNaN(orderDate.getTime())) return;
-
-     try {
-         setDisplayDate(format(orderDate, "dd.MM.yyyy"));
-     } catch (error) {
-         console.error("Error formatting date:", error);
-         const today = new Date();
-         // setOrderDate(today); // Avoid re-triggering loop if orderDate itself is problematic
-         setDisplayDate(format(today, "dd.MM.yyyy"));
-     }
-   }, [orderDate, isClient]);
-
-
-  // Effect to save data to localStorage (debounced, client-side only)
   useEffect(() => {
-    if (isInitialLoadRef.current || !isClient) {
-        return;
+    const savedStamp = localStorage.getItem('leharStamp');
+    const savedStampFileName = localStorage.getItem('leharStampFileName');
+    if (savedStamp) {
+      setStampImage(savedStamp);
     }
-
-    if (orderDate === undefined || isNaN(orderDate.getTime())) {
-      // Don't save if date is invalid, this might happen during initial hydration
-      return;
+    if (savedStampFileName) {
+      setStampFileName(savedStampFileName);
     }
-
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current);
-    }
-    debounceTimeoutRef.current = setTimeout(() => {
-      try {
-        const dataToSave: FormData = {
-          caption,
-          packageName,
-          matter,
-          scheduleRows,
-          stampPreview,
-          roNumber,
-          orderDate: orderDate && !isNaN(orderDate.getTime()) ? orderDate.toISOString() : new Date().toISOString(),
-          clientName,
-          advertisementManagerLine1,
-          advertisementManagerLine2,
-        };
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToSave));
-      } catch (error) {
-        console.error("Failed to save data to localStorage:", error);
-      }
-    }, DEBOUNCE_DELAY);
-    return () => {
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current);
-      }
-    };
-  }, [caption, packageName, matter, scheduleRows, stampPreview, roNumber, orderDate, clientName, advertisementManagerLine1, advertisementManagerLine2, isClient]);
-
-   const hideInteractiveElements = useCallback(() => {
-    if (!document) return;
-    const interactiveElements = document.querySelectorAll(
-      'input, textarea, button, .stamp-container-interactive, .popover-trigger-container button'
-    );
-
-    interactiveElements.forEach((element: Element) => {
-      const htmlElement = element as HTMLElement;
-      // Hide all buttons except those specifically for fullscreen preview actions
-      if (htmlElement.tagName === 'BUTTON' &&
-          !htmlElement.classList.contains('fullscreen-preview-button')) {
-        htmlElement.classList.add('print-hidden');
-      } else if (htmlElement.tagName !== 'BUTTON') {
-        htmlElement.classList.add('print-hidden');
-      }
-    });
   }, []);
 
-  const showInteractiveElements = useCallback(() => {
-    if (!document) return;
-    const interactiveElements = document.querySelectorAll(
-      '.print-hidden' // Query for elements that were hidden
-    );
-    interactiveElements.forEach((element: Element) => {
-      (element as HTMLElement).classList.remove('print-hidden');
-    });
-  }, []);
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    setValue(name as keyof FormData, value);
+  }, [setValue]);
 
-
-  // Effect to handle body class for fullscreen preview
-  useEffect(() => {
-    if (!isClient) return; // Ensure this runs only on the client
-
-    if (isFullScreenPreview) {
-      document.body.classList.add('fullscreen-preview-mode');
-      hideInteractiveElements();
-
-    } else {
-      document.body.classList.remove('fullscreen-preview-mode');
-      showInteractiveElements();
+  const handleDateChange = useCallback((date: Date | undefined) => {
+    if (date) {
+      setFormData(prev => ({ ...prev, orderDate: date }));
+      setValue('orderDate', date);
+      setOrderDateForDisplay(format(date, "dd.MM.yyyy"));
     }
-    // Cleanup function
-    return () => {
-      if (document) {
-        document.body.classList.remove('fullscreen-preview-mode');
-      }
-      showInteractiveElements(); // Ensure elements are shown when component unmounts or preview closes
-    };
-  }, [isFullScreenPreview, hideInteractiveElements, showInteractiveElements, isClient]);
+  }, [setValue]);
 
-
-
-  // --- Callback Hooks ---
-  const addRow = useCallback(() => {
-    setScheduleRows((prevRows) => [
-      ...prevRows,
-      { id: Date.now(), keyNo: '', publication: '', edition: '', size: '', scheduledDate: '', position: '' },
-    ]);
-  }, []);
-
-  const deleteRow = useCallback(() => {
-    if (scheduleRows.length > 1) {
-      setScheduleRows((prevRows) => prevRows.slice(0, -1));
-    } else {
-      toast({
-        title: "Cannot delete last row",
-        description: "At least one schedule row is required.",
-        variant: "destructive",
-      });
+  const handleTableChange = useCallback((index: number, e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    const updatedTableData = formData.tableData ? [...formData.tableData] : [];
+    if(updatedTableData[index]){
+        updatedTableData[index] = { ...updatedTableData[index], [name]: value };
     }
-  }, [scheduleRows.length, toast]);
+    setFormData(prev => ({ ...prev, tableData: updatedTableData }));
+    setValue('tableData', updatedTableData);
+  }, [formData.tableData, setValue]);
 
-  const handleScheduleChange = useCallback((id: number, field: keyof ScheduleRow, value: string) => {
-    setScheduleRows((prevRows) =>
-      prevRows.map((row) => (row.id === id ? { ...row, [field]: value } : row))
-    );
-  }, []);
-
-
-  const handleStampUpload = useCallback((event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
       const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setStampPreview(result);
-        toast({
-          title: "Stamp Uploaded",
-          description: "Stamp image successfully uploaded.",
-        });
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setStampImage(base64String);
+        setStampFileName(file.name);
+        localStorage.setItem('leharStamp', base64String);
+        localStorage.setItem('leharStampFileName', file.name);
+        toast({ title: "Stamp Uploaded", description: `${file.name} has been uploaded and saved.` });
       };
-      reader.onerror = () => {
-        toast({
-          title: "Upload Error",
-          description: "Failed to read the stamp image.",
-          variant: "destructive",
-        });
-      }
       reader.readAsDataURL(file);
-    } else {
-      setStampPreview(null);
     }
-    if (stampFileRef.current) {
-      stampFileRef.current.value = '';
-    }
-  }, [toast]);
-
-  const triggerStampUpload = useCallback(() => {
-    stampFileRef.current?.click();
-  }, []);
-
+  };
 
   const handleClearForm = useCallback(() => {
-    setCaption('');
-    setPackageName('');
-    setMatter('');
-    setScheduleRows([{ id: Date.now(), keyNo: '', publication: '', edition: '', size: '', scheduledDate: '', position: '' }]);
-    setStampPreview(null);
-    setRoNumber('');
+    setFormData({
+      heading: '',
+      packageDeal: '',
+      roNoLn: '',
+      orderDate: new Date(),
+      clientName: '',
+      advertisementManagerLine1: '',
+      advertisementManagerLine2: '',
+      tableData: initialTableData,
+      matter: '',
+      billingAddress: '',
+      notes: '',
+    });
+    initialTableData.forEach((row, idx) => {
+        Object.keys(row).forEach(key => {
+            setValue(`tableData.${idx}.${key as keyof typeof row}` as any, '');
+        });
+    });
+    ['heading', 'packageDeal', 'roNoLn', 'clientName', 'advertisementManagerLine1', 'advertisementManagerLine2', 'matter', 'billingAddress', 'notes'].forEach(field => setValue(field as keyof FormData, ''));
     const today = new Date();
-    setOrderDate(today);
-    setDisplayDate(format(today, "dd.MM.yyyy"));
-    setClientName('');
-    setAdvertisementManagerLine1('');
-    setAdvertisementManagerLine2('');
-    if (stampFileRef.current) {
-      stampFileRef.current.value = '';
-    }
-    try {
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
-      toast({
-        title: "Draft Cleared",
-        description: "Form data and saved draft have been cleared.",
-      });
-    } catch (error) {
-      console.error("Failed to clear localStorage:", error);
-      toast({
-        title: "Clear Error",
-        description: "Could not clear stored draft data.",
-        variant: "destructive",
-      });
-    }
-  }, [toast]);
+    setValue('orderDate', today);
+    setOrderDateForDisplay(format(today, "dd.MM.yyyy"));
+    toast({ title: "Form Cleared", description: "All fields have been reset." });
+  }, [setValue, toast]);
 
-   // Function to enter fullscreen preview
-   const handleFullScreenPreview = useCallback(() => {
-     setIsFullScreenPreview(true);
-   }, []);
+  const handleSaveDraft = useCallback(() => {
+    localStorage.setItem('leharAdFormDraft', JSON.stringify(formData));
+    toast({ title: "Draft Saved", description: "Your form data has been saved as a draft." });
+  }, [formData, toast]);
 
-   // Function to exit fullscreen preview
-   const handleExitFullScreenPreview = useCallback(() => {
-       setIsFullScreenPreview(false);
-   }, []);
-
-   // Function to trigger browser's print dialog
-   const handlePrint = useCallback(() => {
-      if (typeof window !== 'undefined') {
-        if (isFullScreenPreview) {
-          // Already in fullscreen, ensure content is ready then print
-          setTimeout(() => window.print(), 100);
-        } else {
-          // Not in fullscreen, activate it, then print, then deactivate
-          setIsFullScreenPreview(true);
-          setTimeout(() => {
-            window.print();
-            // setIsFullScreenPreview(false); // Keep it in fullscreen for manual close or further printing
-          }, 100); // Delay to allow DOM updates for fullscreen styles
-        }
+  const handleLoadDraft = useCallback(() => {
+    const draft = localStorage.getItem('leharAdFormDraft');
+    if (draft) {
+      const parsedDraft = JSON.parse(draft) as FormData;
+      // Ensure date is correctly parsed
+      if (parsedDraft.orderDate && typeof parsedDraft.orderDate === 'string') {
+        parsedDraft.orderDate = new Date(parsedDraft.orderDate);
+      } else if (!parsedDraft.orderDate) {
+        parsedDraft.orderDate = new Date();
       }
-   }, [isFullScreenPreview]);
+      
+      setFormData(parsedDraft);
+      Object.keys(parsedDraft).forEach(key => {
+        setValue(key as keyof FormData, parsedDraft[key as keyof FormData]);
+      });
+      if(parsedDraft.orderDate) {
+          setOrderDateForDisplay(format(parsedDraft.orderDate, "dd.MM.yyyy"));
+      } else {
+          setOrderDateForDisplay(format(new Date(), "dd.MM.yyyy"));
+      }
+      toast({ title: "Draft Loaded", description: "Your saved draft has been loaded." });
+    } else {
+      toast({ title: "No Draft Found", description: "There is no saved draft to load.", variant: "destructive" });
+    }
+  }, [setValue, toast]);
+
+  const togglePrintPreview = useCallback(() => {
+    setIsPreviewing(prev => !prev);
+  }, []);
+
+  useEffect(() => {
+    if (isPreviewing) {
+      document.body.classList.add('fullscreen-preview-mode');
+    } else {
+      document.body.classList.remove('fullscreen-preview-mode');
+    }
+    // Cleanup function to remove the class if the component unmounts while previewing
+    return () => {
+      document.body.classList.remove('fullscreen-preview-mode');
+    };
+  }, [isPreviewing]);
 
 
-   const safeDisplayDate = isClient && orderDate && !isNaN(orderDate.getTime()) ? displayDate : (isClient && orderDate === undefined ? 'Select Date' : 'Loading...');
+  const PrintableContent = React.forwardRef<HTMLDivElement>((props, ref) => (
+    <div ref={ref} id="printable-area" className="w-full print-border border-black bg-card text-card-foreground shadow-sm rounded-lg p-4 mx-auto">
+        <CardHeader className="header-title p-2 mb-4 bg-black text-white text-center rounded-t-md">
+          <h1 className="text-xl font-bold">RELEASE ORDER</h1>
+        </CardHeader>
 
+        <CardContent className="p-0 card-content-print-fix">
+          <div className="grid grid-cols-2 gap-4 mb-4 heading-package-container">
+            <div className="print-border border border-black p-2 rounded-md">
+              <Label htmlFor="heading" className="block text-sm font-bold mb-1">Heading:</Label>
+              <p id="headingDisplay" className="min-h-[1.2em] text-sm">{formData.heading || ''}</p>
+            </div>
+            <div className="print-border border border-black p-2 rounded-md">
+              <Label htmlFor="packageDeal" className="block text-sm font-bold mb-1">Package/Deal:</Label>
+              <p id="packageDealDisplay" className="min-h-[1.2em] text-sm">{formData.packageDeal || ''}</p>
+            </div>
+          </div>
 
-  // --- Main Render ---
-  return (
-    <div className={cn("max-w-[210mm] mx-auto font-bold", isFullScreenPreview ? 'fullscreen-container' : '')}>
-      {/* Fullscreen Preview Mode */}
-      {isClient && isFullScreenPreview && (
-          <div className="fullscreen-overlay">
-              <div className="fullscreen-content-wrapper">
-                  {/* Close Button for Fullscreen */}
-                   <Button
-                      variant="destructive"
-                      size="icon"
-                      className="absolute top-2 right-2 z-[1100] print-hidden fullscreen-preview-button"
-                      onClick={handleExitFullScreenPreview}
-                   >
-                       <X className="h-4 w-4" />
-                       <span className="sr-only">Close Preview</span>
-                   </Button>
-                   {/* Print Button within Fullscreen */}
-                  <Button
-                     variant="outline"
-                     className="absolute top-2 left-2 z-[1100] print-hidden fullscreen-preview-button"
-                     onClick={handlePrint}
-                   >
-                     <Printer className="mr-2 h-4 w-4" /> Print
-                   </Button>
-
-
-                  {/* Render the printable area inside the fullscreen overlay */}
-                  <div
-                      id="printable-area"
-                      ref={printableAreaRef} // Assign ref here
-                      className="w-full print-border-heavy rounded-none shadow-none bg-white overflow-auto"
-                      style={{ height: 'auto' }} // Let content determine height
-                  >
-                      <CardContent className="card-content-print-fix"> {/* Match print styles */}
-                        {/* Header */}
-                        <div className="text-center bg-black text-white p-1 mb-2 header-title">
-                          <h1 className="text-xl m-0 font-bold">RELEASE ORDER</h1>
-                        </div>
-
-                        {/* Top Row: Address and RO/Date/Client */}
-                        <div className="address-container flex justify-between gap-2 mb-2">
-                             {/* Left Address Box */}
-                             <div className="address-box w-[48%] print-border rounded p-1.5 border border-black">
-                               <p className="text-[7pt] leading-tight">
-                                 Lehar Advertising Agency Pvt. Ltd.<br />
-                                 D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
-                                 Alaknanda Commercial Complex,<br />
-                                 New Delhi-110019<br />
-                                 Tel: 49573333, 34, 35, 36<br />
-                                 Fax: 26028101
-                               </p>
-                             </div>
-                              {/* Right Box: R.O., Date, Client */}
-                               <div className="ro-date-client-container w-[48%] print-border rounded p-1.5 border border-black">
-                                 {/* R.O. No. LN */}
-                                 <div className="field-row flex items-center">
-                                   <Label className="w-auto text-xs shrink-0 mr-1">R.O.No.LN:</Label>
-                                   <p className="flex-1 px-1 py-0.5 text-xs font-bold border-b border-black min-h-[1.2em]">{roNumber || <span className="text-muted-foreground italic text-xs">Not entered</span>}</p>
-                                 </div>
-                                 {/* Date */}
-                                 <div className="field-row flex items-center">
-                                   <Label className="w-auto text-xs shrink-0 mr-1">Date:</Label>
-                                   <p className="flex-1 px-1 py-0.5 text-xs font-bold border-b border-black text-center min-h-[1.2em]">{safeDisplayDate}</p>
-                                 </div>
-                                 {/* Client */}
-                                 <div className="field-row flex items-center">
-                                   <Label className="w-auto text-xs shrink-0 mr-1">Client:</Label>
-                                   <p className="flex-1 px-1 py-0.5 text-xs font-bold border-b border-black min-h-[1.2em]">{clientName || <span className="text-muted-foreground italic text-xs">Not entered</span>}</p>
-                                 </div>
-                               </div>
-                        </div>
-                        {/* Advertisement Manager Section */}
-                        <div className="advertisement-manager-section print-border rounded p-1.5 mb-2 border border-black">
-                           <Label className="block mb-0.5 text-sm">The Advertisement Manager</Label>
-                           <div className="relative mb-0.5">
-                             <p className="w-full px-1 py-0.5 text-xs font-bold min-h-[1.2em] border-b border-black">{advertisementManagerLine1 || <span className="text-muted-foreground italic text-xs">Not entered</span>}</p>
-                           </div>
-                           <div className="relative mb-0.5">
-                             <p className="w-full px-1 py-0.5 text-xs font-bold min-h-[1.2em] border-b border-black">{advertisementManagerLine2 || <span className="text-muted-foreground italic text-xs">Not entered</span>}</p>
-                           </div>
-                           <p className="text-[7pt] mt-0.5">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
-                        </div>
-
-                        {/* Heading & Package Section */}
-                       <div className="heading-package-container flex gap-2 mb-2">
-                         <div className="heading-caption-box flex-1 print-border rounded p-1.5 border border-black">
-                           <Label htmlFor="captionPreview" className="block mb-0.5 text-sm">Heading/Caption:</Label>
-                           <p id="captionPreview" className="w-full px-1 py-0.5 text-xs font-bold min-h-[1.2em] border-b border-black">{caption || <span className="text-muted-foreground italic text-xs">Not entered</span>}</p>
-                         </div>
-                         <div className="package-box w-[30%] print-border rounded p-1.5 border border-black">
-                           <Label htmlFor="packagePreview" className="block mb-0.5 text-sm">Package:</Label>
-                            <p id="packagePreview" className="w-full px-1 py-0.5 text-xs font-bold min-h-[1.2em] border-b border-black">{packageName || <span className="text-muted-foreground italic text-xs">Not entered</span>}</p>
-                         </div>
-                       </div>
-
-
-                        {/* Schedule Table */}
-                        <div className="mb-2 table-container-print">
-                          <Table className="print-table print-border border border-black">
-                            <TableHeader className="bg-secondary print-table-header">
-                              <TableRow>
-                                <TableHead className="w-[10%] print-border-thin border border-black p-1 text-xs font-bold">Key No.</TableHead>
-                                <TableHead className="w-[25%] print-border-thin border border-black p-1 text-xs font-bold">Publication(s)</TableHead>
-                                <TableHead className="w-[15%] print-border-thin border border-black p-1 text-xs font-bold">Edition(s)</TableHead>
-                                <TableHead className="w-[15%] print-border-thin border border-black p-1 text-xs font-bold">Size</TableHead>
-                                <TableHead className="w-[20%] print-border-thin border border-black p-1 text-xs font-bold">Scheduled Date(s)</TableHead>
-                                <TableHead className="w-[15%] print-border-thin border border-black p-1 text-xs font-bold">Position</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                             <TableBody>
-                               {scheduleRows.map((row) => (
-                                 <TableRow key={row.id + '-preview'} className="min-h-[80px] align-top">
-                                   <TableCell className="print-border-thin border border-black p-0.5 print-table-cell align-top">
-                                     <div className="w-full h-full text-[7pt] font-bold align-top whitespace-pre-wrap break-words min-h-[80px]">
-                                       {row.keyNo}
-                                     </div>
-                                   </TableCell>
-                                   <TableCell className="print-border-thin border border-black p-0.5 print-table-cell align-top">
-                                     <div className="w-full h-full text-[7pt] font-bold align-top whitespace-pre-wrap break-words min-h-[80px]">
-                                       {row.publication}
-                                     </div>
-                                   </TableCell>
-                                   <TableCell className="print-border-thin border border-black p-0.5 print-table-cell align-top">
-                                     <div className="w-full h-full text-[7pt] font-bold align-top whitespace-pre-wrap break-words min-h-[80px]">
-                                       {row.edition}
-                                     </div>
-                                   </TableCell>
-                                   <TableCell className="print-border-thin border border-black p-0.5 print-table-cell align-top">
-                                     <div className="w-full h-full text-[7pt] font-bold align-top whitespace-pre-wrap break-words min-h-[80px]">
-                                       {row.size}
-                                     </div>
-                                   </TableCell>
-                                   <TableCell className="print-border-thin border border-black p-0.5 print-table-cell align-top">
-                                     <div className="w-full h-full text-[7pt] font-bold align-top whitespace-pre-wrap break-words min-h-[80px]">
-                                       {row.scheduledDate}
-                                     </div>
-                                   </TableCell>
-                                   <TableCell className="print-border-thin border border-black p-0.5 print-table-cell align-top">
-                                     <div className="w-full h-full text-[7pt] font-bold align-top whitespace-pre-wrap break-words min-h-[80px]">
-                                       {row.position}
-                                     </div>
-                                   </TableCell>
-                                 </TableRow>
-                               ))}
-                             </TableBody>
-                          </Table>
-                        </div>
-
-                        {/* Matter Section */}
-                        <div className="matter-box flex h-[80px] print-border rounded mb-2 overflow-hidden border border-black">
-                            <div className="matter-label bg-black text-white flex items-center justify-center p-1 flex-shrink-0">
-                                <span className="text-sm font-bold whitespace-nowrap">MATTER</span>
-                            </div>
-                           <div className="matter-content flex-1 p-0.5 overflow-hidden">
-                              <div className="whitespace-pre-wrap break-words text-xs font-bold h-full overflow-hidden">
-                                  {matter}
-                              </div>
-                           </div>
-                         </div>
-
-
-                        {/* Billing Info */}
-                        <div className="billing-address-box print-border rounded p-1.5 mb-2 border border-black">
-                           <p className="font-bold mb-0.5 billing-title-underline text-sm">Forward all bills with relevant voucher copies to:</p>
-                           <p className="text-[7pt] leading-tight pt-0.5">
-                             D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
-                             Alaknanda Commercial Complex,<br />
-                             New Delhi-110019<br />
-                             Tel: 49573333, 34, 35, 36<br />
-                             Fax: 26028101
-                           </p>
-                         </div>
-
-
-                         {/* Notes & Stamp Container */}
-                          <div className="notes-stamp-container relative print-border rounded p-1.5 border border-black min-h-[70px]">
-                             <div className="notes-content flex-1 pr-[90px]">
-                               <p className="font-bold mb-0.5 note-title-underline text-sm">Note:</p>
-                               <ol className="list-decimal list-inside text-[7pt] space-y-0.5 pt-0.5 pl-2">
-                                 <li>Space reserved vide our letter No.</li>
-                                 <li>No two advertisements of the same client should appear in the same issue.</li>
-                                 <li>Please quote R.O. No. in all your bills and letters.</li>
-                                 <li>Please send two voucher copies of good reproduction within 3 days of publishing.</li>
-                               </ol>
-                             </div>
-
-                             {stampPreview && (
-                               <div className="stamp-container-print absolute top-[1pt] right-[1pt] w-[85px] h-[65px] flex items-center justify-center border-none overflow-hidden">
-                                 <Image
-                                   src={stampPreview}
-                                   alt="Stamp"
-                                   width={85}
-                                   height={65}
-                                   style={{ objectFit: 'contain' }}
-                                   className="stamp-print-image max-w-full max-h-full"
-                                   data-ai-hint="signature stamp"
-                                 />
-                               </div>
-                             )}
-                          </div>
-                      </CardContent>
-                  </div>
+          <div className="grid grid-cols-2 gap-4 mb-4 address-container">
+            <div className="print-border border border-black p-2 rounded-md ro-date-client-container form-active">
+              <div className="field-row flex items-center mb-1">
+                <Label htmlFor="roNoLnDisplay" className="w-28 text-sm font-bold mr-2">R.O.No.LN:</Label>
+                <p id="roNoLnDisplay" className="min-h-[1.2em] flex-1 text-sm">{formData.roNoLn || ''}</p>
               </div>
-          </div>
-      )}
-
-      {/* Action Buttons - Visible normally */}
-      <div className="flex justify-end gap-2 mb-4 button-container no-print">
-         <Button onClick={handleFullScreenPreview} variant="outline" className="print-hidden fullscreen-preview-button">
-             <Expand className="mr-2 h-4 w-4" /> Full Display
-         </Button>
-         <Button onClick={handlePrint} variant="outline" className="print-hidden fullscreen-preview-button">
-             <Printer className="mr-2 h-4 w-4" /> Print Preview
-         </Button>
-        <Button onClick={handleClearForm} variant="destructive" className="print-hidden">
-          <Eraser className="mr-2 h-4 w-4" /> Clear Form & Draft
-        </Button>
-      </div>
-
-
-      {/* Use the ref on the actual printable area */}
-      <Card id="printable-area-form" ref={formRef} className="w-full print-border-heavy rounded shadow-md p-3 border-2 border-black bg-white">
-        <CardContent className="p-0 card-content-print-fix card-content-pdf-fix">
-          {/* Header */}
-          <div className="text-center bg-black text-white p-1 mb-3 header-title rounded">
-            <h1 className="text-xl m-0 font-bold">RELEASE ORDER</h1>
-          </div>
-
-          {/* Top Row: Address and RO/Date/Client */}
-          <div className="address-container flex justify-between gap-2 mb-3">
-            {/* Left Address Box */}
-            <div className="address-box w-[48%] print-border rounded p-1.5 border border-black">
-              <p className="text-xs leading-tight">
-                Lehar Advertising Agency Pvt. Ltd.<br />
-                D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
-                Alaknanda Commercial Complex,<br />
-                New Delhi-110019<br />
-                Tel: 49573333, 34, 35, 36<br />
-                Fax: 26028101
-              </p>
+              <div className="field-row flex items-center mb-1">
+                <Label htmlFor="orderDateDisplay" className="w-28 text-sm font-bold mr-2">Date:</Label>
+                <p id="orderDateDisplay" className="min-h-[1.2em] flex-1 text-sm">
+                  {formData.orderDate ? format(new Date(formData.orderDate), 'dd.MM.yyyy') : ''}
+                </p>
+              </div>
+              <div className="field-row flex items-center">
+                <Label htmlFor="clientNameDisplay" className="w-28 text-sm font-bold mr-2">Client:</Label>
+                <p id="clientNameDisplay" className="min-h-[1.2em] flex-1 text-sm">{formData.clientName || ''}</p>
+              </div>
             </div>
-            {/* Right Box: R.O., Date, Client */}
-             <div className="ro-date-client-container w-[48%] print-border rounded p-1.5 border border-black form-active">
-               {/* R.O. No. LN */}
-               <div className="field-row flex items-center">
-                 <Label htmlFor="roNumber" className="w-auto text-sm shrink-0 mr-1">R.O.No.LN:</Label>
-                 <Input
-                   id="roNumber"
-                   type="text"
-                   placeholder="Enter R.O. No."
-                   className="flex-1 h-auto border-0 border-b border-input rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
-                   value={roNumber}
-                   onChange={(e) => setRoNumber(e.target.value)}
-                 />
-               </div>
-               {/* Date */}
-               <div className="field-row flex items-center popover-trigger-container">
-                 <Label htmlFor="orderDateTrigger" className="w-auto text-sm shrink-0 mr-1">Date:</Label>
-                 <div className={cn(
-                   "flex-1 justify-center text-center font-bold h-auto border-0 border-b border-input rounded-none px-1 py-0.5 text-sm shadow-none items-center flex",
-                   !safeDisplayDate && "text-muted-foreground"
-                 )}>
-                   <span id="orderDateDisplay" className="flex-1">{safeDisplayDate}</span>
-                   {isClient ? (
-                     <Popover>
-                       <PopoverTrigger asChild>
-                         <Button
-                           variant={"ghost"}
-                           className={cn(
-                             "h-6 w-6 p-0 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print ml-1 print-hidden",
-                           )}
-                           id="orderDateTrigger"
-                         >
-                           <CalendarIcon className="h-4 w-4" />
-                           <span className="sr-only">Pick a date</span>
-                         </Button>
-                       </PopoverTrigger>
-                       <PopoverContent className="w-auto p-0 no-print print-hidden">
-                         <Calendar
-                           mode="single"
-                           selected={orderDate}
-                           onSelect={(date) => {
-                             if (date instanceof Date && !isNaN(date.getTime())) {
-                               setOrderDate(date);
-                               setDisplayDate(format(date, "dd.MM.yyyy"));
-                             } else if (date === undefined) {
-                               setOrderDate(undefined);
-                               setDisplayDate('Select Date');
-                             }
-                           }}
-                           initialFocus
-                         />
-                       </PopoverContent>
-                     </Popover>
-                   ) : (
-                     <Button
-                       variant={"ghost"}
-                       className={cn(
-                         "h-6 w-6 p-0 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print ml-1 print-hidden",
-                         "text-muted-foreground"
-                       )}
-                       disabled
-                     >
-                       <CalendarIcon className="h-4 w-4" />
-                       <span className="sr-only">Loading date picker...</span>
-                     </Button>
-                   )}
-                 </div>
-               </div>
 
-               {/* Client */}
-               <div className="field-row flex items-center">
-                 <Label htmlFor="clientName" className="w-auto text-sm shrink-0 mr-1">Client:</Label>
-                 <Input
-                   id="clientName"
-                   type="text"
-                   placeholder="Enter Client Name"
-                   className="flex-1 h-auto border-0 border-b border-input rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
-                   value={clientName}
-                   onChange={(e) => setClientName(e.target.value)}
-                 />
-               </div>
-             </div>
-          </div>
-
-           {/* Advertisement Manager Section */}
-          <div className="advertisement-manager-section print-border rounded p-1.5 mb-3 border border-black">
-            <Label className="block mb-0.5 text-sm">The Advertisement Manager</Label>
-            <div className="relative mb-0.5">
-              <Input
-                id="adManager1"
-                type="text"
-                placeholder="Line 1"
-                className="w-full border-0 border-b border-input rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                value={advertisementManagerLine1}
-                onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
-              />
-            </div>
-            <div className="relative">
-              <Input
-                id="adManager2"
-                type="text"
-                placeholder="Line 2"
-                className="w-full border-0 border-b border-input rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                value={advertisementManagerLine2}
-                onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
-              />
-            </div>
-            <p className="text-xs mt-1">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
-          </div>
-
-
-          {/* Heading & Package Section */}
-          <div className="heading-package-container flex gap-2 mb-3">
-            <div className="heading-caption-box flex-1 print-border rounded p-1.5 border border-black">
-              <Label htmlFor="caption" className="block mb-0.5 text-sm">Heading/Caption:</Label>
-              <Input
-                id="caption"
-                type="text"
-                placeholder="Enter caption here"
-                className="w-full border-0 border-b border-input rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                value={caption}
-                onChange={(e) => setCaption(e.target.value)}
-              />
-            </div>
-            <div className="package-box w-[30%] print-border rounded p-1.5 border border-black">
-              <Label htmlFor="package" className="block mb-0.5 text-sm">Package:</Label>
-              <Input
-                id="package"
-                type="text"
-                placeholder="Enter package name"
-                className="w-full border-0 border-b border-input rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                value={packageName}
-                onChange={(e) => setPackageName(e.target.value)}
-              />
+            <div className="print-border border border-black p-2 rounded-md advertisement-manager-section">
+              <Label className="block text-sm font-bold underline-black mb-1">The Advertisement Manager,</Label>
+              <p id="advManagerLine1Display" className="min-h-[1.2em] text-sm mb-1">{formData.advertisementManagerLine1 || ''}</p>
+              <p id="advManagerLine2Display" className="min-h-[1.2em] text-sm">{formData.advertisementManagerLine2 || ''}</p>
+              <p className="text-xs mt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
             </div>
           </div>
 
-
-          {/* Schedule Table */}
-          <div className="mb-3 table-container-print">
+          <div className="mb-4 table-container-print">
             <Table className="print-table print-border border border-black">
-              <TableHeader className="bg-secondary print-table-header">
+              <TableHeader className="print-table-header bg-secondary">
                 <TableRow>
-                  <TableHead className="w-[10%] print-border-thin border border-black p-1 text-sm font-bold">Key No.</TableHead>
-                  <TableHead className="w-[25%] print-border-thin border border-black p-1 text-sm font-bold">Publication(s)</TableHead>
-                  <TableHead className="w-[15%] print-border-thin border border-black p-1 text-sm font-bold">Edition(s)</TableHead>
-                  <TableHead className="w-[15%] print-border-thin border border-black p-1 text-sm font-bold">Size</TableHead>
-                  <TableHead className="w-[20%] print-border-thin border border-black p-1 text-sm font-bold">Scheduled Date(s)</TableHead>
-                  <TableHead className="w-[15%] print-border-thin border border-black p-1 text-sm font-bold">Position</TableHead>
+                  <TableHead className="w-[8%] print-border-thin border border-black p-1 text-xs font-bold">Key No.</TableHead>
+                  <TableHead className="w-[20%] print-border-thin border border-black p-1 text-xs font-bold">Publication(s)</TableHead>
+                  <TableHead className="w-[12%] print-border-thin border border-black p-1 text-xs font-bold">Size</TableHead>
+                  <TableHead className="w-[15%] print-border-thin border border-black p-1 text-xs font-bold">Position</TableHead>
+                  <TableHead className="w-[10%] print-border-thin border border-black p-1 text-xs font-bold">Premium%</TableHead>
+                  <TableHead className="w-[10%] print-border-thin border border-black p-1 text-xs font-bold">Rate</TableHead>
+                  <TableHead className="w-[15%] print-border-thin border border-black p-1 text-xs font-bold">Insertion Date(s)</TableHead>
+                  <TableHead className="w-[10%] print-border-thin border border-black p-1 text-xs font-bold">Amount</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {scheduleRows.map((row) => (
-                  <TableRow key={row.id} className="min-h-[80px] align-top">
-                    <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
-                      <Textarea
-                        value={row.keyNo}
-                        onChange={(e) => handleScheduleChange(row.id, 'keyNo', e.target.value)}
-                        className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[80px]"
-                      />
-                    </TableCell>
-                    <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
-                      <Textarea
-                        value={row.publication}
-                        onChange={(e) => handleScheduleChange(row.id, 'publication', e.target.value)}
-                        className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[80px]"
-                      />
-                    </TableCell>
-                    <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
-                      <Textarea
-                        value={row.edition}
-                        onChange={(e) => handleScheduleChange(row.id, 'edition', e.target.value)}
-                        className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[80px]"
-                      />
-                    </TableCell>
-                    <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
-                      <Textarea
-                        value={row.size}
-                        onChange={(e) => handleScheduleChange(row.id, 'size', e.target.value)}
-                        className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[80px]"
-                      />
-                    </TableCell>
-                    <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
-                      <Textarea
-                        value={row.scheduledDate}
-                        onChange={(e) => handleScheduleChange(row.id, 'scheduledDate', e.target.value)}
-                        className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[80px]"
-                      />
-                    </TableCell>
-                    <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
-                      <Textarea
-                        value={row.position}
-                        onChange={(e) => handleScheduleChange(row.id, 'position', e.target.value)}
-                        className="w-full h-full border-none rounded-none text-xs font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none px-1 py-1 align-top resize-none min-h-[80px]"
-                      />
-                    </TableCell>
+                {(formData.tableData || []).map((row, index) => (
+                  <TableRow key={index}>
+                    <TableCell className="print-border-thin border border-black p-1 text-xs min-h-[60px] align-top"><div className="print-table-cell">{row.keyNo || ''}</div></TableCell>
+                    <TableCell className="print-border-thin border border-black p-1 text-xs min-h-[60px] align-top"><div className="print-table-cell">{row.publication || ''}</div></TableCell>
+                    <TableCell className="print-border-thin border border-black p-1 text-xs min-h-[60px] align-top"><div className="print-table-cell">{row.size || ''}</div></TableCell>
+                    <TableCell className="print-border-thin border border-black p-1 text-xs min-h-[60px] align-top"><div className="print-table-cell">{row.position || ''}</div></TableCell>
+                    <TableCell className="print-border-thin border border-black p-1 text-xs min-h-[60px] align-top"><div className="print-table-cell">{row.premium || ''}</div></TableCell>
+                    <TableCell className="print-border-thin border border-black p-1 text-xs min-h-[60px] align-top"><div className="print-table-cell">{row.rate || ''}</div></TableCell>
+                    <TableCell className="print-border-thin border border-black p-1 text-xs min-h-[60px] align-top"><div className="print-table-cell">{row.insertionDate || ''}</div></TableCell>
+                    <TableCell className="print-border-thin border border-black p-1 text-xs min-h-[60px] align-top"><div className="print-table-cell">{row.amount || ''}</div></TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
-            <div className="flex gap-2 mt-2 no-print print-hidden">
-              <Button variant="outline" size="sm" onClick={addRow}>
-                <PlusCircle className="mr-2 h-4 w-4" /> Add Row
-              </Button>
-              <Button variant="destructive" size="sm" onClick={deleteRow} disabled={scheduleRows.length <= 1}>
-                <Trash2 className="mr-2 h-4 w-4" /> Delete Last Row
-              </Button>
-            </div>
           </div>
-
-          {/* Matter Section */}
-          <div className="matter-box flex h-[80px] print-border rounded mb-3 overflow-hidden border border-black">
-            <div className="matter-label bg-black text-white flex items-center justify-center p-1 flex-shrink-0">
-              <span className="text-sm font-bold whitespace-nowrap">
-                MATTER
-              </span>
+          
+          <div className="mb-4 matter-box flex print-border border border-black rounded-md h-[100px] overflow-hidden">
+            <div className="matter-label bg-black text-white flex items-center justify-center p-2 w-[25px]">
+                <span className="transform rotate-180" style={{ writingMode: 'vertical-lr' }}>MATTER</span>
             </div>
-            <div className="matter-content flex-1 p-1">
-              <Textarea
-                id="matterArea"
-                placeholder="Enter matter here..."
-                className="w-full h-full resize-none border-none text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none p-1 align-top"
-                value={matter}
-                onChange={(e) => setMatter(e.target.value)}
-              />
+            <div className="matter-content p-2 flex-1">
+                 <div className="text-sm whitespace-pre-wrap break-words h-full overflow-y-auto">{formData.matter || ''}</div>
             </div>
           </div>
 
 
-          {/* Billing Info */}
-          <div className="billing-address-box print-border rounded p-1.5 mb-3 border border-black">
-             <p className="font-bold mb-0.5 billing-title-underline text-sm">Forward all bills with relevant voucher copies to:</p>
-             <p className="text-xs leading-tight pt-0.5">
-               D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
-               Alaknanda Commercial Complex,<br />
-               New Delhi-110019<br />
-               Tel: 49573333, 34, 35, 36<br />
-               Fax: 26028101
-             </p>
-           </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="print-border border border-black p-2 rounded-md billing-address-box">
+              <p className="billing-title-underline text-sm font-bold mb-1">Forward all bills with relevant voucher copies to:-</p>
+              <div className="text-xs whitespace-pre-wrap break-words min-h-[60px]">{formData.billingAddress || ''}</div>
+            </div>
 
-
-           {/* Notes & Stamp Container */}
-            <div className="notes-stamp-container relative print-border rounded p-1.5 border border-black min-h-[70px]">
-               <div className="notes-content flex-1 pr-[90px]">
-                 <p className="font-bold mb-0.5 note-title-underline text-sm">Note:</p>
-                 <ol className="list-decimal list-inside text-xs space-y-0.5 pt-0.5 pl-3">
-                   <li>Space reserved vide our letter No.</li>
-                   <li>No two advertisements of the same client should appear in the same issue.</li>
-                   <li>Please quote R.O. No. in all your bills and letters.</li>
-                   <li>Please send two voucher copies of good reproduction within 3 days of publishing.</li>
-                 </ol>
-               </div>
-
-              <div
-                id="stampContainerElement"
-                className="stamp-container-interactive absolute top-1 right-1 w-[85px] h-[65px] flex items-center justify-center cursor-pointer overflow-hidden group no-print border-dashed border-gray-400 print-hidden"
-                onClick={triggerStampUpload}
-                onMouseEnter={triggerStampUpload}
-              >
-                <Input
-                  type="file"
-                  ref={stampFileRef}
-                  accept="image/*"
-                  onChange={handleStampUpload}
-                  className="hidden"
-                  id="stampFile"
-                />
-                {stampPreview ? (
-                  <div className="relative w-full h-full flex items-center justify-center">
-                    <Image
-                      id="stampPreviewScreen"
-                      src={stampPreview}
-                      alt="Stamp Preview"
-                      width={85}
-                      height={65}
-                      style={{ objectFit: 'contain' }}
-                      className="block max-w-full max-h-full"
-                      data-ai-hint="signature stamp"
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <span className="text-white text-[10px] font-bold text-center leading-tight">Click/Hover<br />to Change</span>
-                    </div>
-                  </div>
-                ) : (
-                  <Label htmlFor="stampFile" className="text-center text-[10px] text-muted-foreground cursor-pointer p-1 group-hover:opacity-75 transition-opacity leading-tight">
-                    Click or Hover<br /> to Upload Stamp
-                  </Label>
-                )}
+            <div className="print-border border border-black p-2 rounded-md notes-stamp-container relative">
+              <div className="notes-content">
+                <p className="note-title-underline text-sm font-bold mb-1">Note:</p>
+                <ol className="list-decimal list-inside text-xs whitespace-pre-wrap break-words min-h-[40px]">
+                  {(formData.notes || '').split('\n').map((note, index) => note.trim() && <li key={index}>{note}</li>)}
+                </ol>
               </div>
-              {stampPreview && (
-                <div className="stamp-container-print absolute top-[1pt] right-[1pt] w-[85px] h-[65px] hidden print-only-flex pdf-only-flex items-center justify-center border-none overflow-hidden">
-                  <Image
-                    src={stampPreview}
-                    alt="Stamp"
-                    width={85}
-                    height={65}
-                    style={{ objectFit: 'contain' }}
-                    className="stamp-print-image max-w-full max-h-full"
-                    data-ai-hint="signature stamp"
-                  />
+              {stampImage && (
+                <div className="stamp-container-print absolute top-1 right-1 w-[85px] h-[65px]">
+                  <Image src={stampImage} alt="Stamp" layout="fill" objectFit="contain" className="stamp-print-image" />
                 </div>
               )}
             </div>
+          </div>
         </CardContent>
-      </Card>
-    </div>
+      </div>
+  ));
+  PrintableContent.displayName = "PrintableContent";
+
+
+  if (isPreviewing) {
+    return (
+      <div className="fullscreen-overlay">
+        <div className="fullscreen-content-wrapper">
+          <PrintableContent />
+          <Button
+            onClick={togglePrintPreview}
+            variant="destructive"
+            className="absolute top-4 right-4 z-20 fullscreen-preview-button print-hidden"
+          >
+            <XCircle className="mr-2" /> Close Preview
+          </Button>
+          <Button
+            onClick={() => window.print()}
+            variant="default"
+            className="absolute top-4 right-40 z-20 fullscreen-preview-button print-hidden"
+          >
+            <Printer className="mr-2" /> Print
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+
+  return (
+    <Card ref={formRef} id="printable-area-form" className="w-full max-w-5xl mx-auto shadow-2xl print-border border-black">
+      <CardHeader className="bg-black text-white text-center p-3 rounded-t-md header-title">
+        <CardTitle className="text-2xl">RELEASE ORDER</CardTitle>
+      </CardHeader>
+      <CardContent className="p-6 space-y-6 card-content-pdf-fix">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 heading-package-container">
+          <div className="space-y-2 print-border border border-black p-3 rounded-md">
+            <Label htmlFor="heading" className="font-semibold text-md">Heading:</Label>
+            <Input id="heading" name="heading" value={formData.heading} onChange={handleChange} className="text-sm" />
+          </div>
+          <div className="space-y-2 print-border border border-black p-3 rounded-md">
+            <Label htmlFor="packageDeal" className="font-semibold text-md">Package/Deal:</Label>
+            <Input id="packageDeal" name="packageDeal" value={formData.packageDeal} onChange={handleChange} className="text-sm" />
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 address-container">
+          <div className="space-y-1 print-border border border-black p-3 rounded-md ro-date-client-container form-active">
+            <div className="flex items-center field-row">
+              <Label htmlFor="roNoLn" className="w-24 font-semibold text-md">R.O.No.LN:</Label>
+              <Input id="roNoLn" name="roNoLn" value={formData.roNoLn} onChange={handleChange} className="flex-1 text-sm" />
+            </div>
+            <div className="flex items-center field-row">
+                <Label htmlFor="orderDate" className="w-24 font-semibold text-md">Date:</Label>
+                 <Controller
+                    name="orderDate"
+                    control={control}
+                    render={({ field }) => (
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    className={cn(
+                                        "flex-1 justify-start text-left font-normal h-10 text-sm",
+                                        !field.value && "text-muted-foreground"
+                                    )}
+                                >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {orderDateForDisplay || <span>Pick a date</span>}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                                <Calendar
+                                    mode="single"
+                                    selected={field.value}
+                                    onSelect={(date) => {
+                                        field.onChange(date);
+                                        handleDateChange(date);
+                                    }}
+                                    initialFocus
+                                />
+                            </PopoverContent>
+                        </Popover>
+                    )}
+                />
+            </div>
+            <div className="flex items-center field-row">
+              <Label htmlFor="clientName" className="w-24 font-semibold text-md">Client:</Label>
+              <Input id="clientName" name="clientName" value={formData.clientName} onChange={handleChange} className="flex-1 text-sm" />
+            </div>
+          </div>
+
+          <div className="space-y-2 print-border border border-black p-3 rounded-md advertisement-manager-section">
+            <Label className="block font-semibold text-md underline-black">The Advertisement Manager,</Label>
+            <Input name="advertisementManagerLine1" value={formData.advertisementManagerLine1} onChange={handleChange} placeholder="Newspaper/Agency Name" className="text-sm" />
+            <Input name="advertisementManagerLine2" value={formData.advertisementManagerLine2} onChange={handleChange} placeholder="City/Address" className="text-sm" />
+            <p className="text-xs pt-2">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto table-container-print">
+          <Table className="min-w-full print-table print-border border-black">
+            <TableHeader className="bg-secondary print-table-header">
+              <TableRow>
+                <TableHead className="w-[8%] p-1.5 text-xs font-bold print-border-thin border border-black">Key No.</TableHead>
+                <TableHead className="w-[20%] p-1.5 text-xs font-bold print-border-thin border border-black">Publication(s)</TableHead>
+                <TableHead className="w-[12%] p-1.5 text-xs font-bold print-border-thin border border-black">Size</TableHead>
+                <TableHead className="w-[15%] p-1.5 text-xs font-bold print-border-thin border border-black">Position</TableHead>
+                <TableHead className="w-[10%] p-1.5 text-xs font-bold print-border-thin border border-black">Premium%</TableHead>
+                <TableHead className="w-[10%] p-1.5 text-xs font-bold print-border-thin border border-black">Rate</TableHead>
+                <TableHead className="w-[15%] p-1.5 text-xs font-bold print-border-thin border border-black">Insertion Date(s)</TableHead>
+                <TableHead className="w-[10%] p-1.5 text-xs font-bold print-border-thin border border-black">Amount</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {(formData.tableData || []).map((row, index) => (
+                <TableRow key={index}>
+                  <TableCell className="p-1 print-border-thin border border-black min-h-[80px] h-auto align-top">
+                    <Textarea name="keyNo" value={row.keyNo} onChange={(e) => handleTableChange(index, e)} className="text-xs min-h-[80px] h-auto print-table-cell" />
+                  </TableCell>
+                  <TableCell className="p-1 print-border-thin border border-black min-h-[80px] h-auto align-top">
+                    <Textarea name="publication" value={row.publication} onChange={(e) => handleTableChange(index, e)} className="text-xs min-h-[80px] h-auto print-table-cell" />
+                  </TableCell>
+                  <TableCell className="p-1 print-border-thin border border-black min-h-[80px] h-auto align-top">
+                    <Textarea name="size" value={row.size} onChange={(e) => handleTableChange(index, e)} className="text-xs min-h-[80px] h-auto print-table-cell" />
+                  </TableCell>
+                  <TableCell className="p-1 print-border-thin border border-black min-h-[80px] h-auto align-top">
+                    <Textarea name="position" value={row.position} onChange={(e) => handleTableChange(index, e)} className="text-xs min-h-[80px] h-auto print-table-cell" />
+                  </TableCell>
+                  <TableCell className="p-1 print-border-thin border border-black min-h-[80px] h-auto align-top">
+                    <Textarea name="premium" value={row.premium} onChange={(e) => handleTableChange(index, e)} className="text-xs min-h-[80px] h-auto print-table-cell" />
+                  </TableCell>
+                  <TableCell className="p-1 print-border-thin border border-black min-h-[80px] h-auto align-top">
+                    <Textarea name="rate" value={row.rate} onChange={(e) => handleTableChange(index, e)} className="text-xs min-h-[80px] h-auto print-table-cell" />
+                  </TableCell>
+                  <TableCell className="p-1 print-border-thin border border-black min-h-[80px] h-auto align-top">
+                    <Textarea name="insertionDate" value={row.insertionDate} onChange={(e) => handleTableChange(index, e)} className="text-xs min-h-[80px] h-auto print-table-cell" />
+                  </TableCell>
+                  <TableCell className="p-1 print-border-thin border border-black min-h-[80px] h-auto align-top">
+                    <Textarea name="amount" value={row.amount} onChange={(e) => handleTableChange(index, e)} className="text-xs min-h-[80px] h-auto print-table-cell" />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+
+        <div className="matter-box flex print-border border border-black rounded-md h-[100px] overflow-hidden">
+          <div className="matter-label bg-black text-white flex items-center justify-center p-2 w-[25px] flex-shrink-0">
+            <span className="transform rotate-180 select-none" style={{ writingMode: 'vertical-lr' }}>MATTER</span>
+          </div>
+          <div className="matter-content p-0 flex-1">
+            <Textarea
+              id="matter"
+              name="matter"
+              value={formData.matter}
+              onChange={handleChange}
+              placeholder="Enter the matter here"
+              className="h-full w-full text-sm border-0 resize-none focus-visible:ring-0"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2 print-border border border-black p-3 rounded-md billing-address-box">
+            <Label htmlFor="billingAddress" className="font-semibold text-md billing-title-underline">Forward all bills with relevant voucher copies to:-</Label>
+            <Textarea id="billingAddress" name="billingAddress" value={formData.billingAddress} onChange={handleChange} className="text-xs min-h-[80px]" />
+          </div>
+
+          <div className="space-y-2 print-border border border-black p-3 rounded-md notes-stamp-container relative">
+            <div className="notes-content">
+                <Label htmlFor="notes" className="font-semibold text-md note-title-underline">Note:</Label>
+                <Textarea id="notes" name="notes" value={formData.notes} onChange={handleChange} placeholder="1. First note..." className="text-xs min-h-[60px]" />
+            </div>
+            <div 
+                className="stamp-container-interactive absolute top-1 right-1 w-[100px] h-[75px] border-dashed border-2 border-gray-300 flex items-center justify-center text-gray-400 hover:bg-gray-50 cursor-pointer rounded-md"
+                onClick={() => stampInputRef.current?.click()}
+                data-ai-hint="stamp seal"
+            >
+                {stampImage ? (
+                    <Image src={stampImage} alt="Stamp Preview" layout="fill" objectFit="contain" className="rounded-md"/>
+                ) : (
+                    <div className="text-center text-xs p-1">
+                        <UploadCloud size={24} className="mx-auto mb-1"/>
+                        <span>Upload Stamp</span>
+                    </div>
+                )}
+            </div>
+            <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                ref={stampInputRef}
+                onChange={handleImageChange}
+            />
+          </div>
+        </div>
+      </CardContent>
+      <CardFooter className="flex flex-wrap justify-end gap-2 p-4 border-t print-hidden">
+        <Button onClick={togglePrintPreview} variant="outline"><Eye className="mr-2" />Preview Print</Button>
+        <Button onClick={handleClearForm} variant="destructive"><Trash2 className="mr-2"/>Clear Form</Button>
+        <Button onClick={handleLoadDraft}><FolderOpen className="mr-2"/>Load Draft</Button>
+        <Button onClick={handleSaveDraft} variant="secondary"><Save className="mr-2"/>Save Draft</Button>
+      </CardFooter>
+    </Card>
   );
 }
