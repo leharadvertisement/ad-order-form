@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { DatePicker } from '@/components/ui/date-picker';
+import { DatePicker } from '@/components/ui/date-picker'; // Corrected import
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Image from 'next/image';
@@ -611,14 +611,14 @@ const AdOrderForm: FC = () => {
   return (
     <div className="max-w-[210mm] mx-auto p-1 print-root-container bg-background" id="main-application-container">
       
-      <div className="flex justify-end items-center gap-2 p-2 mb-2 no-print no-pdf-export">
+      <div className="flex justify-end items-center gap-2 p-2 mb-2 no-print no-pdf-export action-buttons-container">
         <Button onClick={handlePrintPreview} variant="outline" size="sm" aria-label="Print Preview">
             <Eye className="mr-2" /> Preview
         </Button>
         <Button onClick={generatePdf} variant="outline" size="sm" aria-label="Download PDF">
             <Download className="mr-2" /> PDF
         </Button>
-         <Button onClick={handleFullScreenPreview} variant="outline" size="sm" aria-label="Toggle Fullscreen Preview">
+         <Button onClick={isFullScreenPreview ? handleExitFullScreenPreview : handleFullScreenPreview} variant="outline" size="sm" aria-label="Toggle Fullscreen Preview">
             {isFullScreenPreview ? <EyeOff className="mr-2" /> : <Maximize className="mr-2" />} Fullscreen
         </Button>
       </div>
@@ -724,7 +724,7 @@ const AdOrderForm: FC = () => {
           </div>
         </div>
 
-        <div className="flex mb-3 min-h-[100px] items-stretch matter-container-print-parent p-3 border-2 border-black rounded">
+        <div className="flex mb-3 min-h-[100px] items-stretch matter-container-print-parent p-3">
             <div className="matter-label-screen flex items-center justify-center p-1 w-[38px] self-stretch">
                 <span className="text-sm font-bold">MATTER</span>
             </div>
@@ -841,5 +841,3 @@ const AdOrderForm: FC = () => {
 };
 
 export default AdOrderForm;
-
-    
