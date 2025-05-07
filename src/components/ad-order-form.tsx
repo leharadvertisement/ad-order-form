@@ -60,7 +60,7 @@ export default function AdOrderForm() {
   ]);
   const [stampPreview, setStampPreview] = useState<string | null>(null);
   const [roNumber, setRoNumber] = useState('');
-  const [orderDate, setOrderDate] = useState<Date | undefined>(undefined);
+  const [orderDate, setOrderDate] = useState<Date | undefined>(new Date()); // Initialize with today's date
   const [clientName, setClientName] = useState('');
   const [advertisementManagerLine1, setAdvertisementManagerLine1] = useState('');
   const [advertisementManagerLine2, setAdvertisementManagerLine2] = useState('');
@@ -88,11 +88,12 @@ export default function AdOrderForm() {
 
   // Initialize date on client-side mount
    useEffect(() => {
-     if (isClient && orderDate === undefined) {
+     if (isClient) {
+       const today = new Date();
        // Check local storage first, then default to today
        try {
          const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
-         let initialDate = new Date(); // Default to today
+         let initialDate = today; // Default to today
          if (savedData) {
            const parsedData: Partial<FormData> = JSON.parse(savedData);
            if (parsedData.orderDate) {
@@ -103,12 +104,15 @@ export default function AdOrderForm() {
            }
          }
          setOrderDate(initialDate);
+         setDisplayDate(format(initialDate, "dd.MM.yyyy"));
+
        } catch (error) {
          console.error("Error reading initial date from localStorage:", error);
-         setOrderDate(new Date()); // Fallback to today on error
+         setOrderDate(today); // Fallback to today on error
+         setDisplayDate(format(today, "dd.MM.yyyy"));
        }
      }
-   }, [isClient, orderDate]); // Rerun if orderDate is still undefined after isClient is true
+   }, [isClient]);
 
   // Effect to load data
   useEffect(() => {
@@ -131,25 +135,31 @@ export default function AdOrderForm() {
         setStampPreview(parsedData.stampPreview || null);
         setRoNumber(parsedData.roNumber || '');
 
-        // Date loading is handled in the dedicated effect
-        if (parsedData.orderDate && orderDate === undefined) { // Only set if not already set by the other effect
+        if (parsedData.orderDate) {
            const savedDateObj = new Date(parsedData.orderDate);
            if (!isNaN(savedDateObj.getTime())) {
                setOrderDate(savedDateObj);
+               setDisplayDate(format(savedDateObj, "dd.MM.yyyy"));
            } else {
                 console.warn("Invalid date found in localStorage, using today's date instead.");
-                setOrderDate(new Date());
+                const today = new Date();
+                setOrderDate(today);
+                setDisplayDate(format(today, "dd.MM.yyyy"));
            }
-        } else if (orderDate === undefined) { // If no saved date and not set, default to today
-            setOrderDate(new Date());
+        } else {
+            const today = new Date();
+            setOrderDate(today);
+            setDisplayDate(format(today, "dd.MM.yyyy"));
         }
 
 
         setClientName(parsedData.clientName || '');
         setAdvertisementManagerLine1(parsedData.advertisementManagerLine1 || '');
         setAdvertisementManagerLine2(parsedData.advertisementManagerLine2 || '');
-      } else if (orderDate === undefined) { // If no saved data at all, default date
-        setOrderDate(new Date());
+      } else {
+        const today = new Date();
+        setOrderDate(today);
+        setDisplayDate(format(today, "dd.MM.yyyy"));
       }
 
     } catch (error) {
@@ -159,13 +169,13 @@ export default function AdOrderForm() {
         description: "Could not recover previous draft data. Using defaults.",
         variant: "destructive",
       });
-      if (orderDate === undefined) {
-        setOrderDate(new Date()); // Fallback date on error
-      }
+      const today = new Date();
+      setOrderDate(today);
+      setDisplayDate(format(today, "dd.MM.yyyy"));
     } finally {
         isInitialLoadRef.current = false;
     }
-  }, [isClient, toast, orderDate]);
+  }, [isClient, toast]);
 
 
    // Effect to update displayDate whenever orderDate changes (client-side only)
@@ -190,6 +200,7 @@ export default function AdOrderForm() {
     }
 
     if (orderDate === undefined || isNaN(orderDate.getTime())) {
+      // Don't save if date is invalid, this might happen during initial hydration
       return;
     }
 
@@ -343,6 +354,7 @@ export default function AdOrderForm() {
     setRoNumber('');
     const today = new Date();
     setOrderDate(today);
+    setDisplayDate(format(today, "dd.MM.yyyy"));
     setClientName('');
     setAdvertisementManagerLine1('');
     setAdvertisementManagerLine2('');
@@ -378,13 +390,24 @@ export default function AdOrderForm() {
    // Function to trigger browser's print dialog
    const handlePrint = useCallback(() => {
       if (typeof window !== 'undefined') {
-        setTimeout(() => {
-           window.print();
-        }, 100); // Small delay to ensure DOM updates
+        // If in fullscreen preview, ensure it's rendered correctly before printing
+        if (isFullScreenPreview) {
+             setTimeout(() => {
+                window.print();
+             }, 100); // Delay to allow DOM updates in fullscreen
+        } else {
+            // Temporarily enter fullscreen preview mode for printing to use its styles
+            setIsFullScreenPreview(true);
+            setTimeout(() => {
+                window.print();
+                setIsFullScreenPreview(false); // Exit fullscreen after printing
+            }, 100); // Delay to allow DOM updates
+        }
       }
-   }, []);
+   }, [isFullScreenPreview]);
 
-   const safeDisplayDate = isClient && orderDate && !isNaN(orderDate.getTime()) ? displayDate : (isClient ? 'Select Date' : 'Loading...');
+
+   const safeDisplayDate = isClient && orderDate && !isNaN(orderDate.getTime()) ? displayDate : (isClient && orderDate === undefined ? 'Select Date' : 'Loading...');
 
 
   // --- Main Render ---
@@ -408,7 +431,7 @@ export default function AdOrderForm() {
                   <Button
                      variant="outline"
                      className="absolute top-2 left-2 z-[1100] print-hidden fullscreen-preview-button"
-                     onClick={handlePrint}
+                     onClick={handlePrint} // Use the same handlePrint for consistency
                    >
                      <Printer className="mr-2 h-4 w-4" /> Print
                    </Button>
@@ -423,45 +446,45 @@ export default function AdOrderForm() {
                   >
                       <CardContent className="card-content-print-fix"> {/* Match print styles */}
                         {/* Header */}
-                        <div className="text-center bg-black text-white p-1 mb-2 header-title"> {/* Reduced margin */}
+                        <div className="text-center bg-black text-white p-1 mb-2 header-title">
                           <h1 className="text-xl m-0 font-bold">RELEASE ORDER</h1>
                         </div>
 
-                       {/* Address Boxes Container */}
-                       <div className="address-container flex justify-between gap-2 mb-2"> {/* Reduced gap/margin */}
-                         {/* Left Address Box */}
-                         <div className="address-box w-[48%] print-border rounded p-1.5 border border-black"> {/* Reduced padding */}
-                           <p className="text-[7pt] leading-tight"> {/* Smaller font */}
-                             Lehar Advertising Agency Pvt. Ltd.<br />
-                             D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
-                             Alaknanda Commercial Complex,<br />
-                             New Delhi-110019<br />
-                             Tel: 49573333, 34, 35, 36<br />
-                             Fax: 26028101
-                           </p>
-                         </div>
-                          {/* Right Box: R.O., Date, Client */}
-                           <div className="ro-date-client-container w-[48%] print-border rounded p-1.5 border border-black"> {/* Reduced padding/spacing, removed space-y */}
-                             {/* R.O. No. LN */}
-                             <div className="field-row flex items-center">
-                               <Label className="w-auto text-xs shrink-0 mr-1">R.O.No.LN:</Label>
-                               <p className="flex-1 px-1 py-0.5 text-xs font-bold border-b border-black min-h-[1.2em]">{roNumber || <span className="text-muted-foreground italic text-xs">Not entered</span>}</p>
+                        {/* Top Row: Address and RO/Date/Client */}
+                        <div className="address-container flex justify-between gap-2 mb-2">
+                             {/* Left Address Box */}
+                             <div className="address-box w-[48%] print-border rounded p-1.5 border border-black">
+                               <p className="text-[7pt] leading-tight">
+                                 Lehar Advertising Agency Pvt. Ltd.<br />
+                                 D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
+                                 Alaknanda Commercial Complex,<br />
+                                 New Delhi-110019<br />
+                                 Tel: 49573333, 34, 35, 36<br />
+                                 Fax: 26028101
+                               </p>
                              </div>
-                             {/* Date */}
-                             <div className="field-row flex items-center">
-                               <Label className="w-auto text-xs shrink-0 mr-1">Date:</Label>
-                               <p className="flex-1 px-1 py-0.5 text-xs font-bold border-b border-black text-center min-h-[1.2em]">{safeDisplayDate}</p>
-                             </div>
-                             {/* Client */}
-                             <div className="field-row flex items-center">
-                               <Label className="w-auto text-xs shrink-0 mr-1">Client:</Label>
-                               <p className="flex-1 px-1 py-0.5 text-xs font-bold border-b border-black min-h-[1.2em]">{clientName || <span className="text-muted-foreground italic text-xs">Not entered</span>}</p>
-                             </div>
-                           </div>
-                       </div>
+                              {/* Right Box: R.O., Date, Client */}
+                               <div className="ro-date-client-container w-[48%] print-border rounded p-1.5 border border-black">
+                                 {/* R.O. No. LN */}
+                                 <div className="field-row flex items-center">
+                                   <Label className="w-auto text-xs shrink-0 mr-1">R.O.No.LN:</Label>
+                                   <p className="flex-1 px-1 py-0.5 text-xs font-bold border-b border-black min-h-[1.2em]">{roNumber || <span className="text-muted-foreground italic text-xs">Not entered</span>}</p>
+                                 </div>
+                                 {/* Date */}
+                                 <div className="field-row flex items-center">
+                                   <Label className="w-auto text-xs shrink-0 mr-1">Date:</Label>
+                                   <p className="flex-1 px-1 py-0.5 text-xs font-bold border-b border-black text-center min-h-[1.2em]">{safeDisplayDate}</p>
+                                 </div>
+                                 {/* Client */}
+                                 <div className="field-row flex items-center">
+                                   <Label className="w-auto text-xs shrink-0 mr-1">Client:</Label>
+                                   <p className="flex-1 px-1 py-0.5 text-xs font-bold border-b border-black min-h-[1.2em]">{clientName || <span className="text-muted-foreground italic text-xs">Not entered</span>}</p>
+                                 </div>
+                               </div>
+                        </div>
 
                         {/* Advertisement Manager Section */}
-                         <div className="advertisement-manager-section print-border rounded p-1.5 mb-2 border border-black"> {/* Reduced padding/margin */}
+                         <div className="advertisement-manager-section print-border rounded p-1.5 mb-2 border border-black">
                            <Label className="block mb-0.5 text-sm">The Advertisement Manager</Label>
                            <div className="relative mb-0.5">
                              <p className="w-full px-1 py-0.5 text-xs font-bold min-h-[1.2em] border-b border-black">{advertisementManagerLine1 || <span className="text-muted-foreground italic text-xs">Not entered</span>}</p>
@@ -469,16 +492,16 @@ export default function AdOrderForm() {
                            <div className="relative mb-0.5">
                              <p className="w-full px-1 py-0.5 text-xs font-bold min-h-[1.2em] border-b border-black">{advertisementManagerLine2 || <span className="text-muted-foreground italic text-xs">Not entered</span>}</p>
                            </div>
-                           <p className="text-[7pt] mt-0.5">Kindly insert the advertisement/s in your issue/s for the following date/s</p> {/* Smaller font */}
+                           <p className="text-[7pt] mt-0.5">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
                          </div>
 
                         {/* Heading & Package Section */}
-                       <div className="heading-package-container flex gap-2 mb-2"> {/* Reduced gap/margin */}
-                         <div className="heading-caption-box flex-1 print-border rounded p-1.5 border border-black"> {/* Reduced padding */}
+                       <div className="heading-package-container flex gap-2 mb-2">
+                         <div className="heading-caption-box flex-1 print-border rounded p-1.5 border border-black">
                            <Label htmlFor="captionPreview" className="block mb-0.5 text-sm">Heading/Caption:</Label>
                            <p id="captionPreview" className="w-full px-1 py-0.5 text-xs font-bold min-h-[1.2em] border-b border-black">{caption || <span className="text-muted-foreground italic text-xs">Not entered</span>}</p>
                          </div>
-                         <div className="package-box w-[30%] print-border rounded p-1.5 border border-black"> {/* Reduced padding */}
+                         <div className="package-box w-[30%] print-border rounded p-1.5 border border-black">
                            <Label htmlFor="packagePreview" className="block mb-0.5 text-sm">Package:</Label>
                             <p id="packagePreview" className="w-full px-1 py-0.5 text-xs font-bold min-h-[1.2em] border-b border-black">{packageName || <span className="text-muted-foreground italic text-xs">Not entered</span>}</p>
                          </div>
@@ -486,11 +509,11 @@ export default function AdOrderForm() {
 
 
                         {/* Schedule Table */}
-                        <div className="mb-2 table-container-print"> {/* Reduced margin */}
+                        <div className="mb-2 table-container-print">
                           <Table className="print-table print-border border border-black">
                             <TableHeader className="bg-secondary print-table-header">
                               <TableRow>
-                                <TableHead className="w-[10%] print-border-thin border border-black p-1 text-xs font-bold">Key No.</TableHead> {/* Reduced padding */}
+                                <TableHead className="w-[10%] print-border-thin border border-black p-1 text-xs font-bold">Key No.</TableHead>
                                 <TableHead className="w-[25%] print-border-thin border border-black p-1 text-xs font-bold">Publication(s)</TableHead>
                                 <TableHead className="w-[15%] print-border-thin border border-black p-1 text-xs font-bold">Edition(s)</TableHead>
                                 <TableHead className="w-[15%] print-border-thin border border-black p-1 text-xs font-bold">Size</TableHead>
@@ -500,9 +523,9 @@ export default function AdOrderForm() {
                             </TableHeader>
                              <TableBody>
                                {scheduleRows.map((row) => (
-                                 <TableRow key={row.id + '-preview'} className="min-h-[80px] align-top"> {/* Match print height */}
-                                   <TableCell className="print-border-thin border border-black p-0.5 print-table-cell align-top"> {/* Reduced padding */}
-                                     <div className="w-full h-full text-[7pt] font-bold align-top whitespace-pre-wrap break-words min-h-[80px]"> {/* Match print styles */}
+                                 <TableRow key={row.id + '-preview'} className="min-h-[80px] align-top">
+                                   <TableCell className="print-border-thin border border-black p-0.5 print-table-cell align-top">
+                                     <div className="w-full h-full text-[7pt] font-bold align-top whitespace-pre-wrap break-words min-h-[80px]">
                                        {row.keyNo}
                                      </div>
                                    </TableCell>
@@ -538,14 +561,12 @@ export default function AdOrderForm() {
                         </div>
 
                         {/* Matter Section */}
-                        <div className="matter-box flex h-[80px] print-border rounded mb-2 overflow-hidden border border-black"> {/* Match print height/border */}
-                            {/* Horizontal Matter Label for Print/Preview */}
+                        <div className="matter-box flex h-[80px] print-border rounded mb-2 overflow-hidden border border-black">
                             <div className="matter-label bg-black text-white flex items-center justify-center p-1 flex-shrink-0">
                                 <span className="text-sm font-bold whitespace-nowrap">MATTER</span>
                             </div>
-                           {/* Display matter content */}
-                           <div className="matter-content flex-1 p-0.5 overflow-hidden"> {/* Reduced padding */}
-                              <div className="whitespace-pre-wrap break-words text-xs font-bold h-full overflow-hidden"> {/* Match print styles */}
+                           <div className="matter-content flex-1 p-0.5 overflow-hidden">
+                              <div className="whitespace-pre-wrap break-words text-xs font-bold h-full overflow-hidden">
                                   {matter}
                               </div>
                            </div>
@@ -553,9 +574,9 @@ export default function AdOrderForm() {
 
 
                         {/* Billing Info */}
-                        <div className="billing-address-box print-border rounded p-1.5 mb-2 border border-black"> {/* Reduced padding/margin */}
+                        <div className="billing-address-box print-border rounded p-1.5 mb-2 border border-black">
                            <p className="font-bold mb-0.5 billing-title-underline text-sm">Forward all bills with relevant voucher copies to:</p>
-                           <p className="text-[7pt] leading-tight pt-0.5"> {/* Smaller font */}
+                           <p className="text-[7pt] leading-tight pt-0.5">
                              D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
                              Alaknanda Commercial Complex,<br />
                              New Delhi-110019<br />
@@ -566,11 +587,10 @@ export default function AdOrderForm() {
 
 
                          {/* Notes & Stamp Container */}
-                          <div className="notes-stamp-container relative print-border rounded p-1.5 border border-black min-h-[70px]"> {/* Match print height/padding */}
-                            {/* Notes Section */}
-                             <div className="notes-content flex-1 pr-[90px]"> {/* Ensure space for stamp */}
+                          <div className="notes-stamp-container relative print-border rounded p-1.5 border border-black min-h-[70px]">
+                             <div className="notes-content flex-1 pr-[90px]">
                                <p className="font-bold mb-0.5 note-title-underline text-sm">Note:</p>
-                               <ol className="list-decimal list-inside text-[7pt] space-y-0.5 pt-0.5 pl-2"> {/* Smaller font, reduced spacing */}
+                               <ol className="list-decimal list-inside text-[7pt] space-y-0.5 pt-0.5 pl-2">
                                  <li>Space reserved vide our letter No.</li>
                                  <li>No two advertisements of the same client should appear in the same issue.</li>
                                  <li>Please quote R.O. No. in all your bills and letters.</li>
@@ -578,22 +598,21 @@ export default function AdOrderForm() {
                                </ol>
                              </div>
 
-                             {/* Visible Stamp Image for Print/PDF Only */}
                              {stampPreview && (
-                               <div className="stamp-container-print absolute top-[1pt] right-[1pt] w-[85px] h-[65px] flex items-center justify-center border-none overflow-hidden"> {/* Match print styles */}
+                               <div className="stamp-container-print absolute top-[1pt] right-[1pt] w-[85px] h-[65px] flex items-center justify-center border-none overflow-hidden">
                                  <Image
                                    src={stampPreview}
                                    alt="Stamp"
-                                   width={85} // Match print size
-                                   height={65} // Match print size
+                                   width={85}
+                                   height={65}
                                    style={{ objectFit: 'contain' }}
                                    className="stamp-print-image max-w-full max-h-full"
                                  />
                                </div>
                              )}
                           </div>
-                      </CardContent> {/* End of CardContent matching print styles */}
-                  </div> {/* End of printable-area */}
+                      </CardContent>
+                  </div>
               </div>
           </div>
       )}
@@ -603,6 +622,9 @@ export default function AdOrderForm() {
          <Button onClick={handleFullScreenPreview} variant="outline" className="print-hidden fullscreen-preview-button">
              <Expand className="mr-2 h-4 w-4" /> Full Display
          </Button>
+         <Button onClick={handlePrint} variant="outline" className="print-hidden">
+             <Printer className="mr-2 h-4 w-4" /> Print Preview
+         </Button>
         <Button onClick={handleClearForm} variant="destructive" className="print-hidden">
           <Eraser className="mr-2 h-4 w-4" /> Clear Form & Draft
         </Button>
@@ -610,18 +632,17 @@ export default function AdOrderForm() {
 
 
       {/* Use the ref on the actual printable area */}
-      <Card id="printable-area-form" ref={formRef} className="w-full print-border-heavy rounded shadow-md p-3 border-2 border-black bg-white"> {/* Slightly reduced padding */}
-        {/* Use correct class for CardContent */}
+      <Card id="printable-area-form" ref={formRef} className="w-full print-border-heavy rounded shadow-md p-3 border-2 border-black bg-white">
         <CardContent className="p-0 card-content-print-fix card-content-pdf-fix">
           {/* Header */}
-          <div className="text-center bg-black text-white p-1 mb-3 header-title rounded"> {/* Reduced margin */}
+          <div className="text-center bg-black text-white p-1 mb-3 header-title rounded">
             <h1 className="text-xl m-0 font-bold">RELEASE ORDER</h1>
           </div>
 
-          {/* Address Boxes Container */}
-          <div className="address-container flex justify-between gap-2 mb-3"> {/* Reduced gap/margin */}
+          {/* Top Row: Address and RO/Date/Client */}
+          <div className="address-container flex justify-between gap-2 mb-3">
             {/* Left Address Box */}
-            <div className="address-box w-[48%] print-border rounded p-1.5 border border-black"> {/* Reduced padding */}
+            <div className="address-box w-[48%] print-border rounded p-1.5 border border-black">
               <p className="text-xs leading-tight">
                 Lehar Advertising Agency Pvt. Ltd.<br />
                 D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
@@ -632,7 +653,7 @@ export default function AdOrderForm() {
               </p>
             </div>
             {/* Right Box: R.O., Date, Client */}
-             <div className="ro-date-client-container w-[48%] print-border rounded p-1.5 border border-black form-active"> {/* Reduced padding, use space-y-1 from globals.css */}
+             <div className="ro-date-client-container w-[48%] print-border rounded p-1.5 border border-black form-active">
                {/* R.O. No. LN */}
                <div className="field-row flex items-center">
                  <Label htmlFor="roNumber" className="w-auto text-sm shrink-0 mr-1">R.O.No.LN:</Label>
@@ -659,7 +680,7 @@ export default function AdOrderForm() {
                          <Button
                            variant={"ghost"}
                            className={cn(
-                             "h-6 w-6 p-0 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print ml-1 print-hidden", // Added print-hidden
+                             "h-6 w-6 p-0 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print ml-1 print-hidden",
                            )}
                            id="orderDateTrigger"
                          >
@@ -667,15 +688,17 @@ export default function AdOrderForm() {
                            <span className="sr-only">Pick a date</span>
                          </Button>
                        </PopoverTrigger>
-                       <PopoverContent className="w-auto p-0 no-print print-hidden"> {/* Added print-hidden */}
+                       <PopoverContent className="w-auto p-0 no-print print-hidden">
                          <Calendar
                            mode="single"
                            selected={orderDate}
                            onSelect={(date) => {
                              if (date instanceof Date && !isNaN(date.getTime())) {
                                setOrderDate(date);
+                               setDisplayDate(format(date, "dd.MM.yyyy"));
                              } else if (date === undefined) {
-                               setOrderDate(undefined); // Allow clearing the date
+                               setOrderDate(undefined);
+                               setDisplayDate('Select Date');
                              }
                            }}
                            initialFocus
@@ -686,7 +709,7 @@ export default function AdOrderForm() {
                      <Button
                        variant={"ghost"}
                        className={cn(
-                         "h-6 w-6 p-0 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print ml-1 print-hidden", // Added print-hidden
+                         "h-6 w-6 p-0 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print ml-1 print-hidden",
                          "text-muted-foreground"
                        )}
                        disabled
@@ -713,35 +736,35 @@ export default function AdOrderForm() {
              </div>
           </div>
 
-           {/* Advertisement Manager Section */}
-           <div className="advertisement-manager-section print-border rounded p-1.5 mb-3 border border-black"> {/* Reduced padding/margin */}
-             <Label className="block mb-0.5 text-sm">The Advertisement Manager</Label>
-             <div className="relative mb-0.5">
-               <Input
-                 id="adManager1"
-                 type="text"
-                 placeholder="Line 1"
-                 className="w-full border-0 border-b border-input rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                 value={advertisementManagerLine1}
-                 onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
-               />
-             </div>
-             <div className="relative">
-               <Input
-                 id="adManager2"
-                 type="text"
-                 placeholder="Line 2"
-                 className="w-full border-0 border-b border-input rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                 value={advertisementManagerLine2}
-                 onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
-               />
-             </div>
-             <p className="text-xs mt-1">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
-           </div>
+          {/* Advertisement Manager Section */}
+          <div className="advertisement-manager-section print-border rounded p-1.5 mb-3 border border-black">
+            <Label className="block mb-0.5 text-sm">The Advertisement Manager</Label>
+            <div className="relative mb-0.5">
+              <Input
+                id="adManager1"
+                type="text"
+                placeholder="Line 1"
+                className="w-full border-0 border-b border-input rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                value={advertisementManagerLine1}
+                onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
+              />
+            </div>
+            <div className="relative">
+              <Input
+                id="adManager2"
+                type="text"
+                placeholder="Line 2"
+                className="w-full border-0 border-b border-input rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                value={advertisementManagerLine2}
+                onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
+              />
+            </div>
+            <p className="text-xs mt-1">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
+          </div>
 
           {/* Heading & Package Section */}
-          <div className="heading-package-container flex gap-2 mb-3"> {/* Reduced gap/margin */}
-            <div className="heading-caption-box flex-1 print-border rounded p-1.5 border border-black"> {/* Reduced padding */}
+          <div className="heading-package-container flex gap-2 mb-3">
+            <div className="heading-caption-box flex-1 print-border rounded p-1.5 border border-black">
               <Label htmlFor="caption" className="block mb-0.5 text-sm">Heading/Caption:</Label>
               <Input
                 id="caption"
@@ -752,7 +775,7 @@ export default function AdOrderForm() {
                 onChange={(e) => setCaption(e.target.value)}
               />
             </div>
-            <div className="package-box w-[30%] print-border rounded p-1.5 border border-black"> {/* Reduced padding */}
+            <div className="package-box w-[30%] print-border rounded p-1.5 border border-black">
               <Label htmlFor="package" className="block mb-0.5 text-sm">Package:</Label>
               <Input
                 id="package"
@@ -767,11 +790,11 @@ export default function AdOrderForm() {
 
 
           {/* Schedule Table */}
-          <div className="mb-3 table-container-print"> {/* Reduced margin */}
+          <div className="mb-3 table-container-print">
             <Table className="print-table print-border border border-black">
               <TableHeader className="bg-secondary print-table-header">
                 <TableRow>
-                  <TableHead className="w-[10%] print-border-thin border border-black p-1 text-sm font-bold">Key No.</TableHead> {/* Reduced padding */}
+                  <TableHead className="w-[10%] print-border-thin border border-black p-1 text-sm font-bold">Key No.</TableHead>
                   <TableHead className="w-[25%] print-border-thin border border-black p-1 text-sm font-bold">Publication(s)</TableHead>
                   <TableHead className="w-[15%] print-border-thin border border-black p-1 text-sm font-bold">Edition(s)</TableHead>
                   <TableHead className="w-[15%] print-border-thin border border-black p-1 text-sm font-bold">Size</TableHead>
@@ -781,7 +804,7 @@ export default function AdOrderForm() {
               </TableHeader>
               <TableBody>
                 {scheduleRows.map((row) => (
-                  <TableRow key={row.id} className="min-h-[80px] align-top"> {/* Match print height */}
+                  <TableRow key={row.id} className="min-h-[80px] align-top">
                     <TableCell className="print-border-thin border border-black p-0 print-table-cell align-top">
                       <Textarea
                         value={row.keyNo}
@@ -828,7 +851,7 @@ export default function AdOrderForm() {
                 ))}
               </TableBody>
             </Table>
-            <div className="flex gap-2 mt-2 no-print print-hidden"> {/* Added print-hidden */}
+            <div className="flex gap-2 mt-2 no-print print-hidden">
               <Button variant="outline" size="sm" onClick={addRow}>
                 <PlusCircle className="mr-2 h-4 w-4" /> Add Row
               </Button>
@@ -839,8 +862,7 @@ export default function AdOrderForm() {
           </div>
 
           {/* Matter Section */}
-          <div className="matter-box flex h-[80px] print-border rounded mb-3 overflow-hidden border border-black"> {/* Match print height/border */}
-            {/* Horizontal Text Label */}
+          <div className="matter-box flex h-[80px] print-border rounded mb-3 overflow-hidden border border-black">
             <div className="matter-label bg-black text-white flex items-center justify-center p-1 flex-shrink-0">
               <span className="text-sm font-bold whitespace-nowrap">
                 MATTER
@@ -859,7 +881,7 @@ export default function AdOrderForm() {
 
 
           {/* Billing Info */}
-          <div className="billing-address-box print-border rounded p-1.5 mb-3 border border-black"> {/* Reduced padding/margin */}
+          <div className="billing-address-box print-border rounded p-1.5 mb-3 border border-black">
              <p className="font-bold mb-0.5 billing-title-underline text-sm">Forward all bills with relevant voucher copies to:</p>
              <p className="text-xs leading-tight pt-0.5">
                D-9 & D-10, 1st Floor, Pushpa Bhawan,<br />
@@ -872,11 +894,10 @@ export default function AdOrderForm() {
 
 
            {/* Notes & Stamp Container */}
-            <div className="notes-stamp-container relative print-border rounded p-1.5 border border-black min-h-[70px]"> {/* Match print height/padding */}
-              {/* Notes Section */}
-               <div className="notes-content flex-1 pr-[90px]"> {/* Ensure space for stamp */}
+            <div className="notes-stamp-container relative print-border rounded p-1.5 border border-black min-h-[70px]">
+               <div className="notes-content flex-1 pr-[90px]">
                  <p className="font-bold mb-0.5 note-title-underline text-sm">Note:</p>
-                 <ol className="list-decimal list-inside text-xs space-y-0.5 pt-0.5 pl-3"> {/* Reduced spacing */}
+                 <ol className="list-decimal list-inside text-xs space-y-0.5 pt-0.5 pl-3">
                    <li>Space reserved vide our letter No.</li>
                    <li>No two advertisements of the same client should appear in the same issue.</li>
                    <li>Please quote R.O. No. in all your bills and letters.</li>
@@ -884,10 +905,9 @@ export default function AdOrderForm() {
                  </ol>
                </div>
 
-              {/* Stamp Area - Interactive Container (Screen Only) */}
               <div
                 id="stampContainerElement"
-                className="stamp-container-interactive absolute top-1 right-1 w-[85px] h-[65px] flex items-center justify-center cursor-pointer overflow-hidden group no-print border border-dashed border-gray-400 print-hidden" /* Added print-hidden */
+                className="stamp-container-interactive absolute top-1 right-1 w-[85px] h-[65px] flex items-center justify-center cursor-pointer overflow-hidden group no-print border-dashed border-gray-400 print-hidden"
                 onClick={triggerStampUpload}
                 onMouseEnter={triggerStampUpload}
               >
@@ -905,8 +925,8 @@ export default function AdOrderForm() {
                       id="stampPreviewScreen"
                       src={stampPreview}
                       alt="Stamp Preview"
-                      width={85} // Match print size
-                      height={65} // Match print size
+                      width={85}
+                      height={65}
                       style={{ objectFit: 'contain' }}
                       className="block max-w-full max-h-full"
                     />
@@ -920,7 +940,6 @@ export default function AdOrderForm() {
                   </Label>
                 )}
               </div>
-              {/* Visible Stamp Image for Print/PDF Only */}
               {stampPreview && (
                 <div className="stamp-container-print absolute top-[1pt] right-[1pt] w-[85px] h-[65px] hidden print-only-flex pdf-only-flex items-center justify-center border-none overflow-hidden">
                   <Image
@@ -939,3 +958,4 @@ export default function AdOrderForm() {
     </div>
   );
 }
+
