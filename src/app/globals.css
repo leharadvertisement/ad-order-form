@@ -2,358 +2,458 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Styles from the original HTML prompt */
-@media print {
-  #printButton, #downloadPdfButton, #printPreviewButton, #fullScreenButton, .print-icon-container, .no-print {
-    display: none !important;
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 222.2 47.4% 11.2%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 222.2 84% 4.9%;
+  --radius: 0.5rem;
+
+  /* Chart colors */
+  --chart-1: 12 76% 61%;
+  --chart-2: 173 58% 39%;
+  --chart-3: 197 37% 24%;
+  --chart-4: 43 74% 66%;
+  --chart-5: 27 87% 67%;
+
+  /* Sidebar specific theme variables */
+  --sidebar-background: 220 10% 98%; /* Light gray for sidebar */
+  --sidebar-foreground: 222.2 84% 4.9%; /* Dark text */
+  --sidebar-primary: 222.2 47.4% 11.2%; /* Dark blue for primary elements */
+  --sidebar-primary-foreground: 210 40% 98%; /* Light text on primary */
+  --sidebar-accent: 210 40% 92%; /* Lighter accent */
+  --sidebar-accent-foreground: 222.2 47.4% 11.2%; /* Dark text on accent */
+  --sidebar-border: 214.3 31.8% 88%; /* Slightly darker border for sidebar */
+  --sidebar-ring: 222.2 84% 4.9%;
+}
+
+.dark {
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 210 40% 98%;
+  --primary-foreground: 222.2 47.4% 11.2%;
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 212.7 26.8% 83.9%;
+
+  /* Chart colors for dark theme */
+  --chart-1: 211 76% 61%;
+  --chart-2: 173 58% 39%;
+  --chart-3: 197 37% 24%;
+  --chart-4: 43 74% 66%;
+  --chart-5: 27 87% 67%;
+
+  /* Sidebar specific theme variables for dark mode */
+  --sidebar-background: 222.2 80% 6.9%; /* Darker sidebar background */
+  --sidebar-foreground: 210 40% 94%; /* Lighter text for dark sidebar */
+  --sidebar-primary: 210 40% 98%;
+  --sidebar-primary-foreground: 222.2 47.4% 11.2%;
+  --sidebar-accent: 217.2 32.6% 22.5%; /* Darker accent */
+  --sidebar-accent-foreground: 210 40% 98%;
+  --sidebar-border: 217.2 32.6% 20.5%;
+  --sidebar-ring: 212.7 26.8% 83.9%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
   }
   body {
-      margin: 0 !important;
-      padding: 0 !important;
-      background-color: #fff !important; /* Ensure white background for printing */
-      color: #000 !important; /* Ensure black text for printing */
-     -webkit-print-color-adjust: exact !important; /* Chrome, Safari */
-      print-color-adjust: exact !important; /* Firefox, Edge */
-      font-family: Arial, sans-serif !important; /* Ensure Arial font for print */
+    @apply bg-background text-foreground;
+    font-family: Arial, sans-serif; /* Ensure Arial is default */
   }
-  #application {
-      width: 210mm !important;
-      min-height: 297mm !important; /* Use min-height to allow content to expand if needed */
-      height: auto !important; /* Allow content to determine height */
-      margin: 0 auto !important;
-      padding: 10mm !important; /* Standard A4 margin */
-      border: none !important;
-      box-shadow: none !important;
-      background-color: #fff !important;
-      color: #000 !important;
-      page-break-inside: avoid;
-      font-size: 10pt !important; /* Adjust base font size for print if needed */
-      font-weight: normal !important; /* Ensure normal font weight for print consistency */
-  }
+}
 
-  input, textarea, select {
-      border: none !important;
-      outline: none !important;
-      font-weight: bold !important;
-      font-size: 14px !important; /* Keep original font size for form elements in print */
-      color: #000 !important;
-      background-color: #fff !important;
-      padding: 0px !important; /* Minimal padding for print if needed */
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-  }
-  
-  /* Styles for text content that replaces inputs/textareas in print preview/PDF */
-  .static-text-replacement {
-    font-weight: bold !important; /* Match input style */
-    font-size: 14px !important; /* Match input style */
-    font-family: Arial, sans-serif !important;
-    color: #000 !important;
-    padding: 0px !important; /* Match input padding (or lack thereof) */
+/* General print styles */
+@media print {
+  body {
     margin: 0 !important;
-    white-space: pre-wrap !important;
-    word-wrap: break-word !important;
-    min-height: auto !important; 
-    border: none !important; /* No border for static text */
+    padding: 0 !important;
+    background-color: #fff !important; /* Ensure white background for printing */
+    color: #000 !important; /* Ensure black text for printing */
+    -webkit-print-color-adjust: exact !important; /* Chrome, Safari */
+    print-color-adjust: exact !important; /* Firefox, Edge */
+    font-family: Arial, sans-serif !important; /* Ensure Arial font for print */
+    font-size: 10pt; /* Consistent base font size for print */
   }
 
-  table {
-      border-collapse: collapse !important;
-      width: 100% !important;
-      border: 2px solid black !important; /* Ensure table border is visible */
+  /* Hide elements not meant for printing */
+  .no-print, .no-print-pdf, .print-preview-overlay {
+    display: none !important;
   }
-  th, td {
-      border: 1px solid black !important; /* Ensure cell borders are visible */
-      padding: 6px !important; /* Original padding for table cells */
-      text-align: left !important;
-      word-wrap: break-word !important;
-      font-size: 14px !important; /* Ensure consistent font size */
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-      font-family: Arial, sans-serif !important;
-  }
-  th {
-      background-color: #f0f0f0 !important;
-      font-weight: bold !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
+
+  /* Show elements specifically for printing */
+  .print-only-block { display: block !important; }
+  .print-only-flex { display: flex !important; }
+  .print-only-inline { display: inline !important; }
+  .print-only-inline-block { display: inline-block !important; }
+
+
+  /* Main application container for printing */
+  #printable-content, .print-a4-page {
+    width: 190mm !important; /* A4 width (210mm) - 10mm margin on each side for PDF */
+    min-height: 277mm !important; /* A4 height (297mm) - 10mm margin on each side for PDF */
+    height: auto !important; 
+    margin: 0 auto !important; 
+    padding: 0 !important; /* No internal padding for PDF, html2pdf margin handles it */
+    border: 2px solid black !important; 
+    box-shadow: none !important;
+    background-color: #fff !important;
+    color: #000 !important;
+    page-break-inside: avoid !important; 
+    font-weight: normal !important; 
   }
   
-  /* Release order title bar in print */
+  /* For direct browser print, use A4 size and 10mm padding */
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+  body:not(.pdf-generation-mode) #printable-content,
+  body:not(.pdf-generation-mode) .print-a4-page {
+     width: 210mm !important;
+     min-height: 297mm !important;
+     padding: 10mm !important; /* Standard A4 padding for direct print */
+  }
+
+
+  /* Ensure specific screen version of title bar is hidden, and print version is shown */
+  .release-order-titlebar-screen { display: none !important; }
   .release-order-titlebar-print {
+    display: block !important; /* Ensure it's visible */
     text-align: center !important;
-    margin-top: 10px !important;
+    margin-top: 5mm !important; 
+    margin-bottom: 5mm !important;
     background-color: black !important;
     color: white !important;
-    border: 2px solid black !important;
-    padding: 4px 10px !important;
+    border: 1px solid black !important; 
+    padding: 2mm 5mm !important;
     font-weight: bold !important;
     width: fit-content !important;
     margin-left: auto !important;
     margin-right: auto !important;
-    border-radius: 4px !important;
+    border-radius: 2mm !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
   .release-order-titlebar-print h2 {
       margin: 0 !important;
-      font-size: 22px !important;
+      font-size: 14pt !important; 
   }
-
-  /* Matter label in print */
+  
+  /* Matter label for printing */
+  .matter-label-screen { display: none !important; } /* Hide screen version */
   .matter-label-print {
+    display: flex !important; 
+    align-items: center !important;
+    justify-content: center !important;
     writing-mode: vertical-lr !important;
     text-orientation: upright !important;
     background-color: black !important;
     color: white !important;
-    padding: 2px !important;
-    font-size: 16px !important;
+    padding: 1mm !important;
+    font-size: 10pt !important;
     font-weight: bold !important;
     text-align: center !important;
     border-right: 1px solid black !important;
-    width: 38px !important;
+    width: 25px !important; /* Fixed width for print */
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-    display: flex !important; /* Ensure flex properties for centering */
-    align-items: center !important;
-    justify-content: center !important;
   }
 
-  .matter-content-textarea.static-text-replacement,
-  .matter-content-textarea ~ div {
+  /* General input/textarea replacements for print */
+  .static-text-replacement {
+    font-weight: bold !important; 
+    font-size: 9pt !important; 
+    font-family: Arial, sans-serif !important;
+    color: #000 !important;
+    padding: 1mm 1mm !important; 
+    margin: 0 !important;
+    white-space: pre-wrap !important; 
+    word-wrap: break-word !important;
+    min-height: auto !important; 
+    border: none !important; 
+    display: block; 
+    width: 100% !important; 
+    box-sizing: border-box !important;
+  }
+
+  /* Specific styling for Matter content text area in print */
+  .matter-content-textarea.static-text-replacement {
     border-top: 1px solid black !important;
     border-bottom: 1px solid black !important;
-    border-left: none !important; /* Matter content area should not have left border as label has right */
-    border-right: none !important; /* Should not have right border from main container */
-    padding: 0px !important;
-    margin-left:0px !important;
+    border-left: none !important; 
+    border-right: none !important;
+    padding: 2mm !important; 
+    min-height: 50mm !important; 
+    font-size: 9pt !important;
+  }
+  
+  /* Table styling for print */
+  .print-table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+    border: 1px solid black !important; /* Main table border */
+  }
+  .print-table th, .print-table td,
+  .print-table .print-border-thin { /* For cells that need explicit border */
+    border: 1px solid black !important;
+    padding: 1.5mm !important; 
+    text-align: left !important;
+    vertical-align: top !important; 
+    word-wrap: break-word !important;
+    font-size: 9pt !important; 
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    font-family: Arial, sans-serif !important;
+  }
+  .print-table th, .print-table-header th {
+    background-color: #e0e0e0 !important; 
+    font-weight: bold !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
+  /* Table textareas in print */
+  textarea.table-cell-textarea.static-text-replacement,
+  .table-textarea.static-text-replacement {
+     min-height: 30mm !important; 
+     padding: 1.5mm !important;
+     font-size: 9pt !important;
+     border: none !important; 
+  }
+
+  /* Stamp/Signature area for printing */
   .stamp-upload-container-print {
-    border: 2px dashed #ccc !important; 
-    background-color: #f9f9f9 !important; 
+    width: 150px !important; 
+    height: 90px !important; 
+    border: 1px dashed #888 !important; 
+    background-color: #f8f8f8 !important; 
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+    overflow: hidden !important; 
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
    .stamp-upload-container-print p {
       color: #555 !important;
-      font-size: 12px !important;
+      font-size: 8pt !important;
+      margin: 0 !important;
    }
-
   .stamp-upload-container-print img {
     object-fit: contain !important;
     max-width: 100% !important;
     max-height: 100% !important;
   }
 
-  .no-underline {
-      text-decoration: none !important;
+  /* Specific borders for sections if needed, defaults to thin black */
+  .print-border-thick {
+    border: 1px solid black !important; /* Ensure consistent thin border for print */
   }
-   textarea.table-textarea.static-text-replacement, /* For print preview where textarea is replaced */
-   textarea.table-textarea { /* For direct print */
-     min-height: 160px !important; /* Ensure min-height for PDF/Print */
-     padding: 6px !important;
-     font-size: 14px !important;
-   }
+
+  /* Footer notes, ensure they are styled correctly */
+  .underline {
+    text-decoration: underline !important;
+  }
+  
+  /* Helper classes for print specific display */
+  .print-flex { display: flex !important; }
+  .print-block { display: block !important; }
+  .print-hidden { display: none !important; }
+
 }
 
-/* Base body styles */
+
+/* Screen-specific styles */
 body {
-  font-family: Arial, sans-serif;
-  font-weight: bold; /* This was in original body, keep if it's global bold requirement */
-  margin: 0;
-  padding: 0;
-  background-color: #f0f0f0; /* A light gray background for screen */
+  background-color: #e0e0e0; /* Light gray background for screen */
 }
 
-#application {
-  width: 100%;
-  max-width: 210mm; /* A4 width */
-  min-height: 297mm; /* A4 height */
+/* Main application container for screen */
+.print-a4-page {
+  max-width: 210mm;
   margin: 20px auto; /* Centering for screen view */
-  padding: 20px; /* Padding for screen view */
-  border: 4px solid black;
-  font-weight: bold;
-  position: relative;
-  box-sizing: border-box;
-  color: #000;
+  padding: 10mm; /* Padding for screen view, matches PDF margin */
   background-color: #fff; /* White background for the form itself */
-  box-shadow: 0 0 10px rgba(0,0,0,0.1); /* Subtle shadow for screen */
+  box-shadow: 0 0 15px rgba(0,0,0,0.2); /* Subtle shadow for screen */
+  border: 1px solid #ccc; /* Lighter border for screen */
 }
 
-.button-container {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 10px;
-  position: absolute; /* Kept absolute positioning as per original */
-  top: 10px;
-  right: 10px;
-  z-index: 100;
+.print-shadow {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
-#printButton, #downloadPdfButton, #printPreviewButton, #fullScreenButton {
-  background-color: #dc3545; /* Reddish color from original */
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 16px;
-  margin-left: 10px;
+.print-border-thick {
+  border: 2px solid black;
 }
-#printButton:hover, #downloadPdfButton:hover, #printPreviewButton:hover, #fullScreenButton:hover {
-  background-color: #c82333; /* Darker red on hover */
-}
-
-.print-icon-container {
-    position: absolute;
-    top: 10px;
-    right: 10px; /* It might overlap with button-container, adjust if needed */
-    z-index: 100; /* Ensure it's above other content if positioned similarly */
-}
-.print-icon {
-    font-size: 24px;
-    color: black;
-    cursor: pointer;
-    margin-left: 10px; /* Space from other buttons if they are also in this container */
+.print-border-thin {
+  border: 1px solid black;
 }
 
 
-.full-width {
-  width: 100%;
-  box-sizing: border-box;
+.writing-mode-v-rl {
+  writing-mode: vertical-rl;
 }
-
-input, textarea, select {
-  border: none; /* Original spec */
-  outline: none; /* Original spec */
-  font-weight: bold; /* Original spec */
-  font-size: 14px; /* Original spec */
-  color: #000; /* Original spec */
-  background-color: #fff; /* Original spec */
-  padding: 4px; /* Added some padding for better editing experience on screen */
-  box-sizing: border-box;
-  width: 100%; /* Make form elements take full width of their container by default */
-}
-
-/* Specific styling for table textareas */
-#tableBody textarea {
-    width: 100%;
-    height: auto; /* auto height based on content */
-    min-height: 160px; /* default min-height for table textareas */
-    border: none !important;
-    outline: none !important;
-    font-weight: bold;
-    font-size: 14px;
-    color: #000;
-    background-color: #fff;
-    box-sizing: border-box;
-    resize: none; /* disable resize or set to vertical if needed */
-    padding: 6px; /* Match cell padding */
-    margin: 0;
-    overflow-y: hidden; /* Hide scrollbar if content fits */
+.text-orientation-upright {
+  text-orientation: upright;
 }
 
 
-/* Table styling for screen */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  border: 2px solid black; /* Original spec */
-  font-size: 14px; /* Original spec */
-  text-align: left; /* Original spec */
-  color: #000; /* Original spec */
-}
-th, td {
-  border: 1px solid black; /* Original spec for cells */
-  padding: 6px; /* Original spec for cells */
-  word-wrap: break-word; /* Original spec */
-  vertical-align: top; /* Align content to top for textareas */
-}
-th {
-  background-color: #f0f0f0; /* Original spec */
-}
-
-
-/* Matter section textarea specific focus/blur from original JS */
-#application textarea[placeholder="Enter matter here..."] {
-  border: none; /* Default state */
-  /* transition for border color can be added if desired */
-}
-#application textarea[placeholder="Enter matter here..."]:focus {
-  border: 1px solid black; /* On focus */
-}
-
-/* Add/Delete row buttons styling */
-.new-row-buttons {
-    display: flex;
-    justify-content: center; /* Center align as per original prompt */
-    margin-top: 10px;
-    margin-bottom: 10px; /* Added some bottom margin */
-}
-.new-row-buttons button {
-    margin: 0 5px;
-    padding: 8px 16px;
-    background-color: #4CAF50; /* Green from original */
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: bold; /* Match other form elements */
-}
-.new-row-buttons button:hover {
-    background-color: #367c39; /* Darker green on hover */
-}
-
-
-/* Print Preview Modal Styles */
-.print-preview {
+/* Styles for Print Preview Modal */
+.print-preview-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.8); /* Dark overlay */
+  background-color: rgba(0, 0, 0, 0.75);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000; /* High z-index */
-  overflow: auto; /* Allow scrolling if content overflows */
-  padding: 20px;
-  box-sizing: border-box;
-}
-.print-preview-content {
-  background-color: white;
-  width: 210mm; /* A4 width */
-  min-height: 297mm; /* A4 height */
-  padding: 20px; /* Match #application padding for consistency */
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
-  box-sizing: border-box;
-  transform: scale(0.8); /* Scale down for better fit in preview */
-  transform-origin: top center;
-  overflow: visible; /* Ensure all content is visible */
-}
-.print-preview-close-button { /* Renamed from original to be more specific */
-    position: fixed !important;
-    top: 20px !important; /* Adjusted for better visibility */
-    right: 20px !important; /* Adjusted for better visibility */
-    background-color: #f44336 !important; /* Red for close button */
-    color: white !important;
-    border: none !important;
-    padding: 10px 20px !important;
-    cursor: pointer !important;
-    border-radius: 5px !important;
-    z-index: 1001 !important; /* Above preview content */
-    font-size: 16px !important;
-    font-weight: bold !important;
-}
-.print-preview-close-button:hover {
-    background-color: #d32f2f !important; /* Darker red on hover */
+  z-index: 2000; /* High z-index to be on top */
+  overflow-y: auto; /* Allow scrolling if content is tall */
 }
 
-/* Ensure FontAwesome icons are styled if used via class, e.g., for print icon */
-.fas {
-  font-family: "Font Awesome 5 Free"; /* Ensure correct font family for FA icons */
+.print-preview-modal {
+  background-color: #ccc; /* Light gray background for the modal itself */
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  width: auto;
+  max-width: 95vw; /* Max width for the modal */
+  max-height: 95vh; /* Max height for the modal */
+  display: flex;
+  flex-direction: column;
+}
+
+.print-preview-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #bbb;
+}
+
+.print-preview-content-area {
+  overflow-y: auto; /* Allow scrolling for the A4 content within the modal */
+  flex-grow: 1;
+  background-color: #fff; /* White background for the A4 content */
+}
+
+/* Ensure the cloned #printable-content inside preview uses print styles */
+.print-preview-content-area #printable-content {
+  margin: 0 auto !important; /* Center the A4 page */
+  padding: 10mm !important; /* Add padding for visual separation in preview */
+  border: 1px solid #ccc !important; /* Visual border for the page */
+  box-shadow: 0 0 5px rgba(0,0,0,0.1) !important; /* Slight shadow for depth */
+  /* Apply print-specific styles using @media print block from above */
+  /* This means we need to ensure the print styles are correctly applied here */
+  /* This might involve temporarily adding a class to the body or a wrapper */
+}
+
+/* When in print preview mode via JavaScript, apply print styles to the preview content */
+body.print-preview-active .print-preview-content-area #printable-content {
+    /* All @media print styles should apply here. 
+       The JS logic should ensure this by cloning and applying styles.
+       For elements that change styles based on classes like 'release-order-titlebar-print',
+       the JS cloning logic should add/remove these classes on the cloned node.
+    */
+}
+
+.print-preview-content-area .release-order-titlebar-screen { display: none !important; }
+.print-preview-content-area .release-order-titlebar-print { display: block !important; }
+.print-preview-content-area .matter-label-screen { display: none !important; }
+.print-preview-content-area .matter-label-print { display: flex !important; }
+.print-preview-content-area .stamp-upload-container-actual.no-print-pdf { display: none !important; }
+.print-preview-content-area .stamp-upload-container-print { display: flex !important; }
+.print-preview-content-area .no-print { display: none !important; }
+.print-preview-content-area .no-print-pdf { display: none !important; }
+
+/* Ensure textareas in preview are styled like static text */
+.print-preview-content-area .static-text-replacement {
+  font-weight: bold !important;
+  font-size: 9pt !important;
+  font-family: Arial, sans-serif !important;
+  color: #000 !important;
+  padding: 1mm 1mm !important;
+  margin: 0 !important;
+  white-space: pre-wrap !important;
+  word-wrap: break-word !important;
+  min-height: auto !important;
+  border: none !important;
+  display: block;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+.print-preview-content-area .matter-content-textarea.static-text-replacement {
+  border-top: 1px solid black !important;
+  border-bottom: 1px solid black !important;
+  padding: 2mm !important;
+  min-height: 50mm !important;
+}
+.print-preview-content-area .table-textarea.static-text-replacement {
+   min-height: 30mm !important;
+   padding: 1.5mm !important;
+}
+
+/* Table styles in print preview */
+.print-preview-content-area .print-table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+    border: 1px solid black !important;
+}
+.print-preview-content-area .print-table th, 
+.print-preview-content-area .print-table td {
+    border: 1px solid black !important;
+    padding: 1.5mm !important;
+    text-align: left !important;
+    vertical-align: top !important;
+    word-wrap: break-word !important;
+    font-size: 9pt !important;
+}
+.print-preview-content-area .print-table th {
+    background-color: #e0e0e0 !important;
+    font-weight: bold !important;
+}
+
+.table-cell-textarea {
+    min-height: 80px; /* Default for screen */
+}
+/* Default Tailwind input/textarea border color, can be customized */
+input, textarea {
+  border-color: hsl(var(--input));
+}
+input:focus-visible, textarea:focus-visible {
+   outline: 2px solid hsl(var(--ring)) !important;
+   outline-offset: 2px !important;
+   border-color: hsl(var(--ring)) !important;
 }
