@@ -20,10 +20,10 @@ interface DatePickerProps {
   className?: string;
   dateFormat?: string;
   id?: string;
-  placeholder?: string;
+  placeholderText?: string; // Changed from placeholder to placeholderText to match react-datepicker
 }
 
-export function DatePicker({ selected, onChange, className, dateFormat = "PPP", id, placeholder = "Pick a date" }: DatePickerProps) {
+export function DatePicker({ selected, onChange, className, dateFormat = "PPP", id, placeholderText = "Pick a date" }: DatePickerProps) {
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -33,11 +33,11 @@ export function DatePicker({ selected, onChange, className, dateFormat = "PPP", 
           className={cn(
             "w-full justify-start text-left font-normal date-picker-trigger-button",
             !selected && "text-muted-foreground",
-            className
+            className // Apply className here
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
-          {selected ? format(selected, dateFormat) : <span>{placeholder}</span>}
+          {selected ? format(selected, dateFormat) : <span>{placeholderText}</span>}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0">

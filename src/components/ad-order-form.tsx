@@ -7,11 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { DatePicker } from '@/components/ui/date-picker'; // Corrected import path
+import { DatePicker } from '@/components/ui/date-picker';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Image from 'next/image';
-import { Download, Printer, Eye, X, Maximize, EyeOff, PlusSquare, MinusSquare } from 'lucide-react';
+import { Download, Printer, Eye, X, Maximize, EyeOff, PlusSquare, MinusSquare, Save, FileText, Trash2, Undo } from 'lucide-react';
 import { format } from 'date-fns';
 
 const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://picsum.photos/160/90?random&data-ai-hint=signature+placeholder';
@@ -19,7 +19,7 @@ const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://picsum.photos/160/90?random&dat
 
 const AdOrderForm: FC = () => {
   const [ron, setRon] = useState<string>('');
-  const [orderDate, setOrderDate] = useState<Date | undefined>(undefined);
+  const [orderDate, setOrderDate] = useState<Date | undefined>(new Date());
   const [clientName, setClientName] = useState<string>('');
   const [advManagerInput1, setAdvManagerInput1] = useState<string>('');
   const [advManagerInput2, setAdvManagerInput2] = useState<string>('');
@@ -42,10 +42,10 @@ const AdOrderForm: FC = () => {
   }, []);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && !orderDate && isClient) { // Ensure this runs only on client and after mount
+    if (isClient && typeof window !== 'undefined' && !orderDate) {
         setOrderDate(new Date());
     }
-  }, [isClient]); // Removed orderDate from dependency array to avoid re-setting
+  }, [isClient, orderDate]);
 
 
   const handleDateChange = (date: Date | undefined) => {
@@ -186,12 +186,12 @@ const AdOrderForm: FC = () => {
     clonedElement.style.boxSizing = 'border-box';
 
 
-    const inputsToConvert = clonedElement.querySelectorAll('input[type="text"], input[type="number"], input[type="date"]');
+    const inputsToConvert = clonedElement.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], input.custom-input-pdf');
     inputsToConvert.forEach(inputEl => {
         const p = document.createElement('span');
         const input = inputEl as HTMLInputElement;
         let value = input.value;
-        if (input.id === 'orderDate' && orderDate) {
+        if ((input.id === 'orderDate' || input.classList.contains('table-date-picker-pdf-target')) && orderDate) {
              value = format(orderDate, 'dd.MM.yyyy');
         } else if (input.type === 'date' && !input.value && input.placeholder) {
             value = '\u00A0'; 
@@ -199,7 +199,6 @@ const AdOrderForm: FC = () => {
             try {
                 value = format(new Date(input.value), 'dd.MM.yyyy');
             } catch (e) {
-                 // if date is invalid, keep original value or make it blank
                  value = input.value || '\u00A0';
             }
         } else {
@@ -258,7 +257,7 @@ const AdOrderForm: FC = () => {
         div.innerHTML = textarea.value.replace(/\n/g, '<br>') || '\u00A0'; 
         div.className = 'static-print-text textarea-static-print';
         if (textarea.id === 'matterTextarea') {
-             div.classList.add('matter-container-print');
+             div.classList.add('matter-container-print'); 
              div.style.minHeight = 'var(--pdf-matter-textarea-min-height, 40px)';
              div.style.maxHeight = 'var(--pdf-matter-textarea-max-height, 80px)'; 
              div.style.overflow = 'hidden'; 
@@ -307,7 +306,6 @@ const AdOrderForm: FC = () => {
             imgInStamp.style.maxHeight = "100%";
             imgInStamp.style.objectFit = "contain";
         } else if (stampImage && stampImage !== DEFAULT_STAMP_IMAGE_PLACEHOLDER && !imgInStamp && placeholderInStamp && placeholderInStamp.parentElement?.classList.contains('placeholder-div')) {
-             // If there's a placeholder div with an image, replace it
             const newImg = document.createElement('img');
             newImg.src = stampImage;
             newImg.alt = "Stamp";
@@ -343,15 +341,15 @@ const AdOrderForm: FC = () => {
 
 
     const opt = {
-        margin: [5, 5, 5, 5], 
+        margin: [0,0,0,0], // A4 typically 210x297mm. Margin 0 to control via padding in clonedElement
         filename: 'release_order_form.pdf',
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: {
             scale: 2, 
             useCORS: true,
             logging: false, 
-            width: clonedElement.offsetWidth, 
-            height: clonedElement.offsetHeight, 
+            width: clonedElement.offsetWidth, // Use offsetWidth of the specifically sized clone
+            height: clonedElement.offsetHeight, // Use offsetHeight
             windowWidth: clonedElement.scrollWidth,
             windowHeight: clonedElement.scrollHeight,
             onclone: (documentClone: Document) => {
@@ -530,7 +528,7 @@ const AdOrderForm: FC = () => {
                  newImg.style.objectFit = "contain";
                  stampContainer.innerHTML = ''; 
                  stampContainer.appendChild(newImg);
-            } else if (placeholderDiv) { // If default placeholder is used and a placeholder div exists
+            } else if (placeholderDiv) { 
                 const placeholderImg = placeholderDiv.querySelector('img');
                 if(placeholderImg) {
                     placeholderImg.style.maxWidth = "100%";
@@ -539,7 +537,7 @@ const AdOrderForm: FC = () => {
                 } else {
                      placeholderDiv.innerHTML = '<p>Stamp Area</p>';
                 }
-            } else if (!imgElement) { // Fallback if no image and no placeholder div
+            } else if (!imgElement) { 
                  stampContainer.innerHTML = '<p>Stamp Area</p>';
             }
         }
@@ -608,6 +606,7 @@ const AdOrderForm: FC = () => {
             div.className = 'static-print-text textarea-static-print'; 
             if (textarea.id === 'matterTextarea') {
                  div.classList.add('matter-container-print'); 
+                 div.style.textAlign = getComputedStyle(textarea).textAlign as CanvasTextAlign;
             }
 
             div.style.fontFamily = getComputedStyle(textarea).fontFamily;
@@ -684,25 +683,25 @@ const AdOrderForm: FC = () => {
                 <p className="text-xs leading-snug">Fax: 26028101</p>
                 <p className="text-xs mt-1 leading-snug"><strong>GSTIN:</strong> 07AABCL5406F1ZU</p>
             </div>
-             <div className="flex-1 flex flex-col gap-3 p-3 border-2 border-black rounded">
+            <div className="flex-1 flex flex-col gap-3 p-3 border-2 border-black rounded">
                 <div className="flex gap-3 items-center">
                     <div className="flex-1 flex items-center">
                         <Label htmlFor="roNumber" className="text-sm font-bold mr-2 whitespace-nowrap">R.O. No. LN:</Label>
-                        <Input id="roNumber" type="text" placeholder="Enter Number" value={ron} onChange={(e) => setRon(e.target.value)} className="text-sm py-1 px-2 h-auto"/>
+                        <Input id="roNumber" type="text" placeholder="Enter Number" value={ron} onChange={(e) => setRon(e.target.value)} className="text-sm py-1 px-2 h-auto border-2 border-black"/>
                     </div>
                     <div className="flex-1 flex items-center">
                          <Label htmlFor="orderDate" className="text-sm font-bold mr-2 whitespace-nowrap">Date:</Label>
-                        <DatePicker selected={orderDate} onChange={handleDateChange} dateFormat="dd.MM.yyyy" className="text-sm py-1 px-2 h-auto w-full" id="orderDate" placeholderText="Select Date"/>
+                        <DatePicker selected={orderDate} onChange={handleDateChange} dateFormat="dd.MM.yyyy" className="text-sm py-1 px-2 h-auto w-full border-2 border-black" id="orderDate" placeholderText="Select Date"/>
                     </div>
                 </div>
                 <div className="flex items-center">
                     <Label htmlFor="clientName" className="text-sm font-bold mr-2 whitespace-nowrap">Client:</Label>
-                    <Input id="clientName" placeholder="Client Name" value={clientName} onChange={(e) => setClientName(e.target.value)} className="text-sm py-1 px-2 h-auto"/>
+                    <Input id="clientName" placeholder="Client Name" value={clientName} onChange={(e) => setClientName(e.target.value)} className="text-sm py-1 px-2 h-auto border-2 border-black"/>
                 </div>
                 <div>
                     <Label className="text-sm font-bold">The Advertisement Manager</Label>
-                    <Input placeholder="Publication Name / Address Line 1" value={advManagerInput1} onChange={(e) => setAdvManagerInput1(e.target.value)} className="text-sm py-1 px-2 h-auto mt-1"/>
-                    <Input placeholder="Address Line 2 / City" value={advManagerInput2} onChange={(e) => setAdvManagerInput2(e.target.value)} className="text-sm py-1 px-2 h-auto mt-1"/>
+                    <Input placeholder="Publication Name / Address Line 1" value={advManagerInput1} onChange={(e) => setAdvManagerInput1(e.target.value)} className="text-sm py-1 px-2 h-auto mt-1 border-2 border-black"/>
+                    <Input placeholder="Address Line 2 / City" value={advManagerInput2} onChange={(e) => setAdvManagerInput2(e.target.value)} className="text-sm py-1 px-2 h-auto mt-1 border-2 border-black"/>
                 </div>
                 <div className="mt-2 pt-2 border-t border-black">
                     <p className="text-sm font-bold">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
@@ -713,11 +712,11 @@ const AdOrderForm: FC = () => {
         <div className="flex flex-col md:flex-row gap-4 mb-5 print-header-box">
             <div className="flex-1 p-3 border-2 border-black rounded">
                 <Label htmlFor="headingCaption" className="text-sm font-bold block mb-1">Heading/Caption:</Label>
-                <Input id="headingCaption" placeholder="Enter caption here" value={headingCaption} onChange={(e) => setHeadingCaption(e.target.value)} className="text-sm py-1 px-2 h-auto"/>
+                <Input id="headingCaption" placeholder="Enter caption here" value={headingCaption} onChange={(e) => setHeadingCaption(e.target.value)} className="text-sm py-1 px-2 h-auto border-2 border-black"/>
             </div>
             <div className="w-full md:w-[35%] p-3 border-2 border-black rounded">
                 <Label htmlFor="packageName" className="text-sm font-bold block mb-1">Package:</Label>
-                <Input id="packageName" placeholder="Enter package name" value={packageName} onChange={(e) => setPackageName(e.target.value)} className="text-sm py-1 px-2 h-auto"/>
+                <Input id="packageName" placeholder="Enter package name" value={packageName} onChange={(e) => setPackageName(e.target.value)} className="text-sm py-1 px-2 h-auto border-2 border-black"/>
             </div>
         </div>
 
@@ -779,7 +778,7 @@ const AdOrderForm: FC = () => {
               placeholder="Enter matter here..."
               value={matterText}
               onChange={handleMatterChange}
-              className="flex-1 text-sm p-2 border-l-0 rounded-none resize-none min-h-[100px] h-auto no-shadow-outline focus:border-black matter-content-screen border-t-0 border-r-0 border-b-0" 
+              className="flex-1 text-sm p-2 border-l-0 rounded-none resize-none min-h-[100px] h-auto no-shadow-outline focus:border-black matter-content-screen border-t-0 border-r-0 border-b-0 border-2 !border-l-0 !border-black" 
             />
         </div>
 
