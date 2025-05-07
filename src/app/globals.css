@@ -227,11 +227,11 @@
   .stamp-container-print-preview {
     width: 120px !important; /* Reduced size */
     height: 70px !important;  /* Reduced size */
-    border: 1px dashed #ccc !important; 
+    border: 0px !important; /* Removed border for print/pdf */
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
-    background-color: #f9f9f9 !important; 
+    background-color: transparent !important; /* Transparent background */
     font-size: 8px !important; 
     color: #555 !important;
     text-align: center !important;
@@ -244,6 +244,11 @@
     max-height: 100% !important;
     object-fit: contain !important;
   }
+  .stamp-container-print-preview > div:not(img) { /* Placeholder div styling */
+      border: 0px !important; /* No border for placeholder div in print */
+      background-color: transparent !important; /* Transparent background for placeholder div */
+  }
+
 
   .no-pdf, .html2pdf__page-break { 
       display: none !important;
@@ -368,9 +373,9 @@
 }
 
 .stamp-container-screen {
-  width: 180px; 
-  height: 100px; 
-  border: 0px; 
+  width: 200px; /* Slightly increased width */
+  height: 120px; /* Slightly increased height */
+  border: 0px; /* Removed border for screen view */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -386,11 +391,10 @@
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-  border: 1px dashed #d1d5db; 
 }
-.stamp-container-screen > div:not(img) { 
-    border: 2px dashed #9ca3af;
-    background-color: #f9fafb;
+.stamp-container-screen > div:not(img) { /* Placeholder div styling */
+    border: 0px; /* No border for placeholder div on screen */
+    background-color: #f9fafb; /* Kept light bg for placeholder div visibility */
 }
 
 
@@ -502,11 +506,11 @@ body.print-preview-active > #main-application-container > *:not(#printPreviewOve
 .stamp-container-print-preview { 
     width: 160px !important;
     height: 90px !important;
-    border: 1px dashed #ccc !important; 
+    border: 0px !important; /* No border for print/pdf stamp container */
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
-    background-color: #f9f9f9 !important;
+    background-color: transparent !important; /* Transparent background for print/pdf */
     font-size: 10px !important;
     color: #555 !important;
     text-align: center !important;
@@ -519,6 +523,10 @@ body.print-preview-active > #main-application-container > *:not(#printPreviewOve
     max-width: 100% !important;
     max-height: 100% !important;
     object-fit: contain !important;
+}
+.stamp-container-print-preview > div:not(img) { /* Placeholder div for print */
+    border: 0px !important; /* No border for placeholder div in print */
+    background-color: transparent !important; /* Transparent bg for placeholder div in print */
 }
 
 .main-table-bordered td, .main-table-bordered th {
@@ -648,12 +656,17 @@ body.pdf-export-active .matter-container-print .textarea-static-print {
 
 
 body.pdf-export-active .stamp-container-print-preview {
-    background-color: #f9f9f9 !important;
-    border: 1px dashed #ccc !important;
+    background-color: transparent !important; /* Transparent for PDF */
+    border: 0px !important; /* No border for PDF */
     width: 100px !important;
     height: 60px !important;
     font-size: 7pt !important;
 }
+body.pdf-export-active .stamp-container-print-preview > div:not(img) {
+    border: 0px !important;
+    background-color: transparent !important;
+}
+
 body.pdf-export-active #printable-area-pdf .text-lg { font-size: 11pt !important; }
 body.pdf-export-active #printable-area-pdf .text-md { font-size: 9pt !important; }
 body.pdf-export-active #printable-area-pdf .text-sm { font-size: 8pt !important; }

@@ -13,7 +13,7 @@ import Image from 'next/image';
 import { Download, Printer, Eye, X, Save, UploadCloud, Search, Eraser, CheckCircle, FileText, Settings, Copy, Palette, Briefcase, Users, Building, CalendarDays, FileDown, Maximize, EyeOff, Undo, ExternalLink, MinusSquare, PlusSquare } from 'lucide-react';
 import { format } from 'date-fns';
 
-const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://picsum.photos/180/100?random&data-ai-hint=signature+placeholder';
+const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://picsum.photos/200/120?random&data-ai-hint=signature+placeholder';
 
 
 const AdOrderForm: FC = () => {
@@ -683,9 +683,7 @@ const AdOrderForm: FC = () => {
 
   return (
     <div className="max-w-[210mm] mx-auto p-1 print-root-container bg-background" id="main-application-container">
-      <div className="flex justify-end space-x-2 my-2 no-print no-pdf-export">
-        {/* Buttons removed as per user request */}
-      </div>
+      {/* Buttons removed from here to adhere to request */}
 
       <div id="printable-area-pdf" ref={printableAreaRef} className={`w-full print-target bg-card text-card-foreground shadow-sm p-2 md:p-4 rounded-lg border-4 border-black ${isFullScreenPreview ? 'fullscreen-preview-active' : ''}`}>
         {/* Release Order Title */}
@@ -828,20 +826,20 @@ const AdOrderForm: FC = () => {
                 </ol>
             </div>
 
-            {/* Stamp Area - Moved to the right of the notes */}
+            {/* Stamp Area */}
             <div
                 className="w-[35%] flex flex-col items-center justify-end stamp-parent-container mt-2 md:mt-0 self-end"
             >
                 <div
-                  className="stamp-container-screen w-[180px] h-[100px] flex items-center justify-center text-xs text-gray-500 bg-transparent rounded cursor-pointer hover:opacity-80 border-0"
+                  className="stamp-container-screen w-[200px] h-[120px] flex items-center justify-center text-xs text-gray-500 bg-transparent rounded cursor-pointer hover:opacity-80"
                   onClick={triggerStampUpload}
                   title="Click to upload stamp image"
                 >
                 {stampImage ? (
-                     <Image src={stampImage} alt="Stamp" width={180} height={100} className="object-contain max-w-full max-h-full border border-dashed border-gray-300" data-ai-hint="signature company stamp" />
+                     <Image src={stampImage} alt="Stamp" width={200} height={120} className="object-contain max-w-full max-h-full" data-ai-hint="signature company stamp" />
                 ) : (
-                  <div className="w-full h-full border-2 border-dashed border-gray-400 flex items-center justify-center bg-gray-50">
-                    <Image src={DEFAULT_STAMP_IMAGE_PLACEHOLDER} alt="Upload Stamp Placeholder" width={176} height={96} className="object-contain" data-ai-hint="upload placeholder"/>
+                  <div className="w-full h-full flex items-center justify-center bg-gray-50 border-0"> {/* Removed border-dashed and border-gray-400 */}
+                    <Image src={DEFAULT_STAMP_IMAGE_PLACEHOLDER} alt="Upload Stamp Placeholder" width={196} height={116} className="object-contain" data-ai-hint="upload placeholder"/>
                   </div>
                 )}
                 <Input type="file" ref={stampInputRef} onChange={handleStampUpload} accept="image/*" className="hidden" />
