@@ -11,7 +11,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Image from 'next/image';
-import { Download, Printer, Eye, X, Save, UploadCloud, Search, Eraser, CheckCircle, FileText, Settings, Copy, Palette, Briefcase, Users, Building, CalendarDays, FileDown, Maximize, EyeOff, Undo, ExternalLink, MinusSquare, PlusSquare, Tv } from 'lucide-react';
+import { Download, Printer, Eye, X, Maximize, EyeOff, PlusSquare, MinusSquare } from 'lucide-react';
 import { format } from 'date-fns';
 
 const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://picsum.photos/160/90?random&data-ai-hint=signature+placeholder';
@@ -59,10 +59,10 @@ const AdOrderForm: FC = () => {
     if (textarea) {
       textarea.style.height = 'auto';
       const computedStyle = typeof window !== 'undefined' ? getComputedStyle(textarea) : null;
-      let minHeight = 120; // Default min-height for table textareas, increased from 110px
+      let minHeight = 120; 
 
       if (textarea.id === 'matterTextarea') {
-        minHeight = 100; // Default min-height for matter textarea
+        minHeight = 100; 
       }
       
       minHeight = computedStyle ? parseFloat(computedStyle.minHeight) || minHeight : minHeight;
@@ -191,15 +191,18 @@ const AdOrderForm: FC = () => {
         if (input.id === 'orderDate' && orderDate) {
              value = format(orderDate, 'dd.MM.yyyy');
         } else if (input.type === 'date' && !input.value && input.placeholder) {
-            value = ''; 
+            value = '\u00A0'; 
         } else if (input.type === 'date' && input.value){
             try {
                 value = format(new Date(input.value), 'dd.MM.yyyy');
             } catch (e) {
-                // if date is invalid, keep original value
+                 // if date is invalid, keep original value or make it blank
+                 value = input.value || '\u00A0';
             }
+        } else {
+            value = input.value || '\u00A0';
         }
-        p.textContent = value || '\u00A0'; 
+        p.textContent = value; 
         p.className = 'static-print-text';
         p.style.display = 'inline-block';
         p.style.width = getComputedStyle(input).width;
@@ -300,7 +303,17 @@ const AdOrderForm: FC = () => {
             imgInStamp.style.maxWidth = "100%";
             imgInStamp.style.maxHeight = "100%";
             imgInStamp.style.objectFit = "contain";
-        } else if (stampImage && stampImage !== DEFAULT_STAMP_IMAGE_PLACEHOLDER && !imgInStamp) { 
+        } else if (stampImage && stampImage !== DEFAULT_STAMP_IMAGE_PLACEHOLDER && !imgInStamp && placeholderInStamp && placeholderInStamp.parentElement?.classList.contains('placeholder-div')) {
+             // If there's a placeholder div with an image, replace it
+            const newImg = document.createElement('img');
+            newImg.src = stampImage;
+            newImg.alt = "Stamp";
+            newImg.style.maxWidth = "100%";
+            newImg.style.maxHeight = "100%";
+            newImg.style.objectFit = "contain";
+            stampContainerClone.innerHTML = ''; 
+            stampContainerClone.appendChild(newImg);
+        } else if (stampImage && stampImage !== DEFAULT_STAMP_IMAGE_PLACEHOLDER && !imgInStamp) {
             const newImg = document.createElement('img');
             newImg.src = stampImage;
             newImg.alt = "Stamp";
@@ -341,15 +354,19 @@ const AdOrderForm: FC = () => {
             onclone: (documentClone: Document) => {
                 const clonedBody = documentClone.body;
                 clonedBody.classList.add('pdf-export-active'); 
+                
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                const _ = clonedBody.offsetHeight; 
+                const _ = clonedBody.offsetHeight; // Trigger reflow
 
                 const textareasInClone = clonedBody.querySelectorAll('.textarea-static-print'); 
                  textareasInClone.forEach(ta => {
                     const htmlTa = ta as HTMLElement;
                     htmlTa.style.height = 'auto'; 
                     const maxHeight = parseFloat(getComputedStyle(htmlTa).maxHeight || '9999');
-                    htmlTa.style.height = `${Math.min(htmlTa.scrollHeight, maxHeight)}px`; 
+                    const minHeight = parseFloat(getComputedStyle(htmlTa).minHeight || '0');
+                    let newHeight = htmlTa.scrollHeight;
+                    if (newHeight < minHeight) newHeight = minHeight;
+                    htmlTa.style.height = `${Math.min(newHeight, maxHeight)}px`; 
                     htmlTa.style.overflowY = 'hidden'; 
                 });
             }
@@ -397,13 +414,13 @@ const AdOrderForm: FC = () => {
 
         if(wasFullScreen && document.fullscreenElement) {
             document.exitFullscreen().then(() => {
-                setTimeout(() => { // Ensure fullscreen exit completes
+                setTimeout(() => { 
                     printInternal();
                 }, 100);
             });
         } else if (wasPreviewing) {
              handleClosePrintPreview();
-             setTimeout(() => { // Ensure preview modal closes
+             setTimeout(() => { 
                 printInternal();
             }, 100);
         } else {
@@ -421,7 +438,7 @@ const AdOrderForm: FC = () => {
         setTimeout(() => {
             window.print();
             document.body.classList.remove('direct-print-active');
-        }, 200); // Increased delay slightly
+        }, 200); 
     }
   };
 
@@ -498,13 +515,10 @@ const AdOrderForm: FC = () => {
         if(stampContainer) {
             stampContainer.className = 'stamp-container-print-preview'; 
             const imgElement = stampContainer.querySelector('img');
-            const placeholderDivImg = stampContainer.querySelector('div > img'); 
+            const placeholderDiv = stampContainer.querySelector('div.placeholder-div');
 
-            if (stampImage && stampImage !== DEFAULT_STAMP_IMAGE_PLACEHOLDER && imgElement && imgElement.src !== DEFAULT_STAMP_IMAGE_PLACEHOLDER) {
-                 imgElement.style.maxWidth = "100%";
-                 imgElement.style.maxHeight = "100%";
-                 imgElement.style.objectFit = "contain";
-            } else if (stampImage && stampImage !== DEFAULT_STAMP_IMAGE_PLACEHOLDER && !imgElement) { 
+
+            if (stampImage && stampImage !== DEFAULT_STAMP_IMAGE_PLACEHOLDER) {
                  const newImg = document.createElement('img');
                  newImg.src = stampImage;
                  newImg.alt = "Stamp";
@@ -513,12 +527,17 @@ const AdOrderForm: FC = () => {
                  newImg.style.objectFit = "contain";
                  stampContainer.innerHTML = ''; 
                  stampContainer.appendChild(newImg);
-            } else if ((!stampImage || stampImage === DEFAULT_STAMP_IMAGE_PLACEHOLDER) && placeholderDivImg) { 
-                placeholderDivImg.style.maxWidth = "100%";
-                placeholderDivImg.style.maxHeight = "100%";
-                placeholderDivImg.style.objectFit = "contain";
-            } else if ((!stampImage || stampImage === DEFAULT_STAMP_IMAGE_PLACEHOLDER) && !imgElement && !placeholderDivImg) { 
-                stampContainer.innerHTML = '<p>Stamp Area</p>'; 
+            } else if (placeholderDiv) { // If default placeholder is used and a placeholder div exists
+                const placeholderImg = placeholderDiv.querySelector('img');
+                if(placeholderImg) {
+                    placeholderImg.style.maxWidth = "100%";
+                    placeholderImg.style.maxHeight = "100%";
+                    placeholderImg.style.objectFit = "contain";
+                } else {
+                     placeholderDiv.innerHTML = '<p>Stamp Area</p>';
+                }
+            } else if (!imgElement) { // Fallback if no image and no placeholder div
+                 stampContainer.innerHTML = '<p>Stamp Area</p>';
             }
         }
 
@@ -537,8 +556,10 @@ const AdOrderForm: FC = () => {
                 try {
                     value = format(new Date(input.value), 'dd.MM.yyyy');
                 } catch (e) {
-                    // if date is invalid, keep original value
+                    value = input.value || '\u00A0';
                 }
+            } else {
+                value = input.value || '\u00A0';
             }
             p.textContent = value;
             p.className = 'static-print-text'; 
@@ -746,7 +767,7 @@ const AdOrderForm: FC = () => {
           </div>
         </div>
 
-        <div className="flex mb-3 min-h-[100px] items-stretch matter-container-print-parent p-3 border-2 border-black rounded">
+        <div className="flex mb-3 min-h-[100px] items-stretch matter-container-print-parent p-3">
             <div className="matter-label-screen flex items-center justify-center p-1 w-[38px] self-stretch">
                 <span className="text-sm font-bold">MATTER</span>
             </div>
@@ -789,7 +810,7 @@ const AdOrderForm: FC = () => {
                 {stampImage ? (
                      <Image src={stampImage} alt="Stamp" width={158} height={88} className="object-contain" data-ai-hint="signature company stamp" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                  <div className="w-full h-full flex items-center justify-center bg-gray-50 placeholder-div">
                     <Image src={DEFAULT_STAMP_IMAGE_PLACEHOLDER} alt="Upload Stamp Placeholder" width={158} height={88} className="object-contain" data-ai-hint="upload placeholder"/>
                   </div>
                 )}
@@ -863,5 +884,3 @@ const AdOrderForm: FC = () => {
 };
 
 export default AdOrderForm;
-
-    
