@@ -13,11 +13,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import Image from 'next/image';
 import { Download, Printer, Eye, X, Save, Trash2, UploadCloud, Search, Eraser, CheckCircle, FileText, Settings, Copy, Palette, Briefcase, Users, Building, CalendarDays, FileDown, Maximize, EyeOff, Undo, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
+// import html2canvas from 'html2canvas';
+// import jsPDF from 'jspdf';
 
 
-const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://picsum.photos/180/100?random&data-ai-hint=signature+placeholder';
+const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://picsum.photos/200/120?random&data-ai-hint=signature+placeholder';
 
 
 const AdOrderForm: React.FC = () => {
@@ -38,6 +38,11 @@ const AdOrderForm: React.FC = () => {
   const stampInputRef = useRef<HTMLInputElement>(null);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [isFullScreenPreview, setIsFullScreenPreview] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
 
   const handleDateChange = (date: Date | undefined) => {
@@ -46,12 +51,11 @@ const AdOrderForm: React.FC = () => {
 
   const adjustTextareaHeight = useCallback((textarea: HTMLTextAreaElement | null) => {
     if (textarea) {
-      textarea.style.height = 'auto'; // Reset height to recalculate
-      // Check if printing or PDF generation is active, if so, don't set scrollHeight
-      if (!document.body.classList.contains('pdf-export-active') && !window.matchMedia('print').matches && !isPreviewing && !isFullScreenPreview) {
+      textarea.style.height = 'auto'; 
+      const isPrintingOrPdf = typeof window !== 'undefined' && (document.body.classList.contains('pdf-export-active') || window.matchMedia('print').matches || isPreviewing || isFullScreenPreview);
+      if (!isPrintingOrPdf) {
         textarea.style.height = `${textarea.scrollHeight}px`;
       } else if (isPreviewing || isFullScreenPreview) {
-        // For preview, allow it to grow based on content
         textarea.style.height = `${textarea.scrollHeight}px`;
       }
     }
@@ -115,10 +119,10 @@ const AdOrderForm: React.FC = () => {
   }, []);
   
   useEffect(() => {
-    if(!orderDate){
+    if(isClient && !orderDate){ // Ensure this runs only on client and if orderDate is not set
         setOrderDate(new Date());
     }
-  }, [orderDate]);
+  }, [orderDate, isClient]);
 
 
   const clearForm = () => {
@@ -172,7 +176,10 @@ const AdOrderForm: React.FC = () => {
   
   const generatePdf = useCallback(async () => {
     const element = printableAreaRef.current;
-    if (!element) return;
+    if (!element || typeof window === 'undefined' || !(window as any).html2pdf) {
+        console.error('html2pdf is not loaded or element not found');
+        return;
+    }
 
     document.body.classList.add('pdf-export-active');
 
@@ -181,23 +188,23 @@ const AdOrderForm: React.FC = () => {
 
     inputs.forEach(input => {
         originalValues.push({ el: input, value: input.value, style: input.style.cssText });
-        if (input.id === 'orderDate' && orderDate) { // Check if it's the date input
-          input.value = format(orderDate, 'dd.MM.yyyy');
+        if (input.id === 'orderDate' && orderDate) { 
+          (input as HTMLInputElement).value = format(orderDate, 'dd.MM.yyyy');
         }
     });
     
-    // Clone the printable area for PDF generation to avoid altering the live DOM directly for styling
     const clonedElement = element.cloneNode(true) as HTMLElement;
+    clonedElement.style.height = '297mm'; // A4 height
+    clonedElement.style.width = '210mm'; // A4 width
+    clonedElement.style.overflow = 'hidden'; // Ensure content fits
 
-    // Ensure all textareas in the clone have their full scrollHeight
     const textareasInClone = clonedElement.querySelectorAll('textarea');
     textareasInClone.forEach(ta => {
-        ta.style.height = 'auto'; // Reset height
-        ta.style.height = `${ta.scrollHeight}px`; // Set to scroll height
-        ta.style.overflow = 'hidden'; // Hide scrollbar
+        ta.style.height = 'auto'; 
+        ta.style.height = `${ta.scrollHeight}px`; 
+        ta.style.overflow = 'hidden'; 
     });
     
-    // Convert inputs and textareas to static text in the cloned document
     const inputsToConvert = clonedElement.querySelectorAll('input[type="text"], input[type="number"], input[type="date"]');
     inputsToConvert.forEach(inputEl => {
         const p = document.createElement('span');
@@ -206,13 +213,12 @@ const AdOrderForm: React.FC = () => {
         if (input.id === 'orderDate' && orderDate) {
              value = format(orderDate, 'dd.MM.yyyy');
         } else if (input.type === 'date' && !input.value && input.placeholder) {
-            value = ''; // Keep placeholder if date not set
+            value = ''; 
         }
-        p.textContent = value || ''; // Use empty string if no value
+        p.textContent = value || ''; 
         p.className = 'static-print-text';
-        // Copy relevant styles, ensure display block or inline-block for proper layout
-        p.style.display = 'inline-block'; // Or block if it takes full width
-        p.style.width = getComputedStyle(input).width; // Maintain width
+        p.style.display = 'inline-block'; 
+        p.style.width = getComputedStyle(input).width; 
         p.style.fontFamily = getComputedStyle(input).fontFamily;
         p.style.fontSize = getComputedStyle(input).fontSize;
         p.style.fontWeight = getComputedStyle(input).fontWeight;
@@ -227,30 +233,27 @@ const AdOrderForm: React.FC = () => {
     textareasToConvert.forEach(textareaEl => {
         const div = document.createElement('div');
         const textarea = textareaEl as HTMLTextAreaElement;
-        // Preserve line breaks from textarea
-        div.innerHTML = textarea.value.replace(/\n/g, '<br>') || ''; // Use empty string if no value
+        div.innerHTML = textarea.value.replace(/\n/g, '<br>') || ''; 
         div.className = 'static-print-text textarea-static-print';
 
-        // Apply specific styles for matter textarea
         if (textarea.id === 'matterTextarea') {
-             div.classList.add('matter-container-print'); // For specific PDF styling of matter
+             div.classList.add('matter-container-print'); 
         }
         
-        div.style.cssText = getComputedStyle(textarea).cssText; // Copy all computed styles
-        div.style.border = 'none'; // Remove default textarea border for print
-         if (textarea.id === 'matterTextarea') { // Special border for matter
+        div.style.cssText = getComputedStyle(textarea).cssText; 
+        div.style.border = 'none'; 
+         if (textarea.id === 'matterTextarea') { 
             div.style.borderTop = '1px solid black';
             div.style.borderBottom = '1px solid black';
         }
-        div.style.height = 'auto'; // Let content define height
+        div.style.height = 'auto'; 
         div.style.minHeight = 'unset';
-        div.style.overflow = 'visible'; // Ensure all content is visible
-        div.style.whiteSpace = 'pre-wrap'; // Preserve whitespace and line breaks
-        div.style.wordWrap = 'break-word'; // Wrap long words
+        div.style.overflow = 'visible'; 
+        div.style.whiteSpace = 'pre-wrap'; 
+        div.style.wordWrap = 'break-word'; 
         textarea.parentNode?.replaceChild(div, textarea);
     });
 
-    // Apply print-specific classes for PDF
     const releaseOrderTitleClone = clonedElement.querySelector('.release-order-title-screen') as HTMLElement;
     if (releaseOrderTitleClone) {
         releaseOrderTitleClone.className = 'release-order-titlebar-print-preview';
@@ -269,10 +272,10 @@ const AdOrderForm: React.FC = () => {
             img.style.maxWidth = "100%";
             img.style.maxHeight = "100%";
             img.style.objectFit = "contain";
-            stampContainerClone.innerHTML = ''; // Clear placeholder
+            stampContainerClone.innerHTML = ''; 
             stampContainerClone.appendChild(img);
         } else {
-            stampContainerClone.textContent = 'Stamp Area'; // Fallback text
+            stampContainerClone.textContent = 'Stamp Area'; 
         }
     }
     
@@ -285,16 +288,24 @@ const AdOrderForm: React.FC = () => {
 
 
     const opt = {
-        margin: [10, 5, 10, 5], // top, left, bottom, right in mm
+        margin: [5, 5, 5, 5], // top, left, bottom, right in mm
         filename: 'application_form.pdf',
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: {
-            scale: 2, // Higher scale for better quality
+            scale: 2, 
             useCORS: true,
-            logging: false, // Disable logging for cleaner console
-            scrollY: -window.scrollY, // Try to capture from top
+            logging: false, 
+            scrollY: -window.scrollY, 
             windowWidth: clonedElement.scrollWidth,
-            windowHeight: clonedElement.scrollHeight, // Capture full height
+            windowHeight: clonedElement.scrollHeight, 
+            onclone: (document: Document) => { // Ensure styles are fully applied in clone
+                const clonedBody = document.body;
+                clonedBody.classList.add('pdf-export-active'); // Apply the special class
+                // Force reflow/repaint if necessary
+                clonedBody.style.display = 'none';
+                clonedBody.offsetHeight; // Trigger reflow
+                clonedBody.style.display = '';
+            }
         },
         jsPDF: {
             unit: 'mm',
@@ -304,67 +315,63 @@ const AdOrderForm: React.FC = () => {
         pagebreak: { mode: ['css', 'avoid-all'], before: '.page-break-before' }
     };
     
-    if ((window as any).html2pdf) {
-        (window as any).html2pdf().from(clonedElement).set(opt).save()
-        .then(() => {
-            // Restore original values and styles on the actual form
-            inputs.forEach(input => {
-                const original = originalValues.find(ov => ov.el === input);
-                if (original) {
-                    input.value = original.value;
-                    if(original.style) input.style.cssText = original.style;
-                    else input.removeAttribute('style');
-                }
-                if (input.tagName.toLowerCase() === 'textarea') {
-                    adjustTextareaHeight(input as HTMLTextAreaElement);
-                }
-            });
-            document.body.classList.remove('pdf-export-active');
-        })
-        .catch((error: any) => {
-            console.error("Error generating PDF:", error);
-            inputs.forEach(input => {
-                const original = originalValues.find(ov => ov.el === input);
-                if (original) {
-                    input.value = original.value;
-                    if(original.style) input.style.cssText = original.style;
-                     else input.removeAttribute('style');
-                }
-                 if (input.tagName.toLowerCase() === 'textarea') {
-                    adjustTextareaHeight(input as HTMLTextAreaElement);
-                }
-            });
-            document.body.classList.remove('pdf-export-active');
+    
+    (window as any).html2pdf().from(clonedElement).set(opt).save()
+    .then(() => {
+        inputs.forEach(input => {
+            const original = originalValues.find(ov => ov.el === input);
+            if (original) {
+                (input as HTMLInputElement).value = original.value;
+                if(original.style) input.style.cssText = original.style;
+                else input.removeAttribute('style');
+            }
+            if (input.tagName.toLowerCase() === 'textarea') {
+                adjustTextareaHeight(input as HTMLTextAreaElement);
+            }
         });
-    } else {
-        console.error('html2pdf is not loaded');
         document.body.classList.remove('pdf-export-active');
-    }
+    })
+    .catch((error: any) => {
+        console.error("Error generating PDF:", error);
+        inputs.forEach(input => {
+            const original = originalValues.find(ov => ov.el === input);
+            if (original) {
+                (input as HTMLInputElement).value = original.value;
+                if(original.style) input.style.cssText = original.style;
+                 else input.removeAttribute('style');
+            }
+             if (input.tagName.toLowerCase() === 'textarea') {
+                adjustTextareaHeight(input as HTMLTextAreaElement);
+            }
+        });
+        document.body.classList.remove('pdf-export-active');
+    });
+    
 
   }, [orderDate, stampImage, rowsData, matterText, clientName, advManagerInput1, advManagerInput2, headingCaption, packageName, ron, adjustTextareaHeight]);
 
 
   const handlePrintPreview = useCallback(() => {
     setIsPreviewing(true);
-    document.body.classList.add('print-preview-active'); 
+    if (typeof window !== 'undefined') document.body.classList.add('print-preview-active'); 
   }, []);
 
   const handleClosePrintPreview = useCallback(() => {
     setIsPreviewing(false);
-    document.body.classList.remove('print-preview-active');
-    const previewContentDiv = document.getElementById('printPreviewContent');
+    if (typeof window !== 'undefined') document.body.classList.remove('print-preview-active');
+    const previewContentDiv = typeof window !== 'undefined' ? document.getElementById('printPreviewContent') : null;
     if (previewContentDiv) {
         previewContentDiv.innerHTML = ''; 
     }
   }, []);
 
   const handleActualPrint = useCallback(() => {
-    window.print();
+    if (typeof window !== 'undefined') window.print();
   }, []);
 
   const handleFullScreenPreview = useCallback(() => {
     const element = printableAreaRef.current;
-    if (!element) return;
+    if (!element || typeof window === 'undefined') return;
   
     if (element.requestFullscreen) {
       element.requestFullscreen().then(() => {
@@ -374,17 +381,17 @@ const AdOrderForm: React.FC = () => {
       }).catch(err => {
         alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
       });
-    } else if ((element as any).mozRequestFullScreen) { /* Firefox */
+    } else if ((element as any).mozRequestFullScreen) { 
       (element as any).mozRequestFullScreen();
       setIsFullScreenPreview(true);
       document.body.classList.add('fullscreen-body-active');
       element.classList.add('fullscreen-preview-active');
-    } else if ((element as any).webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+    } else if ((element as any).webkitRequestFullscreen) { 
       (element as any).webkitRequestFullscreen();
       setIsFullScreenPreview(true);
       document.body.classList.add('fullscreen-body-active');
       element.classList.add('fullscreen-preview-active');
-    } else if ((element as any).msRequestFullscreen) { /* IE/Edge */
+    } else if ((element as any).msRequestFullscreen) { 
       (element as any).msRequestFullscreen();
       setIsFullScreenPreview(true);
       document.body.classList.add('fullscreen-body-active');
@@ -394,14 +401,15 @@ const AdOrderForm: React.FC = () => {
 
   const handleExitFullScreenPreview = useCallback(() => {
     const element = printableAreaRef.current;
+    if (typeof window === 'undefined') return;
     if (document.fullscreenElement || (document as any).webkitFullscreenElement || (document as any).mozFullScreenElement || (document as any).msFullscreenElement) {
       if (document.exitFullscreen) {
         document.exitFullscreen();
-      } else if ((document as any).mozCancelFullScreen) { /* Firefox */
+      } else if ((document as any).mozCancelFullScreen) { 
         (document as any).mozCancelFullScreen();
-      } else if ((document as any).webkitExitFullscreen) { /* Chrome, Safari and Opera */
+      } else if ((document as any).webkitExitFullscreen) { 
         (document as any).webkitExitFullscreen();
-      } else if ((document as any).msExitFullscreen) { /* IE/Edge */
+      } else if ((document as any).msExitFullscreen) { 
         (document as any).msExitFullscreen();
       }
     }
@@ -413,6 +421,7 @@ const AdOrderForm: React.FC = () => {
   }, []);
   
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     const fullscreenChangeHandler = () => {
       const isCurrentlyFullScreen = !!(document.fullscreenElement || (document as any).webkitFullscreenElement || (document as any).mozFullScreenElement || (document as any).msFullscreenElement);
       setIsFullScreenPreview(isCurrentlyFullScreen);
@@ -444,6 +453,7 @@ const AdOrderForm: React.FC = () => {
 
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     if (isPreviewing && !isFullScreenPreview) {
       const previewNode = printableAreaRef.current?.cloneNode(true) as HTMLElement | null;
       const previewContentDiv = document.getElementById('printPreviewContent');
@@ -485,22 +495,22 @@ const AdOrderForm: React.FC = () => {
             let value = input.value || '';
             if (input.id === 'orderDate' && orderDate) {
                  value = format(orderDate, 'dd.MM.yyyy');
-            } else if (!input.value && input.placeholder && input.type !== 'date') { // Show placeholder only for non-date empty inputs
+            } else if (!input.value && input.placeholder && input.type !== 'date') { 
                 value = ''; 
             } else if (input.type === 'date' && !input.value) {
-                 value = ''; // Empty for date if no value
+                 value = ''; 
             }
             p.textContent = value;
             p.className = 'static-print-text';
-            p.style.display = 'inline-block'; // Ensure it takes space like input
-            p.style.width = getComputedStyle(input).width; // Maintain width
+            p.style.display = 'inline-block'; 
+            p.style.width = getComputedStyle(input).width; 
             p.style.fontFamily = getComputedStyle(input).fontFamily;
             p.style.fontSize = getComputedStyle(input).fontSize;
             p.style.fontWeight = getComputedStyle(input).fontWeight;
             p.style.lineHeight = getComputedStyle(input).lineHeight;
             p.style.color = 'black';
-            p.style.borderBottom = '1px solid black'; // Mimic underline
-            p.style.padding = '2px 0'; // Mimic input padding
+            p.style.borderBottom = '1px solid black'; 
+            p.style.padding = '2px 0'; 
             input.parentNode?.replaceChild(p, input);
         });
 
@@ -514,13 +524,12 @@ const AdOrderForm: React.FC = () => {
             }
             div.innerHTML = value;
             div.className = 'static-print-text textarea-static-print';
-             // Apply specific styles for matter textarea
             if (textarea.id === 'matterTextarea') {
                  div.classList.add('matter-container-print');
             }
             div.style.cssText = getComputedStyle(textarea).cssText;
-            div.style.border = 'none'; // remove default textarea border for print
-            if (textarea.id === 'matterTextarea') { // Special border for matter
+            div.style.border = 'none'; 
+            if (textarea.id === 'matterTextarea') { 
                 div.style.borderTop = '1px solid black';
                 div.style.borderBottom = '1px solid black';
             }
@@ -544,7 +553,6 @@ const AdOrderForm: React.FC = () => {
         previewContentDiv.innerHTML = ''; 
         previewContentDiv.appendChild(previewNode);
 
-        // Re-adjust heights for textareas in preview
         const textareasInPreview = previewContentDiv.querySelectorAll('.textarea-static-print');
         textareasInPreview.forEach(ta => {
             const htmlTa = ta as HTMLElement;
@@ -559,6 +567,9 @@ const AdOrderForm: React.FC = () => {
     }
   }, [isPreviewing, isFullScreenPreview, orderDate, stampImage, rowsData, matterText, clientName, advManagerInput1, advManagerInput2, headingCaption, packageName, ron, adjustTextareaHeight ]);
 
+  if (!isClient) {
+    return null; // Or a loading spinner
+  }
 
   return (
     <div className="max-w-[210mm] mx-auto p-1 print-root-container bg-background" id="main-application-container">
@@ -589,8 +600,8 @@ const AdOrderForm: React.FC = () => {
             <p className="text-xs mt-1"><strong>GSTIN:</strong> 07AABCL5406F1ZU</p>
           </div>
 
-          <div className="flex-1 flex flex-col gap-3">
-            <div className="flex gap-3 p-2 border-2 border-black rounded items-center">
+          <div className="flex-1 flex flex-col gap-3 p-3 border-2 border-black rounded">
+            <div className="flex gap-3 items-center">
               <div className="flex-1 flex items-center">
                 <Label htmlFor="roNumber" className="text-sm font-bold mr-2 whitespace-nowrap">R.O. No. LN:</Label>
                 <Input id="roNumber" type="number" placeholder="Enter Number" value={ron} onChange={(e) => setRon(e.target.value)} className="text-sm py-1 px-2 h-auto"/>
@@ -600,14 +611,14 @@ const AdOrderForm: React.FC = () => {
                  <DatePicker selected={orderDate} onChange={handleDateChange} dateFormat="dd.MM.yyyy" className="text-sm py-1 px-2 h-auto w-full" id="orderDate" />
               </div>
             </div>
-            <div className="p-2 border-2 border-black rounded flex items-center">
+            <div className="flex items-center">
               <Label htmlFor="clientName" className="text-sm font-bold mr-2 whitespace-nowrap">Client:</Label>
               <Input id="clientName" placeholder="Client Name" value={clientName} onChange={(e) => setClientName(e.target.value)} className="text-sm py-1 px-2 h-auto"/>
             </div>
-            <div className="p-3 border-2 border-black rounded flex flex-col gap-2">
+             <div>
               <Label className="text-sm font-bold">The Advertisement Manager</Label>
-              <Input placeholder="Publication Name / Address Line 1" value={advManagerInput1} onChange={(e) => setAdvManagerInput1(e.target.value)} className="text-sm py-1 px-2 h-auto" />
-              <Input placeholder="Address Line 2 / City" value={advManagerInput2} onChange={(e) => setAdvManagerInput2(e.target.value)} className="text-sm py-1 px-2 h-auto" />
+              <Input placeholder="Publication Name / Address Line 1" value={advManagerInput1} onChange={(e) => setAdvManagerInput1(e.target.value)} className="text-sm py-1 px-2 h-auto mt-1" />
+              <Input placeholder="Address Line 2 / City" value={advManagerInput2} onChange={(e) => setAdvManagerInput2(e.target.value)} className="text-sm py-1 px-2 h-auto mt-1" />
             </div>
             <div className="mt-2 pt-2 border-t border-black">
               <p className="text-sm font-bold">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
@@ -690,15 +701,15 @@ const AdOrderForm: React.FC = () => {
             </div>
             <div className="w-full md:w-[38%] flex justify-center md:justify-end items-start stamp-parent-container">
                 <div 
-                  className="stamp-container-screen w-[180px] h-[100px] border-0 flex items-center justify-center text-xs text-gray-500 bg-transparent rounded cursor-pointer hover:opacity-80"
+                  className="stamp-container-screen w-[200px] h-[120px] flex items-center justify-center text-xs text-gray-500 bg-transparent rounded cursor-pointer hover:opacity-80"
                   onClick={triggerStampUpload}
                   title="Click to upload stamp image"
                 >
                 {stampImage ? (
-                     <Image src={stampImage} alt="Stamp" width={176} height={96} style={{ objectFit: 'contain', maxWidth: '100%', maxHeight: '100%' }} className="border border-dashed border-gray-300" data-ai-hint="signature company stamp"/>
+                     <Image src={stampImage} alt="Stamp" width={200} height={120} style={{ objectFit: 'contain', maxWidth: '100%', maxHeight: '100%' }} data-ai-hint="signature company stamp"/>
                 ) : (
                   <div className="w-full h-full border-2 border-dashed border-gray-400 flex items-center justify-center bg-gray-50">
-                    <Image src={DEFAULT_STAMP_IMAGE_PLACEHOLDER} alt="Upload Stamp Placeholder" width={176} height={96} style={{ objectFit: 'contain', maxWidth: '100%', maxHeight: '100%' }} data-ai-hint="upload placeholder"/>
+                    <Image src={DEFAULT_STAMP_IMAGE_PLACEHOLDER} alt="Upload Stamp Placeholder" width={196} height={116} style={{ objectFit: 'contain', maxWidth: '100%', maxHeight: '100%' }} data-ai-hint="upload placeholder"/>
                   </div>
                 )}
                 <Input type="file" ref={stampInputRef} onChange={handleStampUpload} accept="image/*" className="hidden" />
@@ -709,7 +720,7 @@ const AdOrderForm: React.FC = () => {
           <div className="mt-2 pt-2 border-t border-black">
             <p className="text-xs font-bold underline decoration-black decoration-2 underline-offset-2 mb-1">Note:</p>
             <ol className="list-decimal list-inside text-xs space-y-0.5">
-              <li>Space reserved vide our letter No. <span className="no-underline-print">_______________</span></li>
+              <li>Space reserved vide our letter No. <span className="border-b border-black inline-block w-24 h-4 no-underline-print">&nbsp;</span></li>
               <li>No two advertisements of the same client should appear in the same issue.</li>
               <li>Please quote R.O. No. in all your bills and letters.</li>
               <li>Please send two voucher copies of the good reproduction to us within 3 days of the publishing.</li>
@@ -723,7 +734,6 @@ const AdOrderForm: React.FC = () => {
           id="printPreviewOverlay" 
           className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[1000] p-4 no-print"
           onClick={(e) => {
-            // Close only if clicking on the overlay itself, not the content
              if (e.target === e.currentTarget) {
                 handleClosePrintPreview();
             }
@@ -735,7 +745,6 @@ const AdOrderForm: React.FC = () => {
             onClick={(e) => e.stopPropagation()} 
           >
              <div id="printPreviewContent" className="print-preview-inner-content">
-                {/* Cloned content will be injected here by useEffect */}
              </div>
           </div>
           <Button 
@@ -759,7 +768,6 @@ const AdOrderForm: React.FC = () => {
 
       {isFullScreenPreview && (
          <div id="fullscreen-content-host" className="fixed inset-0 bg-white z-[2000] overflow-auto p-4 no-print print-preview-active">
-            {/* The printable area itself is styled to be fullscreen via CSS class 'fullscreen-preview-active' */}
             <Button 
                 onClick={handleExitFullScreenPreview} 
                 variant="destructive" 
