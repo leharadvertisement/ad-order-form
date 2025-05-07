@@ -1,16 +1,12 @@
+
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google'; // Changed from Geist to Inter
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster'; // Import Toaster
-
-const inter = Inter({ // Changed font variable
-  subsets: ['latin'],
-  variable: '--font-sans', // Changed variable name
-});
+import Script from 'next/script';
 
 export const metadata: Metadata = {
-  title: 'Ad Order Form - Lehar Advertising', // Updated title
-  description: 'Generate Release Orders for Lehar Advertising', // Updated description
+  title: 'Printable Application Form', // Updated title
+  description: 'Generates a printable application form.', // Updated description
 };
 
 export default function RootLayout({
@@ -20,11 +16,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} font-sans antialiased font-bold`}> {/* Use new font variable and add font-bold */}
-        <main className="p-4"> {/* Wrap children in main and add padding */}
+      <head>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+      </head>
+      <body className="font-arial"> {/* Use a generic class for Arial from globals.css */}
+        <main>
           {children}
         </main>
         <Toaster /> {/* Add Toaster component */}
+        {/* html2pdf.js loaded here to ensure it's available after page content */}
+        <Script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js" strategy="lazyOnload" />
       </body>
     </html>
   );
