@@ -19,7 +19,7 @@ const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://picsum.photos/160/90?random&dat
 
 const AdOrderForm: FC = () => {
   const [ron, setRon] = useState<string>('');
-  const [orderDate, setOrderDate] = useState<Date | undefined>(new Date());
+  const [orderDate, setOrderDate] = useState<Date | undefined>(undefined);
   const [clientName, setClientName] = useState<string>('');
   const [advManagerInput1, setAdvManagerInput1] = useState<string>('');
   const [advManagerInput2, setAdvManagerInput2] = useState<string>('');
@@ -191,7 +191,7 @@ const AdOrderForm: FC = () => {
         const p = document.createElement('span');
         const input = inputEl as HTMLInputElement;
         let value = input.value;
-        if ((input.id === 'orderDate' || input.classList.contains('table-date-picker-pdf-target')) && orderDate) {
+        if (input.id === 'orderDate' && orderDate) { // Check if orderDate is defined
              value = format(orderDate, 'dd.MM.yyyy');
         } else if (input.type === 'date' && !input.value && input.placeholder) {
             value = '\u00A0'; 
@@ -657,14 +657,8 @@ const AdOrderForm: FC = () => {
     <div className="max-w-[210mm] mx-auto p-1 print-root-container bg-background" id="main-application-container">
       
       <div className="flex justify-end items-center gap-2 p-2 mb-2 no-print no-pdf-export action-buttons-container">
-        <Button onClick={handlePrintPreview} variant="outline" size="sm" aria-label="Print Preview">
-            <Eye className="mr-2" /> Preview
-        </Button>
         <Button onClick={generatePdf} variant="outline" size="sm" aria-label="Download PDF">
             <Download className="mr-2" /> PDF
-        </Button>
-         <Button onClick={isFullScreenPreview ? handleExitFullScreenPreview : handleFullScreenPreview} variant="outline" size="sm" aria-label="Toggle Fullscreen Preview">
-            {isFullScreenPreview ? <EyeOff className="mr-2" /> : <Maximize className="mr-2" />} Fullscreen
         </Button>
       </div>
 
@@ -691,7 +685,7 @@ const AdOrderForm: FC = () => {
                     </div>
                     <div className="flex-1 flex items-center">
                          <Label htmlFor="orderDate" className="text-sm font-bold mr-2 whitespace-nowrap">Date:</Label>
-                        <DatePicker selected={orderDate} onChange={handleDateChange} dateFormat="dd.MM.yyyy" className="text-sm py-1 px-2 h-auto w-full border-2 border-black" id="orderDate" placeholderText="Select Date"/>
+                        <DatePicker selected={orderDate} onChange={handleDateChange} dateFormat="dd.MM.yyyy" className="text-sm py-1 px-2 h-auto w-full border-2 border-black" id="orderDate"/>
                     </div>
                 </div>
                 <div className="flex items-center">
@@ -736,16 +730,16 @@ const AdOrderForm: FC = () => {
              {rowsData.map((row, index) => (
                <TableRow key={index} className="print-table-row">
                  <TableCell className="main-table-bordered p-0 align-top print-border border border-black">
-                   <Textarea value={row.keyNo as string} onChange={(e) => handleTextareaInput(e, index, 'keyNo')} className="text-xs p-1 border-0 rounded-none resize-none min-h-[120px] h-auto no-shadow-outline print-textarea textarea-align-top" />
+                   <Textarea value={row.keyNo as string} onChange={(e) => handleTextareaInput(e, index, 'keyNo')} className="text-xs p-1 border-0 rounded-none resize-none min-h-[150px] h-auto no-shadow-outline print-textarea textarea-align-top" />
                  </TableCell>
                  <TableCell className="main-table-bordered p-0 align-top print-border border border-black">
-                   <Textarea value={row.publication as string} onChange={(e) => handleTextareaInput(e, index, 'publication')}  className="text-xs p-1 border-0 rounded-none resize-none min-h-[120px] h-auto no-shadow-outline print-textarea textarea-align-top" />
+                   <Textarea value={row.publication as string} onChange={(e) => handleTextareaInput(e, index, 'publication')}  className="text-xs p-1 border-0 rounded-none resize-none min-h-[150px] h-auto no-shadow-outline print-textarea textarea-align-top" />
                  </TableCell>
                  <TableCell className="main-table-bordered p-0 align-top print-border border border-black">
-                   <Textarea value={row.edition as string} onChange={(e) => handleTextareaInput(e, index, 'edition')} className="text-xs p-1 border-0 rounded-none resize-none min-h-[120px] h-auto no-shadow-outline print-textarea textarea-align-top" />
+                   <Textarea value={row.edition as string} onChange={(e) => handleTextareaInput(e, index, 'edition')} className="text-xs p-1 border-0 rounded-none resize-none min-h-[150px] h-auto no-shadow-outline print-textarea textarea-align-top" />
                  </TableCell>
                  <TableCell className="main-table-bordered p-0 align-top print-border border border-black">
-                   <Textarea value={row.size as string} onChange={(e) => handleTextareaInput(e, index, 'size')} className="text-xs p-1 border-0 rounded-none resize-none min-h-[120px] h-auto no-shadow-outline print-textarea textarea-align-top" />
+                   <Textarea value={row.size as string} onChange={(e) => handleTextareaInput(e, index, 'size')} className="text-xs p-1 border-0 rounded-none resize-none min-h-[150px] h-auto no-shadow-outline print-textarea textarea-align-top" />
                  </TableCell>
                  <TableCell className="main-table-bordered p-0 align-top print-border border border-black table-date-picker-wrapper">
                     <DatePicker
@@ -753,11 +747,10 @@ const AdOrderForm: FC = () => {
                         onChange={(date) => handleCellDateChange(date, index)}
                         dateFormat="dd.MM.yyyy"
                         className="text-xs py-0.5 px-1 h-auto w-full border-0 rounded-none no-shadow-outline print-textarea"
-                        placeholderText="Date(s)"
                     />
                  </TableCell>
                  <TableCell className="main-table-bordered p-0 align-top print-border border border-black">
-                   <Textarea value={row.position as string} onChange={(e) => handleTextareaInput(e, index, 'position')}  className="text-xs p-1 border-0 rounded-none resize-none min-h-[120px] h-auto no-shadow-outline print-textarea textarea-align-top" />
+                   <Textarea value={row.position as string} onChange={(e) => handleTextareaInput(e, index, 'position')}  className="text-xs p-1 border-0 rounded-none resize-none min-h-[150px] h-auto no-shadow-outline print-textarea textarea-align-top" />
                  </TableCell>
                </TableRow>
              ))}
@@ -793,7 +786,7 @@ const AdOrderForm: FC = () => {
             <div className="w-[62%]">
                 <p className="text-sm font-bold underline decoration-black decoration-2 underline-offset-2 mb-1">Note:</p>
                 <ol className="list-decimal list-inside text-xs space-y-0.5">
-                  <li>Space reserved vide our letter No.</li>
+                  <li>Space reserved vide our letter No. </li>
                   <li>No two advertisements of the same client should appear in the same issue.</li>
                   <li>Please quote R.O. No. in all your bills and letters.</li>
                   <li>Please send two voucher copies of the good reproduction to us within 3 days of the publishing.</li>
@@ -804,15 +797,15 @@ const AdOrderForm: FC = () => {
                 className="w-[35%] flex flex-col items-center justify-end stamp-parent-container mt-2 md:mt-0 self-end"
             >
                 <div
-                  className="stamp-container-screen w-[160px] h-[90px] flex items-center justify-center text-xs text-gray-500 bg-transparent rounded cursor-pointer hover:opacity-80"
+                  className="stamp-container-screen w-[180px] h-[100px] flex items-center justify-center text-xs text-gray-500 bg-transparent rounded cursor-pointer hover:opacity-80"
                   onClick={triggerStampUpload}
                   title="Click to upload stamp image"
                 >
                 {stampImage ? (
-                     <Image src={stampImage} alt="Stamp" width={158} height={88} className="object-contain" data-ai-hint="signature company stamp" />
+                     <Image src={stampImage} alt="Stamp" width={178} height={98} className="object-contain" data-ai-hint="signature company stamp" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gray-50 placeholder-div">
-                    <Image src={DEFAULT_STAMP_IMAGE_PLACEHOLDER} alt="Upload Stamp Placeholder" width={158} height={88} className="object-contain" data-ai-hint="upload placeholder"/>
+                    <Image src={DEFAULT_STAMP_IMAGE_PLACEHOLDER} alt="Upload Stamp Placeholder" width={178} height={98} className="object-contain" data-ai-hint="upload placeholder"/>
                   </div>
                 )}
                 <Input type="file" ref={stampInputRef} onChange={handleStampUpload} accept="image/*" className="hidden" />
