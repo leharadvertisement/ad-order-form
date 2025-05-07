@@ -11,7 +11,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 // import { Card, CardContent } from '@/components/ui/card'; // Not used
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Image from 'next/image';
-import { Download, Printer, Eye, X, Maximize, PlusSquare, MinusSquare } from 'lucide-react'; 
+import { Printer, PlusSquare, MinusSquare } from 'lucide-react'; 
 import { format } from 'date-fns';
 
 const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://picsum.photos/178/98?random&data-ai-hint=signature+placeholder';
@@ -754,24 +754,9 @@ const AdOrderForm: FC = () => {
     <div className="max-w-[210mm] mx-auto p-1 print-root-container bg-background" id="main-application-container">
       
       <div className="flex justify-end items-center gap-2 p-2 mb-2 no-print no-pdf-export action-buttons-container">
-        <Button onClick={generatePdf} variant="outline" size="sm" aria-label="Download PDF">
-            <Download className="mr-2" /> PDF
-        </Button>
-        <Button onClick={handlePrintPreview} variant="outline" size="sm" aria-label="Print Preview">
-            <Eye className="mr-2" /> Preview
-        </Button>
          <Button onClick={() => handleActualPrint(false)} variant="outline" size="sm" aria-label="Print Document">
             <Printer className="mr-2" /> Print
         </Button>
-        {!isFullScreenPreview ? (
-            <Button onClick={handleFullScreenPreview} variant="outline" size="sm" aria-label="Enter Full Screen Preview">
-                <Maximize className="mr-2" /> Full Screen
-            </Button>
-        ) : (
-            <Button onClick={handleExitFullScreenPreview} variant="outline" size="sm" aria-label="Exit Full Screen Preview">
-                <X className="mr-2" /> Exit Full Screen
-            </Button>
-        )}
       </div>
 
       <div id="printable-area-pdf" ref={printableAreaRef} className={`w-full print-target bg-card text-card-foreground shadow-sm p-2 md:p-4 rounded-lg border-4 border-black ${isFullScreenPreview ? 'fullscreen-preview-active' : ''}`}>
@@ -951,22 +936,6 @@ const AdOrderForm: FC = () => {
                 {/* Content is injected by useEffect */}
              </div>
           </div>
-          <Button
-            onClick={handleClosePrintPreview}
-            variant="destructive"
-            className="fixed top-4 right-4 z-[1001] no-print no-pdf-export"
-            aria-label="Close print preview"
-          >
-            <X className="mr-2 h-4 w-4" /> Close Preview
-          </Button>
-           <Button
-            onClick={() => handleActualPrint(true)} // Pass true to indicate printing from preview
-            variant="default"
-            className="fixed top-4 right-48 z-[1001] no-print no-pdf-export" // Adjust position as needed
-            aria-label="Print document"
-          >
-            <Printer className="mr-2 h-4 w-4" /> Print
-          </Button>
         </div>
       )}
 
@@ -975,22 +944,6 @@ const AdOrderForm: FC = () => {
          <div id="fullscreen-content-host" className="fixed inset-0 bg-white z-[2000] overflow-auto p-4 no-print">
             {/* The #printable-area-pdf div is styled to take over the screen by .fullscreen-preview-active */}
             {/* Buttons for exiting fullscreen or printing can be added here if desired */}
-            <Button
-                onClick={handleExitFullScreenPreview}
-                variant="destructive"
-                className="fixed top-4 right-4 z-[2001] no-print no-pdf-export"
-                aria-label="Exit Full Screen Preview"
-            >
-                <X className="mr-2 h-4 w-4" /> Exit Full Screen
-            </Button>
-            <Button
-                onClick={() => handleActualPrint(false)} // false as it's not from the modal
-                variant="default"
-                className="fixed top-4 right-56 z-[2001] no-print no-pdf-export" // Adjust as needed
-                aria-label="Print document from fullscreen"
-            >
-                <Printer className="mr-2 h-4 w-4" /> Print
-            </Button>
          </div>
       )}
     </div>
@@ -998,4 +951,5 @@ const AdOrderForm: FC = () => {
 };
 
 export default AdOrderForm;
+
 
