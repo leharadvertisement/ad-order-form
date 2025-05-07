@@ -20,7 +20,7 @@ interface DatePickerProps {
   className?: string;
   dateFormat?: string;
   id?: string;
-  placeholderText?: string; // Changed from placeholder to placeholderText to match react-datepicker
+  placeholderText?: string; 
 }
 
 export function DatePicker({ selected, onChange, className, dateFormat = "PPP", id, placeholderText = "Pick a date" }: DatePickerProps) {
@@ -31,9 +31,9 @@ export function DatePicker({ selected, onChange, className, dateFormat = "PPP", 
           variant={"outline"}
           id={id}
           className={cn(
-            "w-full justify-start text-left font-normal date-picker-trigger-button",
+            "w-full justify-center text-center font-normal date-picker-trigger-button", // Changed justify-start to justify-center and text-left to text-center
             !selected && "text-muted-foreground",
-            className // Apply className here
+            className 
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />

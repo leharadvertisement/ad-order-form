@@ -14,7 +14,7 @@ import Image from 'next/image';
 import { Download, Printer, Eye, X, Maximize, EyeOff, PlusSquare, MinusSquare, Save, FileText, Trash2, Undo } from 'lucide-react';
 import { format } from 'date-fns';
 
-const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://picsum.photos/160/90?random&data-ai-hint=signature+placeholder';
+const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://picsum.photos/178/98?random&data-ai-hint=signature+placeholder';
 
 
 const AdOrderForm: FC = () => {
@@ -191,7 +191,7 @@ const AdOrderForm: FC = () => {
         const p = document.createElement('span');
         const input = inputEl as HTMLInputElement;
         let value = input.value;
-        if (input.id === 'orderDate' && orderDate) { // Check if orderDate is defined
+        if (input.id === 'orderDate' && orderDate) { 
              value = format(orderDate, 'dd.MM.yyyy');
         } else if (input.type === 'date' && !input.value && input.placeholder) {
             value = '\u00A0'; 
@@ -341,15 +341,15 @@ const AdOrderForm: FC = () => {
 
 
     const opt = {
-        margin: [0,0,0,0], // A4 typically 210x297mm. Margin 0 to control via padding in clonedElement
+        margin: [0,0,0,0], 
         filename: 'release_order_form.pdf',
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: {
             scale: 2, 
             useCORS: true,
             logging: false, 
-            width: clonedElement.offsetWidth, // Use offsetWidth of the specifically sized clone
-            height: clonedElement.offsetHeight, // Use offsetHeight
+            width: clonedElement.offsetWidth, 
+            height: clonedElement.offsetHeight, 
             windowWidth: clonedElement.scrollWidth,
             windowHeight: clonedElement.scrollHeight,
             onclone: (documentClone: Document) => {
@@ -357,7 +357,7 @@ const AdOrderForm: FC = () => {
                 clonedBody.classList.add('pdf-export-active'); 
                 
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                const _ = clonedBody.offsetHeight; // Trigger reflow
+                const _ = clonedBody.offsetHeight; 
 
                 const textareasInClone = clonedBody.querySelectorAll('.textarea-static-print'); 
                  textareasInClone.forEach(ta => {
@@ -660,6 +660,15 @@ const AdOrderForm: FC = () => {
         <Button onClick={generatePdf} variant="outline" size="sm" aria-label="Download PDF">
             <Download className="mr-2" /> PDF
         </Button>
+        <Button onClick={handlePrintPreview} variant="outline" size="sm" aria-label="Print Preview">
+            <Eye className="mr-2 h-4 w-4" /> Preview
+        </Button>
+         <Button onClick={handleActualPrint} variant="outline" size="sm" aria-label="Print Document">
+            <Printer className="mr-2 h-4 w-4" /> Print
+        </Button>
+        <Button onClick={handleFullScreenPreview} variant="outline" size="sm" aria-label="Fullscreen Preview">
+            <Maximize className="mr-2 h-4 w-4" /> Fullscreen
+        </Button>
       </div>
 
       <div id="printable-area-pdf" ref={printableAreaRef} className={`w-full print-target bg-card text-card-foreground shadow-sm p-2 md:p-4 rounded-lg border-4 border-black ${isFullScreenPreview ? 'fullscreen-preview-active' : ''}`}>
@@ -685,7 +694,7 @@ const AdOrderForm: FC = () => {
                     </div>
                     <div className="flex-1 flex items-center">
                          <Label htmlFor="orderDate" className="text-sm font-bold mr-2 whitespace-nowrap">Date:</Label>
-                        <DatePicker selected={orderDate} onChange={handleDateChange} dateFormat="dd.MM.yyyy" className="text-sm py-1 px-2 h-auto w-full border-2 border-black" id="orderDate"/>
+                        <DatePicker selected={orderDate} onChange={handleDateChange} dateFormat="dd.MM.yyyy" className="text-sm py-1 px-2 h-auto w-full border-2 border-black text-center justify-center" id="orderDate"/>
                     </div>
                 </div>
                 <div className="flex items-center">
@@ -746,7 +755,7 @@ const AdOrderForm: FC = () => {
                         selected={row.scheduledDate instanceof Date ? row.scheduledDate : undefined}
                         onChange={(date) => handleCellDateChange(date, index)}
                         dateFormat="dd.MM.yyyy"
-                        className="text-xs py-0.5 px-1 h-auto w-full border-0 rounded-none no-shadow-outline print-textarea"
+                        className="text-xs py-0.5 px-1 h-auto w-full border-0 rounded-none no-shadow-outline print-textarea text-center justify-center"
                     />
                  </TableCell>
                  <TableCell className="main-table-bordered p-0 align-top print-border border border-black">
@@ -797,7 +806,7 @@ const AdOrderForm: FC = () => {
                 className="w-[35%] flex flex-col items-center justify-end stamp-parent-container mt-2 md:mt-0 self-end"
             >
                 <div
-                  className="stamp-container-screen w-[180px] h-[100px] flex items-center justify-center text-xs text-gray-500 bg-transparent rounded cursor-pointer hover:opacity-80"
+                  className="stamp-container-screen w-[178px] h-[98px] flex items-center justify-center text-xs text-gray-500 bg-transparent rounded cursor-pointer hover:opacity-80"
                   onClick={triggerStampUpload}
                   title="Click to upload stamp image"
                 >
