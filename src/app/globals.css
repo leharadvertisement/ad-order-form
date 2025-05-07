@@ -1,70 +1,124 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-body {
-  font-family: Arial, sans-serif;
-  font-weight: bold; /* Ensure bold is applied as per original body style */
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 222.2 47.4% 11.2%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 222.2 84% 4.9%;
+  --radius: 0.5rem;
+  --chart-1: 12 76% 61%;
+  --chart-2: 173 58% 39%;
+  --chart-3: 197 37% 24%;
+  --chart-4: 43 74% 66%;
+  --chart-5: 27 87% 67%;
 }
 
-.font-arial {
-  font-family: Arial, sans-serif;
+.dark {
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 210 40% 98%;
+  --primary-foreground: 222.2 47.4% 11.2%;
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 212.7 26.8% 83.9%;
+  --chart-1: 220 70% 50%;
+  --chart-2: 160 60% 45%;
+  --chart-3: 30 80% 55%;
+  --chart-4: 280 65% 60%;
+  --chart-5: 340 75% 55%;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 @media print {
-  #printButton, #downloadPdfButton, #printPreviewButton, #fullScreenButton, .print-icon-container, .no-print {
+  #printButton, #downloadPdfButton, #printPreviewButton, #fullScreenButton, .print-icon-container, .no-print, .new-row-buttons {
     display: none !important;
   }
   body {
       margin: 0 !important;
       padding: 0 !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
   }
   #application {
       width: 210mm !important;
-      height: 297mm !important; /* A4 height */
+      /* height: 297mm !important; /* A4 height, but can be auto if content exceeds */
+      min-height: 297mm;
       margin: 0 !important;
-      padding: 0 !important; /* Minimal padding for print */
+      padding: 10px !important; /* Minimal padding for print */
       border: none !important;
       box-shadow: none !important;
-      overflow: hidden !important; /* Prevent overflow issues */
+      overflow: visible !important;
       page-break-inside: avoid;
+      background-color: #fff !important; /* Ensure background is white for printing */
   }
   input, textarea, select {
       border: none !important;
       outline: none !important;
       font-weight: bold !important;
       font-size: 14px !important;
-      color: #000 !important;
-      background-color: #fff !important;
+      color: #000 !important; /* Ensure text is black */
+      background-color: #fff !important; /* Ensure input backgrounds are white */
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
   }
   table {
       border-collapse: collapse !important;
       width: 100% !important;
+      border: 2px solid black !important; /* Ensure table outer border prints */
   }
-  table, th, td {
-      border: none !important; /* Base border removal */
-      padding: 6px !important; /* Reduced padding */
+  table th, table td {
+      border: 1px solid black !important; /* Ensure th/td borders print */
+      padding: 6px !important; /* Consistent padding */
       text-align: left !important;
       word-wrap: break-word !important;
       font-size: 12px !important; /* Smaller font for print */
       color: #000 !important;
+      background-color: #fff !important; /* Ensure cell backgrounds are white */
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
   }
-  th {
-      background-color: #f0f0f0 !important;
-      border: 1px solid black !important; /* Ensure th borders print */
-  }
-  td {
-      border: 1px solid black !important; /* Ensure td borders print */
-  }
-  table {
-     border: 2px solid black !important; /* Ensure table outer border prints */
+  table th {
+      background-color: #f0f0f0 !important; /* TH background color */
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
   }
   .no-underline {
       text-decoration: none !important;
   }
   /* Ensure specific styled elements print correctly */
-  div[style*="background-color: black"] {
+  div[style*="background-color: black"], div[style*="background-color:black"] {
     background-color: black !important;
     color: white !important;
     -webkit-print-color-adjust: exact !important;
@@ -78,23 +132,43 @@ body {
   }
   textarea[placeholder="Enter matter here..."] {
      border-top: 1px solid black !important;
-     border-bottom-width: 1px !important;
+     border-bottom: 1px solid black !important; /* ensure this is applied */
   }
+   .stamp-placeholder-print {
+    border: 2px dashed #ccc !important; /* Dashed border for stamp in print */
+    background-color: #f9f9f9 !important;
+  }
+  .stamp-image-print {
+    object-fit: contain !important;
+  }
+  .print-preview-content > div#application { /* Target the cloned application div */
+    padding: 20px !important; /* Match screen padding for preview or adjust as needed */
+  }
+}
+
+body {
+  font-family: Arial, sans-serif;
+  font-weight: bold; /* Ensure bold is applied as per original body style */
+  margin: 0;
+  padding: 0;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
 }
 
 #application {
   width: 100%;
-  max-width: 210mm;
-  height: auto;
-  margin: 20px auto; /* Added margin for better screen view */
-  font-family: Arial, sans-serif;
-  padding: 10px;
+  max-width: 210mm; /* A4 width */
+  min-height: 297mm; /* A4 height, adjust if content naturally shorter/longer */
+  height: auto; /* Allow height to adjust to content */
+  margin: 20px auto; /* Centering and margin for screen view */
+  padding: 20px; /* Padding for screen view */
   border: 4px solid black;
   font-weight: bold;
-  position: relative;
+  position: relative; /* For absolute positioning of buttons */
   box-sizing: border-box;
-  color: #000;
-  background-color: #fff; /* Ensure white background */
+  color: #000; /* Default text color */
+  background-color: #fff; /* Default background color */
+  box-shadow: 0 0 10px rgba(0,0,0,0.1); /* Subtle shadow for screen */
 }
 
 .button-container {
@@ -104,33 +178,44 @@ body {
   position: absolute;
   top: 10px;
   right: 10px;
-  z-index: 100;
+  z-index: 100; /* Ensure buttons are on top */
 }
 
 #printButton, #downloadPdfButton, #printPreviewButton, #fullScreenButton {
-  background-color: #dc3545;
+  background-color: #007bff; /* Blue */
   color: white;
-  padding: 10px 20px;
+  padding: 8px 15px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 14px;
   margin-left: 10px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 #printButton:hover, #downloadPdfButton:hover, #printPreviewButton:hover, #fullScreenButton:hover {
-  background-color: #c82333;
+  background-color: #0056b3; /* Darker blue */
 }
 
-/* .no-print class is used to hide elements from printing via @media print,
-   but if it needs to be hidden on screen by default for some reason (not typical for buttons),
-   this rule would do it. The original HTML has it on button-container, meaning buttons are only for screen.
-   The original HTML had .no-print on print-icon-container, which means it's for screen too.
-   Let's assume .no-print is for controlling screen vs print in general.
-   The provided HTML has .no-print on elements that should be visible on screen but not print.
-*/
-.no-print-on-screen { /* Use a different class if elements should be hidden on screen by default */
-    display: none;
+.print-icon-container {
+  position: absolute;
+  top: 10px; /* Adjusted position */
+  right: 10px; /* Adjusted position */
+  z-index: 100; /* Ensure it's above other content */
+}
+
+.print-icon {
+  font-size: 20px; /* Slightly smaller icon */
+  color: #007bff; /* Blue */
+  cursor: pointer;
+  padding: 5px;
+  background-color: #f8f9fa; /* Light background for visibility */
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.print-icon:hover {
+  color: #0056b3;
+  background-color: #e9ecef;
 }
 
 
@@ -143,104 +228,427 @@ body {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.8);
+  width: 100vw; /* Full viewport width */
+  height: 100vh; /* Full viewport height */
+  background-color: rgba(0, 0, 0, 0.85); /* Darker overlay */
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  overflow: auto;
+  overflow: auto; /* Allow scrolling if content overflows */
+  padding: 20px; /* Padding around the preview content */
+  box-sizing: border-box;
 }
 
 .print-preview-content {
   background-color: white;
-  width: 210mm;
-  min-height: 297mm; /* Ensure it tries to fit A4, content might make it scroll */
-  padding: 20px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-  margin: 20px; /* Margin for preview scrollability */
+  width: 210mm; /* A4 width */
+  min-height: 297mm; /* A4 height */
+  padding: 20px; /* Match #application padding for consistency */
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
   box-sizing: border-box;
-  transform: scale(0.8); /* Scale down for better screen fit in preview mode */
+  transform: scale(0.85); /* Slightly larger preview scale */
   transform-origin: top center;
+  overflow: visible; /* Ensure all content is visible */
+}
+.print-preview-close-button {
+    position: fixed !important; /* Use fixed to position relative to viewport */
+    top: 30px !important; /* Adjust as needed */
+    right: 30px !important; /* Adjust as needed */
+    background-color: #f44336 !important; /* Red */
+    color: white !important;
+    border: none !important;
+    padding: 10px 20px !important;
+    cursor: pointer !important;
+    border-radius: 5px !important;
+    z-index: 1001 !important; /* Above preview content */
+    font-size: 16px !important;
+    font-weight: bold !important;
 }
 
-.print-icon-container {
-  position: absolute;
-  top: 10px; /* Adjusted position */
-  right: 10px; /* Adjusted position */
-  z-index: 100; /* Ensure it's above other content */
-}
-
-.print-icon {
-  font-size: 24px;
-  color: black;
-  cursor: pointer;
-  padding: 5px; /* Add some padding to make it easier to click */
-  background-color: #f0f0f0; /* Light background for visibility */
-  border-radius: 50%;
-}
 
 input, textarea, select {
-  border: none;
+  border: 1px solid #ccc; /* Subtle border for inputs on screen */
   outline: none;
   font-weight: bold;
   font-size: 14px;
   color: #000;
   background-color: #fff;
-  /* box-shadow: 0 0 0 1px black; */ /* Original comment: Removed box shadow */
-  width: 100%; /* Ensure inputs take full width of their container */
-  padding: 4px; /* Add some padding */
-  box-sizing: border-box; /* Include padding in width */
+  padding: 6px; /* Uniform padding */
+  box-sizing: border-box;
+  border-radius: 4px; /* Rounded corners */
+  width: 100%; /* Default to full width of container */
 }
+input:focus, textarea:focus, select:focus {
+  border-color: #007bff; /* Blue highlight on focus */
+  box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
 input[type="date"] {
-    padding: 3px; /* Specific padding for date input */
-}
-
-table, th, td {
-  border: none; /* Default for screen, @media print handles print borders */
-  padding: 8px;
-  text-align: left;
-  word-wrap: break-word;
-  color: #000;
-}
-
-th {
-  background-color: #f0f0f0;
-  border: 1px solid black; /* Screen view */
-}
-td {
-    border: 1px solid black; /* Screen view */
+    padding: 5px; /* Specific padding for date input consistency */
 }
 
 table {
   border-collapse: collapse;
   border: 2px solid black; /* Screen view */
   width: 100%;
+  margin-top: 20px; /* Space above table */
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* Subtle shadow for table */
+}
+
+th, td {
+  border: 1px solid black; /* Screen view */
+  padding: 8px; /* Cell padding */
+  text-align: left;
+  word-wrap: break-word; /* Prevent long words from breaking layout */
+  color: #000;
+  vertical-align: top; /* Align content to the top of the cell */
+}
+
+th {
+  background-color: #f0f0f0; /* Light gray for table headers */
+  font-weight: bold; /* Ensure headers are bold */
 }
 
 textarea {
-  box-shadow: none;
-  resize: none; /* As per original */
+  resize: vertical; /* Allow vertical resize, disable horizontal */
+  min-height: 40px; /* Minimum height for textareas */
 }
+textarea.table-textarea {
+  width: 100%;
+  height: auto; /* Initial height */
+  min-height: 160px; /* Default min-height for table textareas */
+  border: none !important; /* No border inside table cells */
+  outline: none !important;
+  font-weight: bold;
+  font-size: 14px;
+  color: #000;
+  background-color: #fff;
+  box-sizing: border-box;
+  resize: none; /* Disable resize for table textareas or set to vertical */
+  padding: 0; /* Remove padding if cell already has it */
+  box-shadow: none !important;
+}
+
 
 .new-row-buttons {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start; /* Align buttons to the left */
     margin-top: 10px;
+    gap: 10px; /* Space between buttons */
 }
 
 .new-row-buttons button {
-    margin: 0 5px;
     padding: 8px 16px;
-    background-color: #4CAF50;
+    background-color: #28a745; /* Green */
     color: white;
     border: none;
     border-radius: 5px;
     cursor: pointer;
     font-size: 14px;
+    font-weight: bold;
+}
+.new-row-buttons button:hover {
+    background-color: #218838; /* Darker green */
+}
+.new-row-buttons button.delete-button {
+    background-color: #dc3545; /* Red for delete */
+}
+.new-row-buttons button.delete-button:hover {
+    background-color: #c82333; /* Darker red for delete */
 }
 
-.new-row-buttons button:hover {
-    background-color: #367c39;
+.stamp-upload-container {
+    width: 200px; /* Adjusted width for stamp */
+    height: 120px; /* Adjusted height for stamp */
+    border: 2px dashed #ccc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+    overflow: hidden; /* To contain the image */
+    position: relative; /* For absolute positioning of text/image */
+}
+.stamp-upload-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Or 'cover', 'fill', 'scale-down' */
+}
+.stamp-upload-container p {
+    font-size: 12px;
+    text-align: center;
+    color: #6c757d; /* Muted text color */
+    margin: 0;
+}
+#stampFile {
+    display: none; /* Hide the actual file input */
+}
+
+/* Specific styles for the "MATTER" vertical label box */
+.matter-label-box {
+    writing-mode: vertical-lr;
+    text-orientation: mixed; /* Ensures text is upright */
+    padding: 4px; /* Original padding */
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+    border-right: 1px solid black; /* Original border */
+    background-color: black; /* Original background */
+    color: white; /* Original text color */
+    width: auto; /* Let width be determined by content and padding */
+    min-width: 38px; /* Minimum width to match visual */
+    display: flex; /* For centering content if needed */
+    align-items: center; /* Center content vertically in the writing mode */
+    justify-content: center; /* Center content horizontally in the writing mode */
+    border-radius: 4px 0 0 4px; /* Match parent rounding */
+}
+
+/* Matter content textarea */
+.matter-content-textarea {
+    width: 100%;
+    height: 150px; /* Default height, can be adjusted */
+    border: none !important; /* Remove internal border */
+    padding: 8px; /* Padding inside textarea */
+    margin: 0;
+    word-wrap: break-word;
+    text-align: left;
+    resize: vertical; /* Allow vertical resize */
+    box-sizing: border-box;
+    font-weight: bold;
+    font-size: 14px; /* Consistent font size */
+    color: #000;
+    background-color: #fff;
+    border-top: 1px solid black !important; /* Explicit top border */
+    border-bottom: 1px solid black !important; /* Explicit bottom border */
+    box-shadow: none !important;
+}
+.matter-container {
+    border: 2px solid black;
+    border-radius: 4px;
+    display:flex; /* Added */
+}
+
+/* Ensure no print styles interfere with screen styles unless in @media print */
+.no-print-on-screen {
+    display: none;
+}
+/* Utility to hide border for stamp upload on screen if desired */
+.no-border-on-screen {
+    border: none !important;
+}
+/* Default state for buttons, visible on screen */
+#printPreviewButton, #downloadPdfButton, #fullScreenButton, .print-icon-container:not(.no-print) {
+    display: inline-block; /* Or flex, block, etc. as appropriate */
+}
+
+/* Style for the main print button if it's outside the .button-container */
+#printActualButton {
+  background-color: #17a2b8; /* Teal */
+  color: white;
+  padding: 8px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-left: 10px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+#printActualButton:hover {
+  background-color: #117a8b; /* Darker teal */
+}
+
+/* Ensure button container is not hidden if it's only for print control */
+.button-container.no-print { /* This targets the one used for PDF/Preview */
+    /* This is fine, it will be hidden in print by the general .no-print rule */
+}
+.print-icon-container.no-print {
+    /* This is fine, it will be hidden in print by the general .no-print rule */
+}
+
+/* Styles for elements that should have specific print appearances defined in HTML but also look good on screen */
+/* Example: The Release Order title bar */
+.release-order-titlebar {
+    text-align: center;
+    margin-top: 10px;
+    background-color: black;
+    color: white;
+    border: 2px solid black; /* Consistent with print for screen */
+    padding: 4px 10px;
+    font-weight: bold;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 4px;
+    position: relative; /* If other positioning is needed */
+    top: 0; /* If other positioning is needed */
+}
+.release-order-titlebar h2 {
+    margin: 0;
+    font-size: 22px; /* Consistent font size */
+}
+
+/* Lehar Info Box */
+.lehar-info-box {
+    width: 30%;
+    padding: 8px;
+    border: 2px solid black;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    font-size: 14px;
+    position: relative;
+    border-radius: 4px;
+    color: #000;
+}
+.lehar-info-box h3, .lehar-info-box h4, .lehar-info-box p {
+    margin: 2px 0; /* Consistent small margin */
+    text-align: left;
+    color: #000; /* Ensure text color */
+}
+.lehar-info-box h3 { font-size: 16px; }
+.lehar-info-box h4 { font-size: 15px; margin-top:0; }
+.lehar-info-box strong { font-weight: bold; }
+
+
+/* Right side box (RO, Date, Client, etc.) */
+.details-box {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px; /* Consistent gap */
+    box-sizing: border-box;
+}
+.detail-section { /* For RO/Date, Client, Ad Manager */
+    border: 2px solid black;
+    border-radius: 4px;
+    padding: 8px; /* Consistent padding */
+    display: flex;
+    align-items: center; /* Align items nicely */
+    gap: 8px; /* Gap between label and input or internal elements */
+}
+.detail-section label {
+    font-size: 16px;
+    font-weight: bold;
+    color: #000;
+    margin-right: 8px;
+    white-space: nowrap; /* Prevent label wrapping */
+}
+.detail-section.column-layout {
+    flex-direction: column;
+    align-items: flex-start; /* Align labels to the start */
+}
+.detail-section input[type="text"], .detail-section input[type="number"], .detail-section input[type="date"] {
+    flex-grow: 1; /* Allow inputs to take available space */
+}
+
+/* Heading/Caption & Package */
+.caption-package-container {
+    width: 100%;
+    margin-top: 20px;
+    display: flex;
+    gap: 12px;
+}
+.caption-package-container > div { /* Target direct children divs */
+    border: 2px solid black;
+    border-radius: 4px;
+    padding: 8px;
+    box-sizing: border-box;
+}
+.caption-package-container > div label {
+    font-size: 16px;
+    font-weight: bold;
+    display: block;
+    margin-bottom: 4px;
+    color: #000;
+}
+.caption-package-container > div:first-child { flex: 1; } /* Heading/Caption takes more space */
+.caption-package-container > div:last-child { width: 30%; } /* Package takes 30% */
+
+
+/* Notes and Stamp area */
+.notes-stamp-container {
+    width: 100%;
+    margin-top: 8px; /* Consistent margin */
+    border: 2px solid black;
+    border-radius: 4px;
+    padding: 10px; /* Increased padding */
+    box-sizing: border-box;
+    min-height: 150px; /* Ensure enough height for content */
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+.notes-forwarding-section {
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 10px; /* Space before notes */
+    gap: 10px;
+}
+.forwarding-info {
+    width: calc(60% - 5px); /* Adjust width, considering gap */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+.forwarding-info strong {
+    font-size: 14px;
+    font-weight: bold;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    margin-bottom: 5px;
+}
+.forwarding-info span {
+    font-size: 13px; /* Slightly smaller for address */
+    line-height: 1.4;
+    font-weight: bold;
+}
+
+.stamp-area {
+    width: calc(40% - 5px); /* Adjust width */
+    display: flex;
+    justify-content: flex-end; /* Align stamp to the right */
+    align-items: flex-start; /* Align stamp to the top of its area */
+}
+
+.notes-section {
+    /* margin-top: 10px; Removed fixed margin, rely on flex gap */
+    padding-top: 10px; /* Space above notes */
+    border-top: 1px solid black;
+    width: 100%; /* Take full width */
+}
+.notes-section > span:first-child { /* "Note:" text */
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    font-size: 14px;
+    font-weight: bold;
+    color: #000;
+    margin-right: 10px;
+    display: block; /* Make it block to ensure it's on its own line or control margin effectively */
+    margin-bottom: 5px; /* Space after "Note:" */
+}
+.notes-section div { /* Container for note items */
+    display: flex;
+    flex-direction: column;
+    gap: 4px; /* Space between note items */
+    padding-left: 20px; /* Indent note items */
+}
+.notes-section div span {
+    font-size: 14px;
+    color: #000;
+}
+/* Fix for overlapping text in print for notes */
+@media print {
+    .notes-section div span {
+        line-height: 1.5; /* Increase line height for print readability */
+    }
+    .stamp-upload-container {
+        border: 2px dashed #ccc !important;
+        background-color: #f9f9f9 !important; /* Light background for placeholder */
+    }
+    .stamp-upload-container p {
+        color: #6c757d !important; /* Ensure placeholder text is visible */
+    }
 }
