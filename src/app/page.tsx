@@ -242,7 +242,7 @@ export default function ApplicationFormPage() {
                     </div>
                 </div>
                 <div style={{ width: '38%', height: '100%', margin: '0', display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', padding: '10px', boxSizing: 'border-box', position: 'relative', alignSelf: 'flex-end' }}>
-                    <div style={{ width: '160px', height: '90px', border: '2px dashed #ccc', display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '0px', marginRight: '0px', position: 'absolute', top: '10px', right: '0px', backgroundColor: '#fff', cursor: 'pointer' }} onClick={() => { const uploader = document.getElementById('stampUploader') as HTMLInputElement; if(uploader) uploader.click();}}>
+                    <div style={{ width: '160px', height: '90px', border: '2px solid black', display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '0px', marginRight: '0px', position: 'absolute', top: '10px', right: '0px', backgroundColor: '#fff', cursor: 'pointer' }} onClick={() => { const uploader = document.getElementById('stampUploader') as HTMLInputElement; if(uploader) uploader.click();}}>
                         <p style={{ fontSize: '12px', textAlign: 'center', color: '#aaa', margin: '0px' }}>Upload Image</p>
                         <input type="file" id="stampUploader" accept="image/*" style={{display: 'none'}} onChange={(e) => {
                             const file = e.target.files?.[0];
@@ -283,3 +283,4 @@ export default function ApplicationFormPage() {
     </>
   );
 }
+
