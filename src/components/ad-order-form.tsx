@@ -1,4 +1,3 @@
-
 // src/components/ad-order-form.tsx
 'use client';
 
@@ -7,14 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { DatePicker } from '@/components/ui/date-picker';
+import { DatePicker } from '@/components/ui/date-picker'; // Corrected import
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Image from 'next/image';
 import { Download, Printer, Eye, X, Save, Trash2, UploadCloud, Search, Eraser, CheckCircle, FileText, Settings, Copy, Palette, Briefcase, Users, Building, CalendarDays, FileDown, Maximize, EyeOff, Undo, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 
-const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://picsum.photos/200/120?random&data-ai-hint=signature+placeholder';
+const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://picsum.photos/180/100?random&data-ai-hint=signature+placeholder';
 
 
 const AdOrderForm: React.FC = () => {
@@ -39,12 +38,11 @@ const AdOrderForm: React.FC = () => {
 
   useEffect(() => {
     setIsClient(true);
-    // Set initial date only once on client mount if not already set
     if (typeof window !== 'undefined' && !orderDate) {
         setOrderDate(new Date());
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Empty dependency array ensures this runs only once on mount
+  }, []); 
 
 
   const handleDateChange = (date: Date | undefined) => {
@@ -58,10 +56,8 @@ const AdOrderForm: React.FC = () => {
       if (!isPrintingOrPdf) {
         textarea.style.height = `${textarea.scrollHeight}px`;
       } else if (isPreviewing || isFullScreenPreview) {
-        // For preview modes, allow scrollHeight to determine height for content visibility
         textarea.style.height = `${textarea.scrollHeight}px`;
       }
-       // For actual print via window.print(), CSS @media print handles height.
     }
   },[isPreviewing, isFullScreenPreview]);
 
@@ -181,8 +177,8 @@ const AdOrderForm: React.FC = () => {
 
     document.body.classList.add('pdf-export-active');
 
-    const inputs = Array.from(element.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], textarea')) as (HTMLInputElement | HTMLTextAreaElement)[];
     const originalValues: { el: HTMLElement, value: string, style?: string }[] = [];
+    const inputs = Array.from(element.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], textarea')) as (HTMLInputElement | HTMLTextAreaElement)[];
 
     inputs.forEach(input => {
         originalValues.push({ el: input, value: input.value, style: input.style.cssText });
@@ -192,21 +188,17 @@ const AdOrderForm: React.FC = () => {
     });
 
     const clonedElement = element.cloneNode(true) as HTMLElement;
-
-    // Apply specific styles for PDF generation to the clone
+    
+    // Apply specific styles for PDF generation to the clone for A4 fitting
     clonedElement.style.width = '210mm';
-    clonedElement.style.minHeight = '297mm'; // Ensure it tries to fit A4 height
-    clonedElement.style.height = 'auto'; // Allow content to define height
+    clonedElement.style.height = '297mm'; // A4 height
+    clonedElement.style.padding = '5mm'; // Reduced padding
+    clonedElement.style.fontSize = '9pt'; // Reduced base font size for PDF
+    clonedElement.style.lineHeight = '1.1';
+    clonedElement.style.borderWidth = '2px';
     clonedElement.style.boxSizing = 'border-box';
-    clonedElement.style.overflow = 'hidden'; // Clip content that overflows fixed A4 size
+    clonedElement.style.overflow = 'hidden'; // Important to prevent content from making canvas larger than A4
 
-    const textareasInClone = clonedElement.querySelectorAll('textarea');
-    textareasInClone.forEach(ta => {
-        ta.style.height = 'auto';
-        ta.style.height = `${ta.scrollHeight}px`;
-        ta.style.overflow = 'hidden';
-        ta.style.boxSizing = 'border-box'; // Ensure padding/border are included in height
-    });
 
     const inputsToConvert = clonedElement.querySelectorAll('input[type="text"], input[type="number"], input[type="date"]');
     inputsToConvert.forEach(inputEl => {
@@ -216,20 +208,20 @@ const AdOrderForm: React.FC = () => {
         if (input.id === 'orderDate' && orderDate) {
              value = format(orderDate, 'dd.MM.yyyy');
         } else if (input.type === 'date' && !input.value && input.placeholder) {
-            value = '';
+            value = ''; // Keep placeholder for empty dates for PDF if needed or make empty
         }
-        p.textContent = value || '';
-        p.className = 'static-print-text'; // Ensure this class applies styles for PDF
+        p.textContent = value || ''; // Ensure some content or empty string
+        p.className = 'static-print-text';
         p.style.display = 'inline-block';
         p.style.width = getComputedStyle(input).width;
         p.style.fontFamily = getComputedStyle(input).fontFamily;
-        p.style.fontSize = getComputedStyle(input).fontSize;
+        p.style.fontSize = '9pt'; // Ensure consistent smaller font for PDF
         p.style.fontWeight = getComputedStyle(input).fontWeight;
-        p.style.lineHeight = getComputedStyle(input).lineHeight;
+        p.style.lineHeight = '1.1'; // Ensure consistent smaller line height for PDF
         p.style.color = 'black';
         p.style.borderBottom = '1px solid black';
-        p.style.padding = '2px 0'; // Consistent padding
-        p.style.backgroundColor = 'transparent'; // Ensure no background color
+        p.style.padding = '1px 0'; // Reduced padding
+        p.style.backgroundColor = 'transparent';
         input.parentNode?.replaceChild(p, input);
     });
 
@@ -237,95 +229,100 @@ const AdOrderForm: React.FC = () => {
     textareasToConvert.forEach(textareaEl => {
         const div = document.createElement('div');
         const textarea = textareaEl as HTMLTextAreaElement;
-        div.innerHTML = textarea.value.replace(/\n/g, '<br>') || '';
-        div.className = 'static-print-text textarea-static-print'; // Ensure this class applies styles for PDF
+        div.innerHTML = textarea.value.replace(/\n/g, '<br>') || '&nbsp;'; // Use &nbsp; for empty to maintain height
+        div.className = 'static-print-text textarea-static-print';
          if (textarea.id === 'matterTextarea') {
              div.classList.add('matter-container-print');
         }
-        div.style.cssText = getComputedStyle(textarea).cssText; // Copy all computed styles
-        div.style.border = 'none'; // Remove textarea border
+        // Copy relevant computed styles, but override sizing for PDF
+        div.style.fontFamily = getComputedStyle(textarea).fontFamily;
+        div.style.fontSize = '9pt'; // Ensure consistent smaller font for PDF
+        div.style.fontWeight = getComputedStyle(textarea).fontWeight;
+        div.style.lineHeight = '1.1'; // Ensure consistent smaller line height for PDF
+        div.style.color = 'black';
+        div.style.backgroundColor = 'transparent';
+        div.style.border = 'none';
          if (textarea.id === 'matterTextarea') {
             div.style.borderTop = '1px solid black';
             div.style.borderBottom = '1px solid black';
+            div.style.padding = '1px'; // Reduced padding
         }
-        div.style.height = 'auto';
-        div.style.minHeight = 'unset'; // Remove min-height for PDF version
+        div.style.height = 'auto'; // Let content define height initially
+        div.style.minHeight = 'unset'; // Remove min-height for PDF
         div.style.overflow = 'visible'; // Show all content
         div.style.whiteSpace = 'pre-wrap';
         div.style.wordWrap = 'break-word';
-        div.style.backgroundColor = 'transparent'; // Ensure no background color
         textarea.parentNode?.replaceChild(div, textarea);
+        // After replacing, ensure the div's height is set to its scrollHeight to capture all content
+        div.style.height = `${div.scrollHeight}px`;
     });
 
+    // Specific class changes for PDF styling
     const releaseOrderTitleClone = clonedElement.querySelector('.release-order-title-screen') as HTMLElement;
-    if (releaseOrderTitleClone) {
-        releaseOrderTitleClone.className = 'release-order-titlebar-print-preview';
-    }
+    if (releaseOrderTitleClone) releaseOrderTitleClone.className = 'release-order-titlebar-print-preview';
     const matterLabelClone = clonedElement.querySelector('.matter-label-screen') as HTMLElement;
-    if (matterLabelClone) {
-        matterLabelClone.className = 'matter-label-print-preview';
-    }
+    if (matterLabelClone) matterLabelClone.className = 'matter-label-print-preview';
     const stampContainerClone = clonedElement.querySelector('.stamp-container-screen') as HTMLElement;
     if(stampContainerClone) {
         stampContainerClone.className = 'stamp-container-print-preview';
         if (stampImage) {
-            const img = document.createElement('img');
-            img.src = stampImage;
-            img.alt = "Stamp";
-            img.style.maxWidth = "100%";
-            img.style.maxHeight = "100%";
-            img.style.objectFit = "contain";
-            stampContainerClone.innerHTML = '';
-            stampContainerClone.appendChild(img);
+            const img = stampContainerClone.querySelector('img');
+            if (img) { // If image is already there from screen version
+                img.style.maxWidth = "100%";
+                img.style.maxHeight = "100%";
+                img.style.objectFit = "contain";
+            } else { // Create image if not present
+                const newImg = document.createElement('img');
+                newImg.src = stampImage;
+                newImg.alt = "Stamp";
+                newImg.style.maxWidth = "100%";
+                newImg.style.maxHeight = "100%";
+                newImg.style.objectFit = "contain";
+                stampContainerClone.innerHTML = '';
+                stampContainerClone.appendChild(newImg);
+            }
         } else {
             stampContainerClone.textContent = 'Stamp Area';
         }
     }
-
     const tableClone = clonedElement.querySelector('.main-table-bordered');
     if (tableClone) {
-        tableClone.classList.add('print-table');
+        tableClone.classList.remove('main-table-bordered'); // remove screen class
+        tableClone.classList.add('print-table'); // add pdf specific class
         const tableHeaders = tableClone.querySelectorAll('th');
         tableHeaders.forEach(th => th.classList.add('print-table-header'));
     }
 
+
     const opt = {
-        margin: [5, 5, 5, 5], // top, left, bottom, right in mm
+        margin: [5, 5, 5, 5], 
         filename: 'application_form.pdf',
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: {
-            scale: 2,
+            scale: 2, // Higher scale can improve quality but increase size/time
             useCORS: true,
             logging: false,
-            scrollY: -window.scrollY,
-            windowWidth: clonedElement.scrollWidth, // Use clonedElement's width
-            windowHeight: clonedElement.scrollHeight, // Use clonedElement's height
-            onclone: (document: Document) => {
-                const clonedBody = document.body;
-                clonedBody.classList.add('pdf-export-active'); // Apply the special class for PDF context
-                // Ensure all styles are applied in the clone
-                const styles = document.createElement('style');
-                styles.innerHTML = `
-                    @media print {
-                        .static-print-text { display: inline-block !important; padding: 2px 0 !important; margin: 0 !important; font-weight: bold !important; font-size: 14px !important; color: black !important; background-color: transparent !important; border: none !important; border-bottom: 1px solid black !important; width: auto !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; white-space: pre-wrap !important; word-wrap: break-word !important; }
-                        .textarea-static-print { border-bottom: none !important; height: auto !important; min-height: initial !important; resize: none !important; overflow: visible !important; white-space: pre-wrap !important; word-wrap: break-word !important; }
-                        .matter-container-print .textarea-static-print { border-top: 1px solid black !important; border-bottom: 1px solid black !important; padding: 2px !important; }
-                        .release-order-titlebar-print-preview { text-align: center !important; margin-top: 0px !important; margin-bottom: 10px !important; background-color: black !important; color: white !important; border: 2px solid black !important; padding: 4px 10px !important; font-weight: bold !important; width: fit-content !important; margin-left: auto !important; margin-right: auto !important; border-radius: 4px !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-                        .matter-label-print-preview { writing-mode: vertical-lr !important; text-orientation: mixed !important; transform: rotate(180deg); padding: 2px !important; font-size: 14px !important; font-weight: bold !important; text-align: center !important; border-right: 1px solid black !important; background-color: black !important; color: white !important; width: 38px !important; height: auto !important; display: flex !important; align-items: center !important; justify-content: center !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-                        .stamp-container-print-preview { width: 160px !important; height: 90px !important; border: 1px dashed #ccc !important; display: flex !important; justify-content: center !important; align-items: center !important; background-color: #f9f9f9 !important; font-size: 10px !important; color: #555 !important; text-align: center !important; overflow: hidden !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-                        .print-table { width: 100% !important; border-collapse: collapse !important; border: 2px solid black !important; font-size: 12px !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-                        .print-table th, .print-table td { border: 1px solid black !important; padding: 4px !important; text-align: left !important; vertical-align: top !important; word-wrap: break-word !important; color: black !important; background-color: white !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-                        .print-table th.print-table-header { background-color: #f0f0f0 !important; font-weight: bold !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-                    }
-                    body.pdf-export-active #printable-area-pdf { padding: 10mm !important; border: 4px solid black !important; }
-                    body.pdf-export-active * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-                `;
-                document.head.appendChild(styles);
-
-                // Force reflow
+            scrollY: -window.scrollY, // Capture from top
+            windowWidth: clonedElement.scrollWidth, 
+            windowHeight: clonedElement.scrollHeight, // Crucial: use scrollHeight of the *clonedElement*
+            // Ensure the cloned element has finished rendering and styles applied before capturing
+            onclone: (documentClone: Document) => {
+                const clonedBody = documentClone.body;
+                clonedBody.classList.add('pdf-export-active');
+                // Force reflow, critical for html2canvas to get correct dimensions
                 clonedBody.style.display = 'none';
-                clonedBody.offsetHeight; 
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                const _ = clonedBody.offsetHeight; // Reading offsetHeight triggers reflow
                 clonedBody.style.display = '';
+
+                // Adjust textareas within the clone again if necessary, ensuring they are sized to content
+                const textareasInClone = clonedBody.querySelectorAll('.textarea-static-print');
+                 textareasInClone.forEach(ta => {
+                    const htmlTa = ta as HTMLElement;
+                    htmlTa.style.height = 'auto'; 
+                    htmlTa.style.height = `${htmlTa.scrollHeight}px`; 
+                    htmlTa.style.overflow = 'hidden'; // Prevent scrollbars in PDF
+                });
             }
         },
         jsPDF: {
@@ -333,12 +330,14 @@ const AdOrderForm: React.FC = () => {
             format: 'a4',
             orientation: 'portrait',
         },
-        pagebreak: { mode: ['css', 'avoid-all'], before: '.page-break-before' }
+        // Attempt to keep elements together, but single page is the goal
+        pagebreak: { mode: ['css', 'avoid-all'], before: '.page-break-before' } 
     };
 
 
     (window as any).html2pdf().from(clonedElement).set(opt).save()
     .then(() => {
+        // Restore original input values and styles
         inputs.forEach(input => {
             const original = originalValues.find(ov => ov.el === input);
             if (original) {
@@ -354,6 +353,7 @@ const AdOrderForm: React.FC = () => {
     })
     .catch((error: any) => {
         console.error("Error generating PDF:", error);
+        // Restore original input values and styles on error
         inputs.forEach(input => {
             const original = originalValues.find(ov => ov.el === input);
             if (original) {
@@ -411,7 +411,6 @@ const AdOrderForm: React.FC = () => {
     if (document.fullscreenElement) {
       document.exitFullscreen();
     }
-    // Fullscreen change handler below will set isFullScreenPreview to false
   }, []);
 
   useEffect(() => {
@@ -483,12 +482,12 @@ const AdOrderForm: React.FC = () => {
             if (input.id === 'orderDate' && orderDate) {
                  value = format(orderDate, 'dd.MM.yyyy');
             } else if (!input.value && input.placeholder && input.type !== 'date') {
-                value = '';
+                value = ''; // Keep placeholder for empty dates if desired or make empty
             } else if (input.type === 'date' && !input.value) {
-                 value = '';
+                 value = ''; // Explicitly empty for date inputs
             }
             p.textContent = value;
-            p.className = 'static-print-text'; // Use class for styling
+            p.className = 'static-print-text'; 
             input.parentNode?.replaceChild(p, input);
         });
 
@@ -498,14 +497,14 @@ const AdOrderForm: React.FC = () => {
             const textarea = textareaEl as HTMLTextAreaElement;
             let value = textarea.value.replace(/\n/g, '<br>') || '';
             if (!textarea.value && textarea.placeholder) {
-                value = '';
+                value = ''; // Keep placeholder for empty textareas if desired or make empty
             }
             div.innerHTML = value;
-            div.className = 'static-print-text textarea-static-print'; // Use class for styling
+            div.className = 'static-print-text textarea-static-print'; 
             if (textarea.id === 'matterTextarea') {
                  div.classList.add('matter-container-print');
             }
-            // Copy relevant styles if needed, but prefer class-based styling
+            
             div.style.fontFamily = getComputedStyle(textarea).fontFamily;
             div.style.fontSize = getComputedStyle(textarea).fontSize;
             div.style.fontWeight = getComputedStyle(textarea).fontWeight;
@@ -535,8 +534,8 @@ const AdOrderForm: React.FC = () => {
         const textareasInPreview = previewContentDiv.querySelectorAll('.textarea-static-print');
         textareasInPreview.forEach(ta => {
             const htmlTa = ta as HTMLElement;
-            htmlTa.style.height = 'auto'; // Ensure auto height for content fitting
-            htmlTa.style.height = `${htmlTa.scrollHeight}px`; // Set to scrollHeight
+            htmlTa.style.height = 'auto'; 
+            htmlTa.style.height = `${htmlTa.scrollHeight}px`; 
         });
 
       }
@@ -621,36 +620,36 @@ const AdOrderForm: React.FC = () => {
         </div>
 
         <div className="mb-5 table-container-print">
-         <Table className="print-table main-table-bordered">
-           <TableHeader className="print-table-header">
+         <Table className="main-table-bordered print-border border border-black">
+           <TableHeader className="bg-secondary print-table-header">
              <TableRow>
-               <TableHead className="w-[10%] main-table-bordered p-1.5 text-sm font-bold">Key No.</TableHead>
-               <TableHead className="w-[25%] main-table-bordered p-1.5 text-sm font-bold">Publication(s)</TableHead>
-               <TableHead className="w-[20%] main-table-bordered p-1.5 text-sm font-bold">Edition(s)</TableHead>
-               <TableHead className="w-[15%] main-table-bordered p-1.5 text-sm font-bold">Size</TableHead>
-               <TableHead className="w-[15%] main-table-bordered p-1.5 text-sm font-bold">Scheduled Date(s)</TableHead>
-               <TableHead className="w-[15%] main-table-bordered p-1.5 text-sm font-bold">Position</TableHead>
+               <TableHead className="w-[10%] print-border border border-black p-1.5 text-sm font-bold">Key No.</TableHead>
+               <TableHead className="w-[25%] print-border border border-black p-1.5 text-sm font-bold">Publication(s)</TableHead>
+               <TableHead className="w-[20%] print-border border border-black p-1.5 text-sm font-bold">Edition(s)</TableHead>
+               <TableHead className="w-[15%] print-border border border-black p-1.5 text-sm font-bold">Size</TableHead>
+               <TableHead className="w-[15%] print-border border border-black p-1.5 text-sm font-bold">Scheduled Date(s)</TableHead>
+               <TableHead className="w-[15%] print-border border border-black p-1.5 text-sm font-bold">Position</TableHead>
              </TableRow>
            </TableHeader>
            <TableBody>
              {rowsData.map((row, index) => (
                <TableRow key={index} className="print-table-row">
-                 <TableCell className="main-table-bordered p-0 align-top">
+                 <TableCell className="main-table-bordered p-0 align-top print-border border border-black">
                    <Textarea value={row.keyNo} onChange={(e) => handleTextareaInput(e, index, 'keyNo')} placeholder="Key" className="text-xs p-1 border-0 rounded-none resize-none min-h-[70px] h-auto no-shadow-outline print-textarea textarea-align-top" />
                  </TableCell>
-                 <TableCell className="main-table-bordered p-0 align-top">
+                 <TableCell className="main-table-bordered p-0 align-top print-border border border-black">
                    <Textarea value={row.publication} onChange={(e) => handleTextareaInput(e, index, 'publication')} placeholder="Publication" className="text-xs p-1 border-0 rounded-none resize-none min-h-[70px] h-auto no-shadow-outline print-textarea textarea-align-top" />
                  </TableCell>
-                 <TableCell className="main-table-bordered p-0 align-top">
+                 <TableCell className="main-table-bordered p-0 align-top print-border border border-black">
                    <Textarea value={row.edition} onChange={(e) => handleTextareaInput(e, index, 'edition')} placeholder="Edition" className="text-xs p-1 border-0 rounded-none resize-none min-h-[70px] h-auto no-shadow-outline print-textarea textarea-align-top" />
                  </TableCell>
-                 <TableCell className="main-table-bordered p-0 align-top">
+                 <TableCell className="main-table-bordered p-0 align-top print-border border border-black">
                    <Textarea value={row.size} onChange={(e) => handleTextareaInput(e, index, 'size')} placeholder="Size" className="text-xs p-1 border-0 rounded-none resize-none min-h-[70px] h-auto no-shadow-outline print-textarea textarea-align-top" />
                  </TableCell>
-                 <TableCell className="main-table-bordered p-0 align-top">
+                 <TableCell className="main-table-bordered p-0 align-top print-border border border-black">
                    <Textarea value={row.scheduledDate} onChange={(e) => handleTextareaInput(e, index, 'scheduledDate')} placeholder="Date(s)" className="text-xs p-1 border-0 rounded-none resize-none min-h-[70px] h-auto no-shadow-outline print-textarea textarea-align-top" />
                  </TableCell>
-                 <TableCell className="main-table-bordered p-0 align-top">
+                 <TableCell className="main-table-bordered p-0 align-top print-border border border-black">
                    <Textarea value={row.position} onChange={(e) => handleTextareaInput(e, index, 'position')} placeholder="Position" className="text-xs p-1 border-0 rounded-none resize-none min-h-[70px] h-auto no-shadow-outline print-textarea textarea-align-top" />
                  </TableCell>
                </TableRow>
@@ -703,7 +702,7 @@ const AdOrderForm: React.FC = () => {
           <div className="mt-2 pt-2 border-t border-black">
             <p className="text-xs font-bold underline decoration-black decoration-2 underline-offset-2 mb-1">Note:</p>
             <ol className="list-decimal list-inside text-xs space-y-0.5">
-              <li>Space reserved vide our letter No. </li>
+              <li>Space reserved vide our letter No.</li>
               <li>No two advertisements of the same client should appear in the same issue.</li>
               <li>Please quote R.O. No. in all your bills and letters.</li>
               <li>Please send two voucher copies of the good reproduction to us within 3 days of the publishing.</li>
@@ -752,8 +751,6 @@ const AdOrderForm: React.FC = () => {
 
       {isFullScreenPreview && (
          <div id="fullscreen-content-host" className="fixed inset-0 bg-white z-[2000] overflow-auto p-4 no-print">
-            {/* This div is mainly for the exit button when printableAreaRef itself is fullscreen.
-                The actual content is within printableAreaRef. */}
             <Button
                 onClick={handleExitFullScreenPreview}
                 variant="destructive"
