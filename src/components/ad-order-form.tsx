@@ -7,10 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { DatePicker } from '@/components/ui/date-picker';
+import { DatePicker } from '@/components/ui/date-picker'; 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Image from 'next/image';
-import { Printer, PlusSquare, MinusSquare, Eye, Expand, Download, Save, FileText, Trash2, Copy } from 'lucide-react'; 
+import { Printer, PlusSquare, MinusSquare, Eye, Expand, Download, Save, FileText, Trash2, Copy, Briefcase, UserSquare, FileInput, Rows } from 'lucide-react'; 
 import { format } from 'date-fns';
 
 const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://picsum.photos/178/98?random&data-ai-hint=signature+placeholder';
@@ -726,7 +726,7 @@ const AdOrderForm: FC = () => {
     <div className="max-w-[210mm] mx-auto p-1 print-root-container bg-background" id="main-application-container">
       
       <div className="flex justify-end items-center gap-2 p-2 mb-2 no-print no-pdf-export action-buttons-container">
-         {/* Buttons removed as per user request */}
+        {/* Buttons removed as per user request */}
       </div>
 
       <div id="printable-area-pdf" ref={printableAreaRef} className={`w-full print-target bg-card text-card-foreground shadow-sm p-2 md:p-4 rounded-lg border-4 border-black ${isFullScreenPreview ? 'fullscreen-preview-active' : ''}`}>
@@ -736,7 +736,7 @@ const AdOrderForm: FC = () => {
 
         <div className="flex flex-col md:flex-row gap-4 mb-5 print-header-box">
             <div className="w-full md:w-[35%] p-3 border-2 border-black rounded box-decoration-clone">
-                <Image src="https://picsum.photos/300/200" alt="Lehar Advertising" width={300} height={200} data-ai-hint="company logo address" className="w-full h-auto object-contain"/>
+                <Image src="https://picsum.photos/300/200" alt="Lehar Advertising" width={300} height={200} data-ai-hint="advertising logo" className="w-full h-auto object-contain"/>
             </div>
             <div className="flex-1 flex flex-col gap-3 p-3 border-2 border-black rounded">
                 <div className="flex gap-3 items-center">
