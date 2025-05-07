@@ -61,185 +61,506 @@
   box-sizing: border-box;
 }
 
-@media print {
-  #printButton, #downloadPdfButton, #printPreviewButton, #fullScreenButton, .print-icon-container, .no-print, .new-row-buttons {
-    display: none !important;
-  }
-  body {
-      margin: 0 !important;
-      padding: 0 !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-  }
-  #application {
-      width: 210mm !important;
-      /* height: 297mm !important; /* A4 height, but can be auto if content exceeds */
-      min-height: 297mm;
-      margin: 0 !important;
-      padding: 10px !important; /* Minimal padding for print */
-      border: none !important;
-      box-shadow: none !important;
-      overflow: visible !important;
-      page-break-inside: avoid;
-      background-color: #fff !important; /* Ensure background is white for printing */
-  }
-  input, textarea, select {
-      border: none !important;
-      outline: none !important;
-      font-weight: bold !important;
-      font-size: 14px !important;
-      color: #000 !important; /* Ensure text is black */
-      background-color: #fff !important; /* Ensure input backgrounds are white */
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-  }
-  table {
-      border-collapse: collapse !important;
-      width: 100% !important;
-      border: 2px solid black !important; /* Ensure table outer border prints */
-  }
-  table th, table td {
-      border: 1px solid black !important; /* Ensure th/td borders print */
-      padding: 6px !important; /* Consistent padding */
-      text-align: left !important;
-      word-wrap: break-word !important;
-      font-size: 12px !important; /* Smaller font for print */
-      color: #000 !important;
-      background-color: #fff !important; /* Ensure cell backgrounds are white */
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-  }
-  table th {
-      background-color: #f0f0f0 !important; /* TH background color */
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-  }
-  .no-underline {
-      text-decoration: none !important;
-  }
-  /* Ensure specific styled elements print correctly */
-  div[style*="background-color: black"], div[style*="background-color:black"] {
-    background-color: black !important;
-    color: white !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-  div[style*="writing-mode: vertical-lr"] {
-    background-color: black !important;
-    color: white !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-  textarea[placeholder="Enter matter here..."] {
-     border-top: 1px solid black !important;
-     border-bottom: 1px solid black !important; /* ensure this is applied */
-  }
-   .stamp-placeholder-print {
-    border: 2px dashed #ccc !important; /* Dashed border for stamp in print */
-    background-color: #f9f9f9 !important;
-  }
-  .stamp-image-print {
-    object-fit: contain !important;
-  }
-  .print-preview-content > div#application { /* Target the cloned application div */
-    padding: 20px !important; /* Match screen padding for preview or adjust as needed */
-  }
-}
-
 body {
-  font-family: Arial, sans-serif;
-  font-weight: bold; /* Ensure bold is applied as per original body style */
+  font-family: 'Arial', sans-serif;
+  /* font-weight set by Tailwind utilities or specific components */
   margin: 0;
   padding: 0;
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+/* General screen layout for the application form */
 #application {
-  width: 100%;
-  max-width: 210mm; /* A4 width */
-  min-height: 297mm; /* A4 height, adjust if content naturally shorter/longer */
-  height: auto; /* Allow height to adjust to content */
-  margin: 20px auto; /* Centering and margin for screen view */
+  width: 100%; /* Full width of its container */
+  max-width: 210mm; /* A4 width equivalent */
+  min-height: 297mm; /* A4 height equivalent for screen, helps visualize */
+  height: auto; /* Let content determine height */
+  margin: 20px auto; /* Centering for screen view */
   padding: 20px; /* Padding for screen view */
-  border: 4px solid black;
-  font-weight: bold;
-  position: relative; /* For absolute positioning of buttons */
+  border: 1px solid hsl(var(--border)); /* Subtle border for screen */
+  background-color: hsl(var(--card)); /* Card background */
+  color: hsl(var(--card-foreground)); /* Card text color */
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* Shadow for depth */
   box-sizing: border-box;
-  color: #000; /* Default text color */
-  background-color: #fff; /* Default background color */
-  box-shadow: 0 0 10px rgba(0,0,0,0.1); /* Subtle shadow for screen */
+  position: relative; /* For absolute positioning of buttons if needed */
 }
 
+
+/* Print-specific styles */
+@media print {
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: #fff !important; /* Ensure white background for printing */
+    color: #000 !important; /* Ensure black text for printing */
+    -webkit-print-color-adjust: exact !important; /* Chrome, Safari */
+    print-color-adjust: exact !important; /* Firefox, Edge */
+  }
+
+  #application, .print-friendly-content {
+    width: 100% !important; /* Use full printable area width */
+    height: auto !important; /* Adjust height to content */
+    min-height: initial !important; /* Remove min-height for print if it causes issues */
+    margin: 0 !important; /* Remove margins for printing */
+    padding: 10mm !important; /* A4 standard margin, can adjust */
+    border: none !important; /* Remove screen border for printing */
+    box-shadow: none !important; /* Remove screen shadow */
+    background-color: #fff !important;
+    color: #000 !important;
+    page-break-inside: avoid; /* Try to keep the form on one page */
+    font-size: 10pt !important; /* Adjust base font size for print if needed */
+  }
+  
+  .no-print, .print-icon-container, .new-row-buttons, #printPreviewButton, #downloadPdfButton, #fullScreenButton, .print-preview-close-button {
+    display: none !important;
+  }
+
+  input, textarea, select {
+    border: 1px solid #ccc !important; /* Light border for inputs in print for clarity */
+    outline: none !important;
+    font-weight: normal !important; /* Adjust font weight if bold is too much for print */
+    font-size: 10pt !important;
+    color: #000 !important;
+    background-color: #fff !important;
+    padding: 4px !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Styles for text content that replaces inputs/textareas in print preview/PDF */
+  .static-text-replacement {
+    font-weight: normal !important;
+    font-size: 10pt !important;
+    color: #000 !important;
+    padding: 4px !important;
+    margin: 0 !important;
+    white-space: pre-wrap !important;
+    word-wrap: break-word !important;
+    min-height: auto !important; /* Adjust as needed */
+  }
+  
+  .print-table, .print-table th, .print-table td {
+    border: 1px solid black !important;
+    border-collapse: collapse !important;
+    padding: 4px !important; /* Reduced padding for print */
+    font-size: 9pt !important; /* Smaller font for table content */
+    word-wrap: break-word !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .print-table-header th {
+    background-color: #e0e0e0 !important; /* Lighter gray for print headers */
+    font-weight: bold !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  .release-order-titlebar {
+    background-color: black !important;
+    color: white !important;
+    border: 1px solid black !important;
+    padding: 3px 8px !important;
+    font-size: 14pt !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .release-order-titlebar h2 {
+      margin: 0 !important;
+      font-size: inherit !important;
+  }
+
+  .matter-label-box {
+    background-color: black !important;
+    color: white !important;
+    border-right: 1px solid black !important;
+    padding: 3px !important;
+    font-size: 11pt !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    writing-mode: vertical-lr !important;
+    text-orientation: mixed !important;
+  }
+  
+  .matter-content-textarea.static-text-replacement,
+  .matter-content-textarea ~ div /* for the static replacement */ {
+    border-top: 1px solid black !important;
+    border-bottom: 1px solid black !important;
+    padding: 6px !important;
+  }
+
+  .stamp-upload-container.stamp-placeholder-print {
+    border: 1px dashed #999 !important; /* Dashed border for stamp placeholder in print */
+    background-color: #f5f5f5 !important; /* Light background for placeholder */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+   .stamp-upload-container.stamp-placeholder-print p {
+      color: #555 !important;
+      font-size: 9pt !important;
+   }
+
+  .stamp-upload-container img {
+    object-fit: contain !important;
+    max-width: 100%;
+    max-height: 100%;
+  }
+
+  /* Ensure links are not underlined by default in print unless specified */
+  a {
+    text-decoration: none !important;
+    color: inherit !important;
+  }
+}
+
+
+/* Button container for top-right action buttons on screen */
 .button-container {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 10px;
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 100; /* Ensure buttons are on top */
+  padding: 10px; /* Add some padding */
+  position: sticky; /* Make buttons sticky at the top */
+  top: 0;
+  background-color: hsl(var(--background) / 0.8); /* Semi-transparent background */
+  backdrop-filter: blur(4px); /* Blur effect */
+  z-index: 50; /* Ensure it's above other content */
+  border-bottom: 1px solid hsl(var(--border)); /* Separator */
 }
 
-#printButton, #downloadPdfButton, #printPreviewButton, #fullScreenButton {
-  background-color: #007bff; /* Blue */
-  color: white;
-  padding: 8px 15px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 14px;
-  margin-left: 10px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-#printButton:hover, #downloadPdfButton:hover, #printPreviewButton:hover, #fullScreenButton:hover {
-  background-color: #0056b3; /* Darker blue */
-}
-
-.print-icon-container {
-  position: absolute;
-  top: 10px; /* Adjusted position */
-  right: 10px; /* Adjusted position */
-  z-index: 100; /* Ensure it's above other content */
-}
-
-.print-icon {
-  font-size: 20px; /* Slightly smaller icon */
-  color: #007bff; /* Blue */
-  cursor: pointer;
-  padding: 5px;
-  background-color: #f8f9fa; /* Light background for visibility */
-  border-radius: 50%;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-.print-icon:hover {
-  color: #0056b3;
-  background-color: #e9ecef;
+/* Styling for individual buttons in the top container */
+.button-container > .shadcn-button { /* Assuming ShadCN buttons are used */
+  margin-left: 8px;
 }
 
 
-.full-width {
-  width: 100%;
+/* General Input, Textarea, Select Styling for Screen */
+input, textarea, select {
+  border: 1px solid hsl(var(--input)); /* ShadCN input border */
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  padding: 0.5rem 0.75rem; /* Tailwind-like padding */
+  border-radius: var(--radius);
+  font-size: 0.875rem; /* text-sm */
+  font-weight: 500; /* medium */
+  width: 100%; /* Default to full width */
   box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: hsl(var(--ring)); /* ShadCN ring color on focus */
+  box-shadow: 0 0 0 1px hsl(var(--ring));
+}
+textarea {
+  min-height: 80px; /* Default min-height for textareas */
+  resize: vertical; /* Allow vertical resize */
 }
 
+/* Specific styles for table textareas to blend in */
+.table-textarea {
+  border: none !important; /* No border inside table cells */
+  outline: none !important;
+  background-color: transparent !important; /* Transparent background */
+  padding: 0.25rem; /* Minimal padding */
+  margin: 0;
+  width: 100%;
+  height: auto; /* Auto height based on content */
+  min-height: 60px; /* Default min-height for table textareas */
+  resize: none; /* Disable resize or set to vertical if needed */
+  box-shadow: none !important;
+  font-weight: normal;
+  font-size: 0.875rem; /* text-sm */
+  overflow-y: hidden; /* Hide scrollbar if content fits */
+}
+.table-textarea:focus {
+  box-shadow: none !important; /* No focus shadow for table textareas */
+}
+
+
+/* Table Styling */
+.print-table { /* ShadCN like table styling */
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid hsl(var(--border));
+  font-size: 0.875rem; /* text-sm */
+}
+.print-table th, .print-table td {
+  border: 1px solid hsl(var(--border));
+  padding: 0.5rem; /* p-2 */
+  text-align: left;
+  vertical-align: top; /* Align content to the top */
+  word-wrap: break-word;
+}
+.print-table th {
+  background-color: hsl(var(--muted)); /* Muted background for headers */
+  font-weight: 600; /* semibold */
+}
+
+/* Release Order Title Bar */
+.release-order-titlebar {
+    text-align: center;
+    margin-top: 1rem; /* mt-4 */
+    background-color: hsl(var(--primary)); /* Primary background */
+    color: hsl(var(--primary-foreground)); /* Primary text color */
+    border: 1px solid hsl(var(--primary));
+    padding: 0.5rem 1rem; /* p-2 px-4 */
+    font-weight: bold;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: var(--radius);
+}
+.release-order-titlebar h2 {
+    margin: 0;
+    font-size: 1.25rem; /* text-xl */
+}
+
+/* Lehar Info Box & Details Box common styles */
+.lehar-info-box, .details-box, .advertisement-manager-box {
+    padding: 0.75rem; /* p-3 */
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    box-sizing: border-box;
+    color: hsl(var(--foreground));
+    font-size: 0.875rem; /* text-sm */
+}
+.lehar-info-box h3 { font-size: 1rem; /* text-base */ font-weight: bold; margin-bottom: 0.25rem; }
+.lehar-info-box h4 { font-size: 0.875rem; /* text-sm */ font-semibold; margin-bottom: 0.5rem; }
+.lehar-info-box p { margin: 0.125rem 0; /* my-0.5 */ line-height: 1.4; }
+
+.details-box .detail-section, .advertisement-manager-box .detail-section {
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    padding: 0.75rem; /* p-3 */
+    display: flex;
+    align-items: center;
+    gap: 0.5rem; /* gap-2 */
+}
+.details-box .detail-section.column-layout, .advertisement-manager-box.column-layout {
+    flex-direction: column;
+    align-items: flex-start;
+}
+.details-box .detail-section label, .advertisement-manager-box label {
+    font-size: 0.875rem; /* text-sm */
+    font-weight: bold;
+    margin-right: 0.5rem; /* mr-2 */
+    white-space: nowrap;
+}
+
+
+/* Caption & Package Section */
+.caption-package-container {
+    width: 100%;
+    margin-top: 1.25rem; /* mt-5 */
+    display: flex;
+    flex-direction: column; /* Stack on small screens */
+    gap: 0.75rem; /* gap-3 */
+}
+
+@media (min-width: 768px) { /* md breakpoint */
+  .caption-package-container {
+    flex-direction: row; /* Side-by-side on medium screens and up */
+  }
+}
+
+.caption-package-container > div {
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    padding: 0.75rem; /* p-3 */
+    box-sizing: border-box;
+}
+.caption-package-container > div label {
+    font-size: 0.875rem; /* text-sm */
+    font-weight: bold;
+    display: block;
+    margin-bottom: 0.25rem; /* mb-1 */
+}
+
+
+/* Matter Section */
+.matter-container {
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    display: flex;
+    margin-top: 1.25rem; /* mt-5 */
+}
+.matter-label-box {
+    writing-mode: vertical-lr;
+    text-orientation: mixed;
+    padding: 0.5rem; /* p-2 */
+    font-size: 0.875rem; /* text-sm */
+    font-weight: bold;
+    text-align: center;
+    border-right: 1px solid hsl(var(--border));
+    background-color: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    min-width: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-top-left-radius: var(--radius);
+    border-bottom-left-radius: var(--radius);
+}
+.matter-content-textarea {
+    width: 100%;
+    border: none !important;
+    padding: 0.75rem; /* p-3 */
+    margin: 0;
+    word-wrap: break-word;
+    text-align: left;
+    resize: vertical;
+    box-sizing: border-box;
+    font-weight: normal;
+    font-size: 0.875rem; /* text-sm */
+    background-color: transparent;
+    border-top: 1px solid hsl(var(--border)) !important; /* For print and screen consistency if needed */
+    border-bottom: 1px solid hsl(var(--border)) !important;
+    box-shadow: none !important;
+    border-top-right-radius: var(--radius);
+    border-bottom-right-radius: var(--radius);
+}
+.matter-content-textarea:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+
+/* Notes & Stamp Section */
+.notes-stamp-container {
+    width: 100%;
+    margin-top: 0.5rem; /* mt-2 */
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    padding: 0.75rem; /* p-3 */
+    box-sizing: border-box;
+    min-height: 150px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+.notes-forwarding-section {
+    display: flex;
+    flex-direction: column; /* Stack on small screens */
+    justify-content: space-between;
+    padding-bottom: 0.75rem; /* pb-3 */
+    gap: 0.75rem; /* gap-3 */
+}
+@media (min-width: 768px) { /* md breakpoint */
+  .notes-forwarding-section {
+    flex-direction: row; /* Side-by-side on medium screens */
+  }
+}
+
+.forwarding-info {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+@media (min-width: 768px) { /* md breakpoint */
+  .forwarding-info {
+    width: calc(60% - 0.375rem); /* Adjust width for gap */
+  }
+}
+
+.forwarding-info strong {
+    font-size: 0.875rem; /* text-sm */
+    font-weight: bold;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    margin-bottom: 0.25rem; /* mb-1 */
+}
+.forwarding-info span {
+    font-size: 0.8125rem; /* slightly smaller than sm */
+    line-height: 1.4;
+    font-weight: normal;
+}
+
+.stamp-area {
+    width: 100%;
+    display: flex;
+    justify-content: center; /* Center on small screens */
+    align-items: flex-start;
+}
+@media (min-width: 768px) { /* md breakpoint */
+  .stamp-area {
+    width: calc(40% - 0.375rem); /* Adjust width for gap */
+    justify-content: flex-end; /* Align stamp to the right on medium screens */
+  }
+}
+
+.stamp-upload-container {
+    width: 160px;
+    height: 90px;
+    border: 2px dashed hsl(var(--border));
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    background-color: hsl(var(--muted));
+    border-radius: var(--radius);
+    overflow: hidden;
+    position: relative;
+}
+.stamp-upload-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+.stamp-upload-container p {
+    font-size: 0.75rem; /* text-xs */
+    text-align: center;
+    color: hsl(var(--muted-foreground));
+    margin: 0;
+}
+.stamp-upload-container:hover {
+    border-color: hsl(var(--ring));
+}
+
+.notes-section {
+    padding-top: 0.75rem; /* pt-3 */
+    border-top: 1px solid hsl(var(--border));
+    width: 100%;
+}
+.notes-section > span:first-child { /* "Note:" text */
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    font-size: 0.875rem; /* text-sm */
+    font-weight: bold;
+    display: block;
+    margin-bottom: 0.25rem; /* mb-1 */
+}
+.notes-section div { /* Container for note items */
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem; /* gap-1 */
+    padding-left: 1.25rem; /* pl-5, indent note items */
+}
+.notes-section div span {
+    font-size: 0.875rem; /* text-sm */
+    line-height: 1.5;
+}
+
+
+/* Print Preview Modal Styles */
 .print-preview {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw; /* Full viewport width */
-  height: 100vh; /* Full viewport height */
+  width: 100vw;
+  height: 100vh;
   background-color: rgba(0, 0, 0, 0.85); /* Darker overlay */
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 1000; /* High z-index */
   overflow: auto; /* Allow scrolling if content overflows */
-  padding: 20px; /* Padding around the preview content */
+  padding: 20px;
   box-sizing: border-box;
 }
-
 .print-preview-content {
   background-color: white;
   width: 210mm; /* A4 width */
@@ -247,408 +568,59 @@ body {
   padding: 20px; /* Match #application padding for consistency */
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
   box-sizing: border-box;
-  transform: scale(0.85); /* Slightly larger preview scale */
+  transform: scale(0.8); /* Scale down for better fit in preview */
   transform-origin: top center;
   overflow: visible; /* Ensure all content is visible */
 }
 .print-preview-close-button {
-    position: fixed !important; /* Use fixed to position relative to viewport */
-    top: 30px !important; /* Adjust as needed */
-    right: 30px !important; /* Adjust as needed */
-    background-color: #f44336 !important; /* Red */
-    color: white !important;
+    position: fixed !important;
+    top: 30px !important;
+    right: 30px !important;
+    background-color: hsl(var(--destructive)) !important;
+    color: hsl(var(--destructive-foreground)) !important;
     border: none !important;
-    padding: 10px 20px !important;
+    padding: 0.5rem 1rem !important; /* p-2 px-4 */
     cursor: pointer !important;
-    border-radius: 5px !important;
-    z-index: 1001 !important; /* Above preview content */
-    font-size: 16px !important;
+    border-radius: var(--radius) !important;
+    z-index: 1001 !important;
+    font-size: 0.875rem !important; /* text-sm */
     font-weight: bold !important;
+    display: flex;
+    align-items: center;
+}
+.print-preview-close-button:hover {
+    background-color: hsl(var(--destructive) / 0.9) !important;
 }
 
-
-input, textarea, select {
-  border: 1px solid #ccc; /* Subtle border for inputs on screen */
-  outline: none;
-  font-weight: bold;
-  font-size: 14px;
-  color: #000;
-  background-color: #fff;
-  padding: 6px; /* Uniform padding */
-  box-sizing: border-box;
-  border-radius: 4px; /* Rounded corners */
-  width: 100%; /* Default to full width of container */
-}
-input:focus, textarea:focus, select:focus {
-  border-color: #007bff; /* Blue highlight on focus */
-  box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
-}
-
-input[type="date"] {
-    padding: 5px; /* Specific padding for date input consistency */
-}
-
-table {
-  border-collapse: collapse;
-  border: 2px solid black; /* Screen view */
-  width: 100%;
-  margin-top: 20px; /* Space above table */
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* Subtle shadow for table */
-}
-
-th, td {
-  border: 1px solid black; /* Screen view */
-  padding: 8px; /* Cell padding */
-  text-align: left;
-  word-wrap: break-word; /* Prevent long words from breaking layout */
-  color: #000;
-  vertical-align: top; /* Align content to the top of the cell */
-}
-
-th {
-  background-color: #f0f0f0; /* Light gray for table headers */
-  font-weight: bold; /* Ensure headers are bold */
-}
-
-textarea {
-  resize: vertical; /* Allow vertical resize, disable horizontal */
-  min-height: 40px; /* Minimum height for textareas */
-}
-textarea.table-textarea {
-  width: 100%;
-  height: auto; /* Initial height */
-  min-height: 160px; /* Default min-height for table textareas */
-  border: none !important; /* No border inside table cells */
-  outline: none !important;
-  font-weight: bold;
-  font-size: 14px;
-  color: #000;
-  background-color: #fff;
-  box-sizing: border-box;
-  resize: none; /* Disable resize for table textareas or set to vertical */
-  padding: 0; /* Remove padding if cell already has it */
-  box-shadow: none !important;
-}
-
-
+/* Add Row / Delete Row Buttons */
 .new-row-buttons {
     display: flex;
     justify-content: flex-start; /* Align buttons to the left */
-    margin-top: 10px;
-    gap: 10px; /* Space between buttons */
+    margin-top: 0.5rem; /* mt-2 */
+    margin-bottom: 1.25rem; /* mb-5 */
+    gap: 0.5rem; /* gap-2 */
+}
+.new-row-buttons button { /* This will style ShadCN buttons if used or plain buttons */
+    /* ShadCN Button component handles its own styling. These are fallbacks or can be more specific. */
+    padding: 0.375rem 0.75rem; /* py-1.5 px-3 */
+    font-size: 0.75rem; /* text-xs */
+    height: auto; /* Override fixed height if needed */
 }
 
-.new-row-buttons button {
-    padding: 8px 16px;
-    background-color: #28a745; /* Green */
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: bold;
-}
-.new-row-buttons button:hover {
-    background-color: #218838; /* Darker green */
-}
-.new-row-buttons button.delete-button {
-    background-color: #dc3545; /* Red for delete */
-}
-.new-row-buttons button.delete-button:hover {
-    background-color: #c82333; /* Darker red for delete */
+/* Utility for full screen elements */
+.fullscreen-preview {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: white; /* Or a neutral background */
+  z-index: 2000; /* Above everything else */
+  overflow: auto; /* Scroll if content exceeds viewport */
+  padding: 20px; /* Optional padding */
 }
 
-.stamp-upload-container {
-    width: 200px; /* Adjusted width for stamp */
-    height: 120px; /* Adjusted height for stamp */
-    border: 2px dashed #ccc;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    background-color: #f9f9f9;
-    border-radius: 4px;
-    overflow: hidden; /* To contain the image */
-    position: relative; /* For absolute positioning of text/image */
-}
-.stamp-upload-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain; /* Or 'cover', 'fill', 'scale-down' */
-}
-.stamp-upload-container p {
-    font-size: 12px;
-    text-align: center;
-    color: #6c757d; /* Muted text color */
-    margin: 0;
-}
-#stampFile {
-    display: none; /* Hide the actual file input */
-}
-
-/* Specific styles for the "MATTER" vertical label box */
-.matter-label-box {
-    writing-mode: vertical-lr;
-    text-orientation: mixed; /* Ensures text is upright */
-    padding: 4px; /* Original padding */
-    font-size: 16px;
-    font-weight: bold;
-    text-align: center;
-    border-right: 1px solid black; /* Original border */
-    background-color: black; /* Original background */
-    color: white; /* Original text color */
-    width: auto; /* Let width be determined by content and padding */
-    min-width: 38px; /* Minimum width to match visual */
-    display: flex; /* For centering content if needed */
-    align-items: center; /* Center content vertically in the writing mode */
-    justify-content: center; /* Center content horizontally in the writing mode */
-    border-radius: 4px 0 0 4px; /* Match parent rounding */
-}
-
-/* Matter content textarea */
-.matter-content-textarea {
-    width: 100%;
-    height: 150px; /* Default height, can be adjusted */
-    border: none !important; /* Remove internal border */
-    padding: 8px; /* Padding inside textarea */
-    margin: 0;
-    word-wrap: break-word;
-    text-align: left;
-    resize: vertical; /* Allow vertical resize */
-    box-sizing: border-box;
-    font-weight: bold;
-    font-size: 14px; /* Consistent font size */
-    color: #000;
-    background-color: #fff;
-    border-top: 1px solid black !important; /* Explicit top border */
-    border-bottom: 1px solid black !important; /* Explicit bottom border */
-    box-shadow: none !important;
-}
-.matter-container {
-    border: 2px solid black;
-    border-radius: 4px;
-    display:flex; /* Added */
-}
-
-/* Ensure no print styles interfere with screen styles unless in @media print */
-.no-print-on-screen {
-    display: none;
-}
-/* Utility to hide border for stamp upload on screen if desired */
-.no-border-on-screen {
-    border: none !important;
-}
-/* Default state for buttons, visible on screen */
-#printPreviewButton, #downloadPdfButton, #fullScreenButton, .print-icon-container:not(.no-print) {
-    display: inline-block; /* Or flex, block, etc. as appropriate */
-}
-
-/* Style for the main print button if it's outside the .button-container */
-#printActualButton {
-  background-color: #17a2b8; /* Teal */
-  color: white;
-  padding: 8px 15px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 14px;
-  margin-left: 10px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-#printActualButton:hover {
-  background-color: #117a8b; /* Darker teal */
-}
-
-/* Ensure button container is not hidden if it's only for print control */
-.button-container.no-print { /* This targets the one used for PDF/Preview */
-    /* This is fine, it will be hidden in print by the general .no-print rule */
-}
-.print-icon-container.no-print {
-    /* This is fine, it will be hidden in print by the general .no-print rule */
-}
-
-/* Styles for elements that should have specific print appearances defined in HTML but also look good on screen */
-/* Example: The Release Order title bar */
-.release-order-titlebar {
-    text-align: center;
-    margin-top: 10px;
-    background-color: black;
-    color: white;
-    border: 2px solid black; /* Consistent with print for screen */
-    padding: 4px 10px;
-    font-weight: bold;
-    width: fit-content;
-    margin-left: auto;
-    margin-right: auto;
-    border-radius: 4px;
-    position: relative; /* If other positioning is needed */
-    top: 0; /* If other positioning is needed */
-}
-.release-order-titlebar h2 {
-    margin: 0;
-    font-size: 22px; /* Consistent font size */
-}
-
-/* Lehar Info Box */
-.lehar-info-box {
-    width: 30%;
-    padding: 8px;
-    border: 2px solid black;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    font-size: 14px;
-    position: relative;
-    border-radius: 4px;
-    color: #000;
-}
-.lehar-info-box h3, .lehar-info-box h4, .lehar-info-box p {
-    margin: 2px 0; /* Consistent small margin */
-    text-align: left;
-    color: #000; /* Ensure text color */
-}
-.lehar-info-box h3 { font-size: 16px; }
-.lehar-info-box h4 { font-size: 15px; margin-top:0; }
-.lehar-info-box strong { font-weight: bold; }
-
-
-/* Right side box (RO, Date, Client, etc.) */
-.details-box {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 12px; /* Consistent gap */
-    box-sizing: border-box;
-}
-.detail-section { /* For RO/Date, Client, Ad Manager */
-    border: 2px solid black;
-    border-radius: 4px;
-    padding: 8px; /* Consistent padding */
-    display: flex;
-    align-items: center; /* Align items nicely */
-    gap: 8px; /* Gap between label and input or internal elements */
-}
-.detail-section label {
-    font-size: 16px;
-    font-weight: bold;
-    color: #000;
-    margin-right: 8px;
-    white-space: nowrap; /* Prevent label wrapping */
-}
-.detail-section.column-layout {
-    flex-direction: column;
-    align-items: flex-start; /* Align labels to the start */
-}
-.detail-section input[type="text"], .detail-section input[type="number"], .detail-section input[type="date"] {
-    flex-grow: 1; /* Allow inputs to take available space */
-}
-
-/* Heading/Caption & Package */
-.caption-package-container {
-    width: 100%;
-    margin-top: 20px;
-    display: flex;
-    gap: 12px;
-}
-.caption-package-container > div { /* Target direct children divs */
-    border: 2px solid black;
-    border-radius: 4px;
-    padding: 8px;
-    box-sizing: border-box;
-}
-.caption-package-container > div label {
-    font-size: 16px;
-    font-weight: bold;
-    display: block;
-    margin-bottom: 4px;
-    color: #000;
-}
-.caption-package-container > div:first-child { flex: 1; } /* Heading/Caption takes more space */
-.caption-package-container > div:last-child { width: 30%; } /* Package takes 30% */
-
-
-/* Notes and Stamp area */
-.notes-stamp-container {
-    width: 100%;
-    margin-top: 8px; /* Consistent margin */
-    border: 2px solid black;
-    border-radius: 4px;
-    padding: 10px; /* Increased padding */
-    box-sizing: border-box;
-    min-height: 150px; /* Ensure enough height for content */
-    position: relative;
-    display: flex;
-    flex-direction: column;
-}
-.notes-forwarding-section {
-    display: flex;
-    justify-content: space-between;
-    padding-bottom: 10px; /* Space before notes */
-    gap: 10px;
-}
-.forwarding-info {
-    width: calc(60% - 5px); /* Adjust width, considering gap */
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-}
-.forwarding-info strong {
-    font-size: 14px;
-    font-weight: bold;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-    margin-bottom: 5px;
-}
-.forwarding-info span {
-    font-size: 13px; /* Slightly smaller for address */
-    line-height: 1.4;
-    font-weight: bold;
-}
-
-.stamp-area {
-    width: calc(40% - 5px); /* Adjust width */
-    display: flex;
-    justify-content: flex-end; /* Align stamp to the right */
-    align-items: flex-start; /* Align stamp to the top of its area */
-}
-
-.notes-section {
-    /* margin-top: 10px; Removed fixed margin, rely on flex gap */
-    padding-top: 10px; /* Space above notes */
-    border-top: 1px solid black;
-    width: 100%; /* Take full width */
-}
-.notes-section > span:first-child { /* "Note:" text */
-    text-decoration: underline;
-    text-underline-offset: 3px;
-    font-size: 14px;
-    font-weight: bold;
-    color: #000;
-    margin-right: 10px;
-    display: block; /* Make it block to ensure it's on its own line or control margin effectively */
-    margin-bottom: 5px; /* Space after "Note:" */
-}
-.notes-section div { /* Container for note items */
-    display: flex;
-    flex-direction: column;
-    gap: 4px; /* Space between note items */
-    padding-left: 20px; /* Indent note items */
-}
-.notes-section div span {
-    font-size: 14px;
-    color: #000;
-}
-/* Fix for overlapping text in print for notes */
-@media print {
-    .notes-section div span {
-        line-height: 1.5; /* Increase line height for print readability */
-    }
-    .stamp-upload-container {
-        border: 2px dashed #ccc !important;
-        background-color: #f9f9f9 !important; /* Light background for placeholder */
-    }
-    .stamp-upload-container p {
-        color: #6c757d !important; /* Ensure placeholder text is visible */
-    }
+/* Ensure Tailwind's responsive prefixes work */
+@layer base {
+  /* Example: md:flex-direction-row would work due to Tailwind's processing */
 }
