@@ -6,14 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { DatePicker } from '@/components/ui/date-picker'; // Corrected import path
-import { Card, CardContent } from '@/components/ui/card';
+import { DatePicker } from '@/components/ui/date-picker';
+import { Card, CardContent } from '@/components/ui/card'; // Keep Card imports if used elsewhere, or remove if not.
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Image from 'next/image';
 import { Download, Printer, Eye, X, Save, UploadCloud, Search, Eraser, CheckCircle, FileText, Settings, Copy, Palette, Briefcase, Users, Building, CalendarDays, FileDown, Maximize, EyeOff, Undo, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 
-const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://picsum.photos/180/100?random&data-ai-hint=signature+placeholder';
+const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://picsum.photos/160/90?random&data-ai-hint=signature+placeholder';
 
 
 const AdOrderForm: React.FC = () => {
@@ -56,30 +56,23 @@ const AdOrderForm: React.FC = () => {
 
   const adjustTextareaHeight = useCallback((textarea: HTMLTextAreaElement | null) => {
     if (textarea) {
-      textarea.style.height = 'auto'; // Reset height to recalculate
+      textarea.style.height = 'auto'; 
       const computedStyle = typeof window !== 'undefined' ? getComputedStyle(textarea) : null;
-      const minHeight = computedStyle ? parseFloat(computedStyle.minHeight) : 70; // Default min-height if not computable
+      const minHeight = computedStyle ? parseFloat(computedStyle.minHeight) : 70; 
       
-      // Determine if in print/PDF/preview mode
       const isPrintingOrPdfContext = typeof window !== 'undefined' && 
                                      (document.body.classList.contains('pdf-export-active') || 
-                                      document.body.classList.contains('print-preview-active') || // Modal preview
-                                      document.body.classList.contains('fullscreen-body-active') || // Fullscreen preview
-                                      window.matchMedia('print').matches); // Browser print dialog
+                                      document.body.classList.contains('print-preview-active') || 
+                                      document.body.classList.contains('fullscreen-body-active') || 
+                                      window.matchMedia('print').matches);
 
       if (isPrintingOrPdfContext) {
-        // For print/PDF/preview, allow content to define height, but respect CSS for PDF if specific.
-        // The crucial part for PDF is often to let it be 'auto' and control overflow/max-height via CSS.
         if (document.body.classList.contains('pdf-export-active')) {
-            // For PDF generation, specific CSS rules in globals.css might handle this.
-            // Here, we ensure it's at least scrollHeight or a defined PDF min-height.
             textarea.style.height = `${Math.max(textarea.scrollHeight, parseFloat(computedStyle?.getPropertyValue('--pdf-textarea-min-height') || '20'))}px`;
         } else {
-            // For print preview or direct print
             textarea.style.height = `${textarea.scrollHeight}px`;
         }
       } else {
-        // For screen view
         textarea.style.height = `${Math.max(textarea.scrollHeight, minHeight)}px`;
       }
     }
@@ -158,6 +151,11 @@ const AdOrderForm: React.FC = () => {
     setPackageName('');
     setMatterText('');
     setRowsData([{ keyNo: '', publication: '', edition: '', size: '', scheduledDate: null, position: '' }]);
+    setStampImage(null); // Clear stamp image as well
+    if (typeof window !== 'undefined') {
+        localStorage.removeItem('adOrderFormDraft'); // Clear draft from local storage
+        localStorage.removeItem('uploadedStampImage'); // Clear saved stamp image
+    }
   };
 
   const saveDraft = () => {
@@ -210,7 +208,6 @@ const AdOrderForm: React.FC = () => {
 
     document.body.classList.add('pdf-export-active');
     
-    // Ensure all textareas are adjusted for PDF context before cloning
     const textareasOnPage = element.querySelectorAll('textarea');
     textareasOnPage.forEach(ta => adjustTextareaHeight(ta)); 
 
@@ -218,7 +215,6 @@ const AdOrderForm: React.FC = () => {
     
     clonedElement.querySelectorAll('.no-pdf-export').forEach(el => el.remove());
     
-    // Apply A4 dimensions and styles directly for html2pdf
     clonedElement.style.width = '210mm';
     clonedElement.style.height = '297mm'; 
     clonedElement.style.minHeight = '297mm';
@@ -227,7 +223,7 @@ const AdOrderForm: React.FC = () => {
     clonedElement.style.padding = '5mm'; 
     clonedElement.style.fontSize = '9pt'; 
     clonedElement.style.lineHeight = '1.1';
-    clonedElement.style.borderWidth = '2px';
+    clonedElement.style.borderWidth = '2px'; // Thinner border for PDF
     clonedElement.style.boxSizing = 'border-box';
 
 
@@ -319,7 +315,6 @@ const AdOrderForm: React.FC = () => {
         div.style.whiteSpace = 'pre-wrap';
         div.style.wordWrap = 'break-word';
         textarea.parentNode?.replaceChild(div, textarea);
-        // Recalculate height based on content and PDF constraints
         const finalHeight = Math.min(div.scrollHeight, parseFloat(div.style.maxHeight || '9999'));
         div.style.height = `${finalHeight}px`;
     });
@@ -356,8 +351,8 @@ const AdOrderForm: React.FC = () => {
              placeholderInStamp.style.maxWidth = "100%";
              placeholderInStamp.style.maxHeight = "100%";
              placeholderInStamp.style.objectFit = "contain";
-        } else if (!stampImage && !imgInStamp && !placeholderInStamp) { // Added check for !imgInStamp
-            stampContainerClone.textContent = 'Stamp Area'; // Fallback text
+        } else if (!stampImage && !imgInStamp && !placeholderInStamp) { 
+            stampContainerClone.textContent = 'Stamp Area'; 
         }
     }
     const tableClone = clonedElement.querySelector('.main-table-bordered');
@@ -384,7 +379,7 @@ const AdOrderForm: React.FC = () => {
             onclone: (documentClone: Document) => {
                 const clonedBody = documentClone.body;
                 clonedBody.classList.add('pdf-export-active'); 
-                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 const _ = clonedBody.offsetHeight; 
 
                 const textareasInClone = clonedBody.querySelectorAll('.textarea-static-print');
@@ -436,9 +431,9 @@ const AdOrderForm: React.FC = () => {
   const handleActualPrint = useCallback(() => {
     if (typeof window !== 'undefined') {
         const wasPreviewing = isPreviewing;
-        const wasFullScreen = isFullScreenPreview;
+        // const wasFullScreen = isFullScreenPreview; // Fullscreen logic removed for now
 
-        if(wasPreviewing && !wasFullScreen) { 
+        if(wasPreviewing) { 
              handleClosePrintPreview();
         }
         
@@ -447,19 +442,17 @@ const AdOrderForm: React.FC = () => {
         setTimeout(() => {
             window.print();
             document.body.classList.remove('direct-print-active'); 
-            // if (wasPreviewing && !wasFullScreen) handlePrintPreview(); // Optionally restore preview
         }, 100); 
     }
-  }, [isPreviewing, isFullScreenPreview, handleClosePrintPreview]);
+  }, [isPreviewing, handleClosePrintPreview]);
+
 
   const handleFullScreenPreview = useCallback(() => {
     const element = printableAreaRef.current;
     if (!element || typeof window === 'undefined') return;
 
     if (!document.fullscreenElement) {
-        element.requestFullscreen().then(() => {
-          // Fullscreen change event will handle class toggling
-        }).catch(err => {
+        element.requestFullscreen().catch(err => {
           alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
         });
     }
@@ -471,6 +464,7 @@ const AdOrderForm: React.FC = () => {
       document.exitFullscreen(); 
     }
   }, []);
+
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -496,7 +490,7 @@ const AdOrderForm: React.FC = () => {
 
 
   useEffect(() => {
-    if (typeof window === 'undefined') return; // Ensure client-side only
+    if (typeof window === 'undefined') return; 
     if (isPreviewing && !isFullScreenPreview && printableAreaRef.current) {
       const previewNode = printableAreaRef.current.cloneNode(true) as HTMLElement | null;
       const previewContentDiv = document.getElementById('printPreviewContent');
@@ -553,7 +547,7 @@ const AdOrderForm: React.FC = () => {
             if (input.id === 'orderDate' && orderDate) {
                  value = format(orderDate, 'dd.MM.yyyy');
             } else if (!input.value && input.placeholder && input.type !== 'date') {
-                value = '\u00A0';
+                value = '\u00A0'; 
             } else if (input.type === 'date' && !input.value) {
                  value = '\u00A0'; 
             }
@@ -628,7 +622,6 @@ const AdOrderForm: React.FC = () => {
         previewContentDiv.innerHTML = '';
         previewContentDiv.appendChild(previewNode);
 
-        // Adjust heights after appending to DOM for accurate scrollHeight
         const textareasInPreview = previewContentDiv.querySelectorAll('.textarea-static-print');
         textareasInPreview.forEach(ta => {
             const htmlTa = ta as HTMLElement;
@@ -667,39 +660,39 @@ const AdOrderForm: React.FC = () => {
         </div>
 
         <div className="flex flex-col md:flex-row gap-4 mb-5 print-header-box">
-          <div className="w-full md:w-[35%] p-3 border-2 border-black rounded box-decoration-clone">
-            <h3 className="text-lg font-bold">Lehar</h3>
-            <h4 className="text-md font-semibold">ADVERTISING PVT.LTD.</h4>
-            <p className="text-xs mt-1 leading-snug">D-9 &amp; D-10, 1st Floor, Pushpa Bhawan,</p>
-            <p className="text-xs leading-snug">Alaknanda Commercial complex, <br /> New Delhi-110019</p>
-            <p className="text-xs mt-1 leading-snug">Tel.: 49573333, 34, 35, 36</p>
-            <p className="text-xs leading-snug">Fax: 26028101</p>
-            <p className="text-xs mt-1 leading-snug"><strong>GSTIN:</strong> 07AABCL5406F1ZU</p>
-          </div>
-          <div className="flex-1 flex flex-col gap-3 p-3 border-2 border-black rounded">
-            <div className="flex gap-3 items-center">
-              <div className="flex-1 flex items-center">
-                <Label htmlFor="roNumber" className="text-sm font-bold mr-2 whitespace-nowrap">R.O. No. LN:</Label>
-                <Input id="roNumber" type="number" placeholder="Enter Number" value={ron} onChange={(e) => setRon(e.target.value)} className="text-sm py-1 px-2 h-auto"/>
-              </div>
-              <div className="flex-1 flex items-center">
-                 <Label htmlFor="orderDate" className="text-sm font-bold mr-2 whitespace-nowrap">Date:</Label>
-                 <DatePicker selected={orderDate} onChange={handleDateChange} dateFormat="dd.MM.yyyy" className="text-sm py-1 px-2 h-auto w-full" id="orderDate" placeholder="Select Date" />
-              </div>
+            <div className="w-full md:w-[35%] p-3 border-2 border-black rounded box-decoration-clone">
+                <h3 className="text-lg font-bold">Lehar</h3>
+                <h4 className="text-md font-semibold">ADVERTISING PVT.LTD.</h4>
+                <p className="text-xs mt-1 leading-snug">D-9 &amp; D-10, 1st Floor, Pushpa Bhawan,</p>
+                <p className="text-xs leading-snug">Alaknanda Commercial complex, <br /> New Delhi-110019</p>
+                <p className="text-xs mt-1 leading-snug">Tel.: 49573333, 34, 35, 36</p>
+                <p className="text-xs leading-snug">Fax: 26028101</p>
+                <p className="text-xs mt-1 leading-snug"><strong>GSTIN:</strong> 07AABCL5406F1ZU</p>
             </div>
-            <div className="flex items-center">
-              <Label htmlFor="clientName" className="text-sm font-bold mr-2 whitespace-nowrap">Client:</Label>
-              <Input id="clientName" placeholder="Client Name" value={clientName} onChange={(e) => setClientName(e.target.value)} className="text-sm py-1 px-2 h-auto"/>
+            <div className="flex-1 flex flex-col gap-3 p-3 border-2 border-black rounded">
+                <div className="flex gap-3 items-center">
+                    <div className="flex-1 flex items-center">
+                        <Label htmlFor="roNumber" className="text-sm font-bold mr-2 whitespace-nowrap">R.O. No. LN:</Label>
+                        <Input id="roNumber" type="number" placeholder="Enter Number" value={ron} onChange={(e) => setRon(e.target.value)} className="text-sm py-1 px-2 h-auto"/>
+                    </div>
+                    <div className="flex-1 flex items-center">
+                        <Label htmlFor="orderDate" className="text-sm font-bold mr-2 whitespace-nowrap">Date:</Label>
+                        <DatePicker selected={orderDate} onChange={handleDateChange} dateFormat="dd.MM.yyyy" className="text-sm py-1 px-2 h-auto w-full" id="orderDate" placeholder="Select Date" />
+                    </div>
+                </div>
+                <div className="flex items-center">
+                    <Label htmlFor="clientName" className="text-sm font-bold mr-2 whitespace-nowrap">Client:</Label>
+                    <Input id="clientName" placeholder="Client Name" value={clientName} onChange={(e) => setClientName(e.target.value)} className="text-sm py-1 px-2 h-auto"/>
+                </div>
+                <div>
+                    <Label className="text-sm font-bold">The Advertisement Manager</Label>
+                    <Input placeholder="Publication Name / Address Line 1" value={advManagerInput1} onChange={(e) => setAdvManagerInput1(e.target.value)} className="text-sm py-1 px-2 h-auto mt-1" />
+                    <Input placeholder="Address Line 2 / City" value={advManagerInput2} onChange={(e) => setAdvManagerInput2(e.target.value)} className="text-sm py-1 px-2 h-auto mt-1" />
+                </div>
+                <div className="mt-2 pt-2 border-t border-black">
+                    <p className="text-sm font-bold">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
+                </div>
             </div>
-             <div>
-              <Label className="text-sm font-bold">The Advertisement Manager</Label>
-              <Input placeholder="Publication Name / Address Line 1" value={advManagerInput1} onChange={(e) => setAdvManagerInput1(e.target.value)} className="text-sm py-1 px-2 h-auto mt-1" />
-              <Input placeholder="Address Line 2 / City" value={advManagerInput2} onChange={(e) => setAdvManagerInput2(e.target.value)} className="text-sm py-1 px-2 h-auto mt-1" />
-            </div>
-            <div className="mt-2 pt-2 border-t border-black">
-              <p className="text-sm font-bold">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
-            </div>
-          </div>
         </div>
 
         <div className="flex flex-col md:flex-row gap-4 mb-5 print-header-box">
@@ -780,8 +773,30 @@ const AdOrderForm: React.FC = () => {
             <div className="w-full md:w-[58%]">
               <p className="text-xs font-bold mb-1">Forward all bills with relevant VTS copy to :-</p>
               <p className="text-xs leading-snug">D-9 &amp; D-10, 1st Floor, Pushpa Bhawan, <br /> Alaknanda Commercial complex, <br />New Delhi-110019 <br />Tel.: 49573333, 34, 35, 36 <br />Fax: 26028101</p>
-            
-              <div className="mt-4 pt-2 border-t border-black">
+            </div>
+
+            <div 
+                className="w-full md:w-[38%] flex flex-col items-center md:items-end justify-end stamp-parent-container mt-2 md:mt-0 self-end" 
+            >
+                <div
+                  className="stamp-container-screen w-[160px] h-[90px] flex items-center justify-center text-xs text-gray-500 bg-transparent rounded cursor-pointer hover:opacity-80 border-0"
+                  onClick={triggerStampUpload}
+                  title="Click to upload stamp image"
+                >
+                {stampImage ? (
+                     <Image src={stampImage} alt="Stamp" width={160} height={90} style={{ objectFit: 'contain', maxWidth: '100%', maxHeight: '100%' }} data-ai-hint="signature company stamp" />
+                ) : (
+                  <div className="w-full h-full border-2 border-dashed border-gray-400 flex items-center justify-center bg-gray-50">
+                    <Image src={DEFAULT_STAMP_IMAGE_PLACEHOLDER} alt="Upload Stamp Placeholder" width={156} height={86} style={{ objectFit: 'contain' }} data-ai-hint="upload placeholder"/>
+                  </div>
+                )}
+                <Input type="file" ref={stampInputRef} onChange={handleStampUpload} accept="image/*" className="hidden" />
+                </div>
+                 <p className="text-xs text-center mt-1">Authorised Signatory</p>
+            </div>
+          </div>
+          <hr className="border-black border-b-2 my-2 w-full" /> 
+          <div className="mt-0 pt-0"> 
                 <p className="text-xs font-bold underline decoration-black decoration-2 underline-offset-2 mb-1">Note:</p>
                 <ol className="list-decimal list-inside text-xs space-y-0.5">
                   <li>Space reserved vide our letter No.</li>
@@ -790,28 +805,6 @@ const AdOrderForm: React.FC = () => {
                   <li>Please send two voucher copies of the good reproduction to us within 3 days of the publishing.</li>
                 </ol>
               </div>
-            </div>
-
-            <div 
-                className="w-full md:w-[38%] flex flex-col items-center md:items-end justify-end stamp-parent-container mt-2 md:mt-0 self-end" 
-            >
-                <div
-                  className="stamp-container-screen w-[180px] h-[100px] flex items-center justify-center text-xs text-gray-500 bg-transparent rounded cursor-pointer hover:opacity-80 border-0"
-                  onClick={triggerStampUpload}
-                  title="Click to upload stamp image"
-                >
-                {stampImage ? (
-                     <Image src={stampImage} alt="Stamp" width={180} height={100} style={{ objectFit: 'contain', maxWidth: '100%', maxHeight: '100%' }} data-ai-hint="signature company stamp" className="border border-dashed border-gray-300"/>
-                ) : (
-                  <div className="w-full h-full border-2 border-dashed border-gray-400 flex items-center justify-center bg-gray-50">
-                    <Image src={DEFAULT_STAMP_IMAGE_PLACEHOLDER} alt="Upload Stamp Placeholder" width={176} height={96} style={{ objectFit: 'contain' }} data-ai-hint="upload placeholder"/>
-                  </div>
-                )}
-                <Input type="file" ref={stampInputRef} onChange={handleStampUpload} accept="image/*" className="hidden" />
-                </div>
-                 <p className="text-xs text-center mt-1">Authorised Signatory</p>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -855,7 +848,6 @@ const AdOrderForm: React.FC = () => {
 
       {isFullScreenPreview && (
          <div id="fullscreen-content-host" className="fixed inset-0 bg-white z-[2000] overflow-auto p-4 no-print">
-            {/* Content inside printable-area-pdf is already styled for print/fullscreen */}
             <Button
                 onClick={handleExitFullScreenPreview}
                 variant="destructive"
@@ -879,4 +871,3 @@ const AdOrderForm: React.FC = () => {
 };
 
 export default AdOrderForm;
-
