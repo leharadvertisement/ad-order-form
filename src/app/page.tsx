@@ -440,7 +440,7 @@ export default function ApplicationFormPage() {
             <div className="flex justify-between pb-2">
                 <div className="w-[60%] h-full m-0 flex items-start justify-start relative flex-col box-border pr-0">
                     <div className="flex flex-col items-start justify-start h-full pl-2 box-border">
-                        <span className="text-sm font-bold inline-block text-left text-black mb-2"><strong>Forward all bills with relevant VTS copy to :-</strong></span>
+                        <span className="text-sm font-bold inline-block text-left text-black mb-2 underline underline-offset-[3px] decoration-black"><strong>Forward all bills with relevant VTS copy to :-</strong></span>
                         <div  className="ml-0 -mt-2.5 text-left p-0 h-full">
                             <span className="text-xs font-bold inline-block leading-normal text-black h-full">D-9 &amp; D-10, 1st Floor, Pushpa Bhawan, <br /> Alaknanda Commercial complex, <br />New Delhi-110019 <br />Tel.: 49573333, 34, 35, 36 <br />Fax: 26028101
                             </span>
@@ -450,12 +450,12 @@ export default function ApplicationFormPage() {
                 <div className="w-[38%] h-full m-0 flex items-end justify-end p-2.5 box-border relative self-end">
                     <div 
                         className="border-2 border-dashed border-gray-300 flex justify-center items-center absolute top-2.5 right-0 bg-gray-50 cursor-pointer rounded overflow-hidden"
-                        style={{ width: '200px', height: '120px' }} // Adjusted size
+                        style={{ width: '200px', height: '120px' }} // Adjusted size for better aspect ratio
                         onClick={() => { const uploader = document.getElementById('stampUploader') as HTMLInputElement; if(uploader) uploader.click();}}
                         data-ai-hint="stamp placeholder"
                     >
                         {stampImage ? (
-                             <Image src={stampImage} alt="Stamp Preview" layout="fill" objectFit="cover" />
+                             <Image src={stampImage} alt="Stamp Preview" layout="responsive" width={200} height={120} objectFit="contain" />
                         ) : (
                             <p className="text-xs text-center text-gray-400 m-0 p-2">Upload Image</p>
                         )}
@@ -463,10 +463,10 @@ export default function ApplicationFormPage() {
                     </div>
                 </div>
             </div>
-            <div className="mt-0 ml-2 w-[calc(98%-8px)] pt-1.5 flex flex-col"> {/* Adjusted margin-top to 0 and width to prevent overlap with border */}
-                <span className="underline underline-offset-[3px] text-sm font-bold text-black mr-2.5">Note:</span>
+            <div className="mt-0 ml-2 w-[calc(98%-8px)] pt-1.5 flex flex-col border-t border-black"> {/* Added border-t here */}
+                <span className="underline underline-offset-[3px] text-sm font-bold text-black mr-2.5 decoration-black">Note:</span>
                 <div className="flex flex-col gap-1">
-                    <span className="text-sm text-black">  1. Space reserved vide our letter No.  </span>
+                    <span className="text-sm text-black"> 1. Space reserved vide our letter No. </span>
                     <span className="text-sm text-black"> 2. No two advertisements of the same client should appear in the same issue.  </span>
                     <span className="text-sm text-black"> 3. Please quote R.O. No. in all your bills and letters. </span>
                     <span className="text-sm text-black inline-block w-full"> 4. Please send two voucher copies of the good reproduction to us within 3 days of the publishing.
@@ -485,4 +485,3 @@ export default function ApplicationFormPage() {
     </>
   );
 }
-
