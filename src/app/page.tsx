@@ -326,8 +326,8 @@ export default function ApplicationFormPage() {
                 <div style={{ width: '38%', height: '100%', margin: '0', display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', padding: '10px', boxSizing: 'border-box', position: 'relative', alignSelf: 'flex-end' }}>
                     <div 
                         style={{ 
-                            width: '180px', // Adjusted width
-                            height: '100px', // Adjusted height
+                            width: '180px', 
+                            height: '100px', 
                             border: '2px dashed #ccc', 
                             display: 'flex', 
                             justifyContent: 'center', 
@@ -340,7 +340,7 @@ export default function ApplicationFormPage() {
                             backgroundColor: '#f9f9f9', 
                             cursor: 'pointer',
                             borderRadius: '4px',
-                            overflow: 'hidden' // Ensures image stays within bounds
+                            overflow: 'hidden'
                         }} 
                         onClick={() => { const uploader = document.getElementById('stampUploader') as HTMLInputElement; if(uploader) uploader.click();}}
                         data-ai-hint="stamp placeholder"
@@ -353,9 +353,9 @@ export default function ApplicationFormPage() {
                                 reader.onload = (event) => {
                                     const imgContainer = e.target.previousElementSibling?.parentElement;
                                     if(imgContainer && event.target?.result){
-                                        imgContainer.innerHTML = `<img src="${event.target.result}" alt="Stamp Preview" style="width: 100%; height: 100%; object-fit: contain;" />`;
-                                        (imgContainer as HTMLElement).style.border = 'none'; // Remove border after image upload
-                                        (imgContainer as HTMLElement).style.backgroundColor = 'transparent'; // Make background transparent
+                                        imgContainer.innerHTML = `<img src="${event.target.result}" alt="Stamp Preview" style="width: 100%; height: 100%; object-fit: cover;" />`;
+                                        (imgContainer as HTMLElement).style.border = '2px dashed #ccc'; 
+                                        (imgContainer as HTMLElement).style.backgroundColor = 'transparent'; 
                                     }
                                 }
                                 reader.readAsDataURL(file);
@@ -364,7 +364,7 @@ export default function ApplicationFormPage() {
                     </div>
                 </div>
             </div>
-            <div style={{ marginTop: '10px', marginLeft: '8px', width: '98%', borderTop: '1px solid black', paddingTop: '6px', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ marginTop: '10px', marginLeft: '8px', width: '98%', paddingTop: '6px', display: 'flex', flexDirection: 'column' }}>
                 <span style={{ textDecoration: 'underline', textUnderlineOffset: '3px', fontSize: '14px', fontWeight: 'bold', color: '#000', marginRight: '10px' }}>Note:</span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <span style={{ fontSize: '14px', color: '#000' }}>  1. Space reserved vide our letter No.  </span>
@@ -386,3 +386,4 @@ export default function ApplicationFormPage() {
     </>
   );
 }
+
