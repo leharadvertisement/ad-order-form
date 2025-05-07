@@ -109,13 +109,11 @@ export default function AdOrderForm() {
          setOrderDate(new Date()); // Fallback to today on error
        }
      }
-   }, [isClient]); // Depend only on isClient and ensure orderDate is defined before use
+   }, [isClient, orderDate]); // Rerun if orderDate is still undefined after isClient is true
 
   // Effect to load data
   useEffect(() => {
     if (!isClient) return;
-
-    // Date is handled in the effect above, no need to repeat here
 
     try {
       const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -135,20 +133,25 @@ export default function AdOrderForm() {
         setRoNumber(parsedData.roNumber || '');
 
         // Date loading is handled in the dedicated effect
-        // if (parsedData.orderDate) {
-        //    const savedDateObj = new Date(parsedData.orderDate);
-        //    if (!isNaN(savedDateObj.getTime())) {
-        //        initialDate = savedDateObj;
-        //    } else {
-        //         console.warn("Invalid date found in localStorage, using today's date instead.");
-        //    }
-        // }
+        if (parsedData.orderDate && orderDate === undefined) { // Only set if not already set by the other effect
+           const savedDateObj = new Date(parsedData.orderDate);
+           if (!isNaN(savedDateObj.getTime())) {
+               setOrderDate(savedDateObj);
+           } else {
+                console.warn("Invalid date found in localStorage, using today's date instead.");
+                setOrderDate(new Date());
+           }
+        } else if (orderDate === undefined) { // If no saved date and not set, default to today
+            setOrderDate(new Date());
+        }
+
 
         setClientName(parsedData.clientName || '');
         setAdvertisementManagerLine1(parsedData.advertisementManagerLine1 || '');
         setAdvertisementManagerLine2(parsedData.advertisementManagerLine2 || '');
+      } else if (orderDate === undefined) { // If no saved data at all, default date
+        setOrderDate(new Date());
       }
-      // No else needed here as date is set by the other effect
 
     } catch (error) {
       console.error("Failed to load data from localStorage:", error);
@@ -157,10 +160,13 @@ export default function AdOrderForm() {
         description: "Could not recover previous draft data. Using defaults.",
         variant: "destructive",
       });
+      if (orderDate === undefined) {
+        setOrderDate(new Date()); // Fallback date on error
+      }
     } finally {
         isInitialLoadRef.current = false;
     }
-  }, [isClient, toast]);
+  }, [isClient, toast, orderDate]);
 
 
    // Effect to update displayDate whenever orderDate changes (client-side only)
@@ -172,7 +178,7 @@ export default function AdOrderForm() {
      } catch (error) {
          console.error("Error formatting date:", error);
          const today = new Date();
-         setOrderDate(today); // Consider if this is the desired fallback
+         // setOrderDate(today); // Avoid re-triggering loop if orderDate itself is problematic
          setDisplayDate(format(today, "dd.MM.yyyy"));
      }
    }, [orderDate, isClient]);
@@ -184,7 +190,6 @@ export default function AdOrderForm() {
         return;
     }
 
-    // Proceed with saving only if orderDate is defined and valid
     if (orderDate === undefined || isNaN(orderDate.getTime())) {
       return;
     }
@@ -201,7 +206,7 @@ export default function AdOrderForm() {
           scheduleRows,
           stampPreview,
           roNumber,
-          orderDate: orderDate && !isNaN(orderDate.getTime()) ? orderDate.toISOString() : null,
+          orderDate: orderDate && !isNaN(orderDate.getTime()) ? orderDate.toISOString() : new Date().toISOString(),
           clientName,
           advertisementManagerLine1,
           advertisementManagerLine2,
@@ -219,27 +224,38 @@ export default function AdOrderForm() {
   }, [caption, packageName, matter, scheduleRows, stampPreview, roNumber, orderDate, clientName, advertisementManagerLine1, advertisementManagerLine2, isClient]);
 
    const hideInteractiveElements = useCallback(() => {
+    if (!document) return;
     const interactiveElements = document.querySelectorAll(
-      'input, textarea, button, .stamp-container-interactive'
+      'input, textarea, button, .stamp-container-interactive, .popover-trigger-container button'
     );
 
     interactiveElements.forEach((element: Element) => {
-      (element as HTMLElement).classList.add('print-hidden');
+      const htmlElement = element as HTMLElement;
+      // Hide all buttons except those specifically for fullscreen preview actions
+      if (htmlElement.tagName === 'BUTTON' &&
+          !htmlElement.classList.contains('fullscreen-preview-button')) {
+        htmlElement.classList.add('print-hidden');
+      } else if (htmlElement.tagName !== 'BUTTON') {
+        htmlElement.classList.add('print-hidden');
+      }
     });
   }, []);
 
   const showInteractiveElements = useCallback(() => {
+    if (!document) return;
     const interactiveElements = document.querySelectorAll(
-      'input, textarea, button, .stamp-container-interactive'
+      '.print-hidden' // Query for elements that were hidden
     );
-
     interactiveElements.forEach((element: Element) => {
       (element as HTMLElement).classList.remove('print-hidden');
     });
   }, []);
 
+
   // Effect to handle body class for fullscreen preview
   useEffect(() => {
+    if (!isClient) return; // Ensure this runs only on the client
+
     if (isFullScreenPreview) {
       document.body.classList.add('fullscreen-preview-mode');
       hideInteractiveElements();
@@ -250,10 +266,12 @@ export default function AdOrderForm() {
     }
     // Cleanup function
     return () => {
-      document.body.classList.remove('fullscreen-preview-mode');
-      showInteractiveElements();
+      if (document) {
+        document.body.classList.remove('fullscreen-preview-mode');
+      }
+      showInteractiveElements(); // Ensure elements are shown when component unmounts or preview closes
     };
-  }, [isFullScreenPreview, hideInteractiveElements, showInteractiveElements]);
+  }, [isFullScreenPreview, hideInteractiveElements, showInteractiveElements, isClient]);
 
 
 
@@ -360,26 +378,28 @@ export default function AdOrderForm() {
 
    // Function to trigger browser's print dialog
    const handlePrint = useCallback(() => {
-      setTimeout(() => {
-         window.print();
-      }, 100);
+      if (typeof window !== 'undefined') {
+        setTimeout(() => {
+           window.print();
+        }, 100); // Small delay to ensure DOM updates
+      }
    }, []);
 
-   const safeDisplayDate = isClient && orderDate && !isNaN(orderDate.getTime()) ? displayDate : 'Loading...';
+   const safeDisplayDate = isClient && orderDate && !isNaN(orderDate.getTime()) ? displayDate : (isClient ? 'Select Date' : 'Loading...');
 
 
   // --- Main Render ---
   return (
     <div className={cn("max-w-[210mm] mx-auto font-bold", isFullScreenPreview ? 'fullscreen-container' : '')}>
       {/* Fullscreen Preview Mode */}
-      {isFullScreenPreview && (
+      {isClient && isFullScreenPreview && (
           <div className="fullscreen-overlay">
               <div className="fullscreen-content-wrapper">
                   {/* Close Button for Fullscreen */}
                    <Button
                       variant="destructive"
                       size="icon"
-                      className="absolute top-2 right-2 z-[1100] print-hidden" // Higher z-index
+                      className="absolute top-2 right-2 z-[1100] print-hidden fullscreen-preview-button"
                       onClick={handleExitFullScreenPreview}
                    >
                        <X className="h-4 w-4" />
@@ -388,7 +408,7 @@ export default function AdOrderForm() {
                    {/* Print Button within Fullscreen */}
                   <Button
                      variant="outline"
-                     className="absolute top-2 left-2 z-[1100] print-hidden" // Higher z-index
+                     className="absolute top-2 left-2 z-[1100] print-hidden fullscreen-preview-button"
                      onClick={handlePrint}
                    >
                      <Printer className="mr-2 h-4 w-4" /> Print
@@ -408,6 +428,18 @@ export default function AdOrderForm() {
                           <h1 className="text-xl m-0 font-bold">RELEASE ORDER</h1>
                         </div>
 
+                        {/* Heading & Package Section */}
+                       <div className="heading-package-container flex gap-2 mb-2"> {/* Reduced gap/margin */}
+                         <div className="heading-caption-box flex-1 print-border rounded p-1.5 border border-black"> {/* Reduced padding */}
+                           <Label htmlFor="captionPreview" className="block mb-0.5 text-sm">Heading/Caption:</Label>
+                           <p id="captionPreview" className="w-full px-1 py-0.5 text-xs font-bold min-h-[1.2em] border-b border-black">{caption || <span className="text-muted-foreground italic text-xs">Not entered</span>}</p>
+                         </div>
+                         <div className="package-box w-[30%] print-border rounded p-1.5 border border-black"> {/* Reduced padding */}
+                           <Label htmlFor="packagePreview" className="block mb-0.5 text-sm">Package:</Label>
+                            <p id="packagePreview" className="w-full px-1 py-0.5 text-xs font-bold min-h-[1.2em] border-b border-black">{packageName || <span className="text-muted-foreground italic text-xs">Not entered</span>}</p>
+                         </div>
+                       </div>
+
                         {/* Advertisement Manager Section */}
                          <div className="advertisement-manager-section print-border rounded p-1.5 mb-2 border border-black"> {/* Reduced padding/margin */}
                            <Label className="block mb-0.5 text-sm">The Advertisement Manager</Label>
@@ -419,19 +451,6 @@ export default function AdOrderForm() {
                            </div>
                            <p className="text-[7pt] mt-0.5">Kindly insert the advertisement/s in your issue/s for the following date/s</p> {/* Smaller font */}
                          </div>
-
-
-                       {/* Heading & Package Section */}
-                       <div className="heading-package-container flex gap-2 mb-2"> {/* Reduced gap/margin */}
-                         <div className="heading-caption-box flex-1 print-border rounded p-1.5 border border-black"> {/* Reduced padding */}
-                           <Label htmlFor="captionPreview" className="block mb-0.5 text-sm">Heading/Caption:</Label>
-                           <p id="captionPreview" className="w-full px-1 py-0.5 text-xs font-bold min-h-[1.2em] border-b border-black">{caption || <span className="text-muted-foreground italic text-xs">Not entered</span>}</p>
-                         </div>
-                         <div className="package-box w-[30%] print-border rounded p-1.5 border border-black"> {/* Reduced padding */}
-                           <Label htmlFor="packagePreview" className="block mb-0.5 text-sm">Package:</Label>
-                            <p id="packagePreview" className="w-full px-1 py-0.5 text-xs font-bold min-h-[1.2em] border-b border-black">{packageName || <span className="text-muted-foreground italic text-xs">Not entered</span>}</p>
-                         </div>
-                       </div>
 
 
                        {/* Address Boxes Container */}
@@ -448,7 +467,7 @@ export default function AdOrderForm() {
                            </p>
                          </div>
                           {/* Right Box: R.O., Date, Client */}
-                           <div className="ro-date-client-container w-[48%] print-border rounded p-1.5 space-y-0.5 border border-black"> {/* Reduced padding/spacing */}
+                           <div className="ro-date-client-container w-[48%] print-border rounded p-1.5 border border-black"> {/* Reduced padding/spacing, removed space-y */}
                              {/* R.O. No. LN */}
                              <div className="field-row flex items-center">
                                <Label className="w-auto text-xs shrink-0 mr-1">R.O.No.LN:</Label>
@@ -584,10 +603,10 @@ export default function AdOrderForm() {
 
       {/* Action Buttons - Visible normally */}
       <div className="flex justify-end gap-2 mb-4 button-container no-print">
-         <Button onClick={handleFullScreenPreview} variant="outline">
+         <Button onClick={handleFullScreenPreview} variant="outline" className="print-hidden">
              <Expand className="mr-2 h-4 w-4" /> Full Display
          </Button>
-        <Button onClick={handleClearForm} variant="destructive">
+        <Button onClick={handleClearForm} variant="destructive" className="print-hidden">
           <Eraser className="mr-2 h-4 w-4" /> Clear Form & Draft
         </Button>
       </div>
@@ -600,6 +619,32 @@ export default function AdOrderForm() {
           {/* Header */}
           <div className="text-center bg-black text-white p-1 mb-3 header-title rounded"> {/* Reduced margin */}
             <h1 className="text-xl m-0 font-bold">RELEASE ORDER</h1>
+          </div>
+
+          {/* Heading & Package Section */}
+          <div className="heading-package-container flex gap-2 mb-3"> {/* Reduced gap/margin */}
+            <div className="heading-caption-box flex-1 print-border rounded p-1.5 border border-black"> {/* Reduced padding */}
+              <Label htmlFor="caption" className="block mb-0.5 text-sm">Heading/Caption:</Label>
+              <Input
+                id="caption"
+                type="text"
+                placeholder="Enter caption here"
+                className="w-full border-0 border-b border-input rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                value={caption}
+                onChange={(e) => setCaption(e.target.value)}
+              />
+            </div>
+            <div className="package-box w-[30%] print-border rounded p-1.5 border border-black"> {/* Reduced padding */}
+              <Label htmlFor="package" className="block mb-0.5 text-sm">Package:</Label>
+              <Input
+                id="package"
+                type="text"
+                placeholder="Enter package name"
+                className="w-full border-0 border-b border-input rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                value={packageName}
+                onChange={(e) => setPackageName(e.target.value)}
+              />
+            </div>
           </div>
 
            {/* Advertisement Manager Section */}
@@ -629,32 +674,6 @@ export default function AdOrderForm() {
            </div>
 
 
-          {/* Heading & Package Section */}
-          <div className="heading-package-container flex gap-2 mb-3"> {/* Reduced gap/margin */}
-            <div className="heading-caption-box flex-1 print-border rounded p-1.5 border border-black"> {/* Reduced padding */}
-              <Label htmlFor="caption" className="block mb-0.5 text-sm">Heading/Caption:</Label>
-              <Input
-                id="caption"
-                type="text"
-                placeholder="Enter caption here"
-                className="w-full border-0 border-b border-input rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                value={caption}
-                onChange={(e) => setCaption(e.target.value)}
-              />
-            </div>
-            <div className="package-box w-[30%] print-border rounded p-1.5 border border-black"> {/* Reduced padding */}
-              <Label htmlFor="package" className="block mb-0.5 text-sm">Package:</Label>
-              <Input
-                id="package"
-                type="text"
-                placeholder="Enter package name"
-                className="w-full border-0 border-b border-input rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                value={packageName}
-                onChange={(e) => setPackageName(e.target.value)}
-              />
-            </div>
-          </div>
-
           {/* Address Boxes Container */}
           <div className="address-container flex justify-between gap-2 mb-3"> {/* Reduced gap/margin */}
             {/* Left Address Box */}
@@ -669,7 +688,7 @@ export default function AdOrderForm() {
               </p>
             </div>
             {/* Right Box: R.O., Date, Client */}
-             <div className="ro-date-client-container w-[48%] print-border rounded p-1.5 space-y-1 border border-black"> {/* Reduced padding/spacing */}
+             <div className="ro-date-client-container w-[48%] print-border rounded p-1.5 border border-black form-active"> {/* Reduced padding, use space-y-1 from globals.css */}
                {/* R.O. No. LN */}
                <div className="field-row flex items-center">
                  <Label htmlFor="roNumber" className="w-auto text-sm shrink-0 mr-1">R.O.No.LN:</Label>
@@ -696,7 +715,7 @@ export default function AdOrderForm() {
                          <Button
                            variant={"ghost"}
                            className={cn(
-                             "h-6 w-6 p-0 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print ml-1",
+                             "h-6 w-6 p-0 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print ml-1 print-hidden", // Added print-hidden
                            )}
                            id="orderDateTrigger"
                          >
@@ -704,13 +723,15 @@ export default function AdOrderForm() {
                            <span className="sr-only">Pick a date</span>
                          </Button>
                        </PopoverTrigger>
-                       <PopoverContent className="w-auto p-0 no-print">
+                       <PopoverContent className="w-auto p-0 no-print print-hidden"> {/* Added print-hidden */}
                          <Calendar
                            mode="single"
                            selected={orderDate}
                            onSelect={(date) => {
                              if (date instanceof Date && !isNaN(date.getTime())) {
                                setOrderDate(date);
+                             } else if (date === undefined) {
+                               setOrderDate(undefined); // Allow clearing the date
                              }
                            }}
                            initialFocus
@@ -721,7 +742,7 @@ export default function AdOrderForm() {
                      <Button
                        variant={"ghost"}
                        className={cn(
-                         "h-6 w-6 p-0 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print ml-1",
+                         "h-6 w-6 p-0 border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none no-print ml-1 print-hidden", // Added print-hidden
                          "text-muted-foreground"
                        )}
                        disabled
@@ -812,7 +833,7 @@ export default function AdOrderForm() {
                 ))}
               </TableBody>
             </Table>
-            <div className="flex gap-2 mt-2 no-print">
+            <div className="flex gap-2 mt-2 no-print print-hidden"> {/* Added print-hidden */}
               <Button variant="outline" size="sm" onClick={addRow}>
                 <PlusCircle className="mr-2 h-4 w-4" /> Add Row
               </Button>
@@ -871,7 +892,7 @@ export default function AdOrderForm() {
               {/* Stamp Area - Interactive Container (Screen Only) */}
               <div
                 id="stampContainerElement"
-                className="stamp-container-interactive absolute top-1 right-1 w-[85px] h-[65px] flex items-center justify-center cursor-pointer overflow-hidden group no-print border border-dashed border-gray-400" /* Added border for screen */
+                className="stamp-container-interactive absolute top-1 right-1 w-[85px] h-[65px] flex items-center justify-center cursor-pointer overflow-hidden group no-print border border-dashed border-gray-400 print-hidden" /* Added print-hidden */
                 onClick={triggerStampUpload}
                 onMouseEnter={triggerStampUpload}
               >
@@ -923,3 +944,4 @@ export default function AdOrderForm() {
     </div>
   );
 }
+

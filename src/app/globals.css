@@ -142,17 +142,20 @@ body {
   .no-print,
   .popover,
   .popover-content,
-  button:not(.print-visible-button),
-  .print-hidden
+  button:not(.print-visible-button), /* Hide most buttons */
+  .print-hidden:not(.fullscreen-preview-button) /* Hide elements marked as print-hidden unless they are preview buttons */
   {
     display: none !important;
     visibility: hidden !important;
   }
   /* Allow specific buttons to be shown if needed */
-  button.print-visible-button {
-     display: inline-block !important; /* Or flex, depending on context */
+  button.print-visible-button,
+  button.fullscreen-preview-button /* Ensure fullscreen buttons are printable if explicitly marked */
+  {
+     display: inline-flex !important; /* Or flex, depending on context */
      visibility: visible !important;
   }
+
 
   /* Styles specifically for the printable area */
   #printable-area,
@@ -225,7 +228,7 @@ body {
        font-size: 8pt !important; /* Smaller font */
        line-height: 1.1 !important;
     }
-    .advertisement-manager-section .min-h-\[1\.5em\] {
+    .advertisement-manager-section .min-h-\[1\.2em\] { /* Updated class name */
         min-height: 1.2em !important; /* Adjust min height */
     }
    .heading-package-container {
@@ -258,7 +261,6 @@ body {
    }
    .ro-date-client-container {
        padding: 4pt !important;
-       /* space-y-0.5 !important; - Replaced with margin on child elements */
    }
    .ro-date-client-container .field-row {
        margin-bottom: 2pt !important; /* Add small margin between rows */
@@ -366,7 +368,7 @@ body {
      white-space: pre-wrap !important; /* Wrap text */
      overflow-wrap: break-word !important;
      height: auto !important; /* Allow height to adjust */
-     min-height: 1.1em; /* Minimum height for visibility */
+     min-height: 1.2em; /* Minimum height for visibility, was 1.1em */
      font-size: 8pt !important; /* Match body font size */
      display: block !important; /* Behave like a block element */
      width: 100% !important; /* Take full width */
@@ -530,7 +532,7 @@ body {
       border-bottom: 0.5pt dotted #999 !important; /* Optional subtle underline */
       font-size: 8pt !important;
       flex: 1 !important; /* Allow text to fill space */
-      min-height: 1.1em !important; /* Ensure visibility */
+      min-height: 1.2em !important; /* Ensure visibility, was 1.1em */
       padding: 0.5pt 0 !important;
       margin: 0 !important;
   }
@@ -621,14 +623,14 @@ body {
    display: none !important;
    visibility: hidden !important;
 }
-.fullscreen-preview-mode button:not(.print-hidden) { /* Hide most buttons */
+/* Hide most buttons in fullscreen, except those explicitly marked for fullscreen */
+.fullscreen-preview-mode button:not(.fullscreen-preview-button) {
    display: none !important;
    visibility: hidden !important;
 }
-
-.fullscreen-preview-mode .print-hidden { /* Show buttons explicitly marked as print-hidden in fullscreen */
-   display: inline-flex !important; /* Or flex, block, etc. */
-   visibility: visible !important;
+.fullscreen-preview-mode button.fullscreen-preview-button {
+    display: inline-flex !important; /* Or flex, block, etc. */
+    visibility: visible !important;
 }
 
 
@@ -657,7 +659,7 @@ body {
 .fullscreen-preview-mode .advertisement-manager-section { margin-bottom: 6pt !important; border: 1pt solid black !important; padding: 4pt !important; }
 .fullscreen-preview-mode .advertisement-manager-section p,
 .fullscreen-preview-mode .advertisement-manager-section label { font-size: 8pt !important; line-height: 1.1 !important;}
-.fullscreen-preview-mode .advertisement-manager-section .min-h-\[1\.5em\] { min-height: 1.2em !important; }
+.fullscreen-preview-mode .advertisement-manager-section .min-h-\[1\.2em\] { min-height: 1.2em !important; } /* Updated class */
 
 .fullscreen-preview-mode .heading-package-container { margin-bottom: 6pt !important; gap: 8pt !important; }
 .fullscreen-preview-mode .heading-package-container > div { padding: 4pt !important; border-width: 1pt !important; }
@@ -667,7 +669,7 @@ body {
 .fullscreen-preview-mode .address-container { margin-bottom: 6pt !important; gap: 8pt !important; }
 .fullscreen-preview-mode .address-container > div { padding: 4pt !important; border-width: 1pt !important; }
 .fullscreen-preview-mode .address-container .address-box p { font-size: 7pt !important; line-height: 1.1 !important; }
-.fullscreen-preview-mode .ro-date-client-container { padding: 4pt !important; /*space-y-0.5 !important;*/ }
+.fullscreen-preview-mode .ro-date-client-container { padding: 4pt !important; }
 .fullscreen-preview-mode .ro-date-client-container .field-row { margin-bottom: 2pt !important; }
 .fullscreen-preview-mode .ro-date-client-container .field-row:last-child { margin-bottom: 0 !important; }
 .fullscreen-preview-mode .ro-date-client-container .field-row label,
@@ -805,17 +807,9 @@ button.print-visible-button {
 
 /* Ensure .ro-date-client-container uses Tailwind's space-y utility correctly */
 .ro-date-client-container > .field-row + .field-row {
-    @apply mt-0.5; /* Equivalent to space-y-0.5 for print/fullscreen */
+    margin-top: 0.125rem; /* Equivalent to space-y-0.5 (2pt at 9pt base) */
 }
 .ro-date-client-container.form-active > .field-row + .field-row {
-    @apply mt-1; /* Equivalent to space-y-1 for form */
+    margin-top: 0.25rem; /* Equivalent to space-y-1 (4pt at 9pt base) */
 }
 
-/*
-@apply for nested rules is not supported. This was causing the error:
-.print-table-cell > div {
-    @apply min-h-[80px] h-auto border-none p-[1pt] font-bold text-black text-[7pt] whitespace-pre-wrap break-words block overflow-hidden leading-[1.1] align-top;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-}
-*/
