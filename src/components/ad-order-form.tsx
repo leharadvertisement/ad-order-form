@@ -440,19 +440,6 @@ export default function AdOrderForm() {
                          </div>
                        </div>
 
-                        {/* Advertisement Manager Section */}
-                         <div className="advertisement-manager-section print-border rounded p-1.5 mb-2 border border-black"> {/* Reduced padding/margin */}
-                           <Label className="block mb-0.5 text-sm">The Advertisement Manager</Label>
-                           <div className="relative mb-0.5">
-                             <p className="w-full px-1 py-0.5 text-xs font-bold min-h-[1.2em] border-b border-black">{advertisementManagerLine1 || <span className="text-muted-foreground italic text-xs">Not entered</span>}</p>
-                           </div>
-                           <div className="relative mb-0.5">
-                             <p className="w-full px-1 py-0.5 text-xs font-bold min-h-[1.2em] border-b border-black">{advertisementManagerLine2 || <span className="text-muted-foreground italic text-xs">Not entered</span>}</p>
-                           </div>
-                           <p className="text-[7pt] mt-0.5">Kindly insert the advertisement/s in your issue/s for the following date/s</p> {/* Smaller font */}
-                         </div>
-
-
                        {/* Address Boxes Container */}
                        <div className="address-container flex justify-between gap-2 mb-2"> {/* Reduced gap/margin */}
                          {/* Left Address Box */}
@@ -486,6 +473,17 @@ export default function AdOrderForm() {
                            </div>
                        </div>
 
+                        {/* Advertisement Manager Section */}
+                         <div className="advertisement-manager-section print-border rounded p-1.5 mb-2 border border-black"> {/* Reduced padding/margin */}
+                           <Label className="block mb-0.5 text-sm">The Advertisement Manager</Label>
+                           <div className="relative mb-0.5">
+                             <p className="w-full px-1 py-0.5 text-xs font-bold min-h-[1.2em] border-b border-black">{advertisementManagerLine1 || <span className="text-muted-foreground italic text-xs">Not entered</span>}</p>
+                           </div>
+                           <div className="relative mb-0.5">
+                             <p className="w-full px-1 py-0.5 text-xs font-bold min-h-[1.2em] border-b border-black">{advertisementManagerLine2 || <span className="text-muted-foreground italic text-xs">Not entered</span>}</p>
+                           </div>
+                           <p className="text-[7pt] mt-0.5">Kindly insert the advertisement/s in your issue/s for the following date/s</p> {/* Smaller font */}
+                         </div>
 
 
                         {/* Schedule Table */}
@@ -603,7 +601,7 @@ export default function AdOrderForm() {
 
       {/* Action Buttons - Visible normally */}
       <div className="flex justify-end gap-2 mb-4 button-container no-print">
-         <Button onClick={handleFullScreenPreview} variant="outline" className="print-hidden">
+         <Button onClick={handleFullScreenPreview} variant="outline" className="print-hidden fullscreen-preview-button">
              <Expand className="mr-2 h-4 w-4" /> Full Display
          </Button>
         <Button onClick={handleClearForm} variant="destructive" className="print-hidden">
@@ -646,33 +644,6 @@ export default function AdOrderForm() {
               />
             </div>
           </div>
-
-           {/* Advertisement Manager Section */}
-           <div className="advertisement-manager-section print-border rounded p-1.5 mb-3 border border-black"> {/* Reduced padding/margin */}
-             <Label className="block mb-0.5 text-sm">The Advertisement Manager</Label>
-             <div className="relative mb-0.5">
-               <Input
-                 id="adManager1"
-                 type="text"
-                 placeholder="Line 1"
-                 className="w-full border-0 border-b border-input rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                 value={advertisementManagerLine1}
-                 onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
-               />
-             </div>
-             <div className="relative">
-               <Input
-                 id="adManager2"
-                 type="text"
-                 placeholder="Line 2"
-                 className="w-full border-0 border-b border-input rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                 value={advertisementManagerLine2}
-                 onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
-               />
-             </div>
-             <p className="text-xs mt-1">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
-           </div>
-
 
           {/* Address Boxes Container */}
           <div className="address-container flex justify-between gap-2 mb-3"> {/* Reduced gap/margin */}
@@ -768,6 +739,32 @@ export default function AdOrderForm() {
                </div>
              </div>
           </div>
+
+           {/* Advertisement Manager Section */}
+           <div className="advertisement-manager-section print-border rounded p-1.5 mb-3 border border-black"> {/* Reduced padding/margin */}
+             <Label className="block mb-0.5 text-sm">The Advertisement Manager</Label>
+             <div className="relative mb-0.5">
+               <Input
+                 id="adManager1"
+                 type="text"
+                 placeholder="Line 1"
+                 className="w-full border-0 border-b border-input rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                 value={advertisementManagerLine1}
+                 onChange={(e) => setAdvertisementManagerLine1(e.target.value)}
+               />
+             </div>
+             <div className="relative">
+               <Input
+                 id="adManager2"
+                 type="text"
+                 placeholder="Line 2"
+                 className="w-full border-0 border-b border-input rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                 value={advertisementManagerLine2}
+                 onChange={(e) => setAdvertisementManagerLine2(e.target.value)}
+               />
+             </div>
+             <p className="text-xs mt-1">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
+           </div>
 
 
 
