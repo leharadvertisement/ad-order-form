@@ -10,10 +10,12 @@ import { Label } from '@/components/ui/label';
 import { DatePicker } from '@/components/ui/date-picker'; 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Image from 'next/image';
-import { Printer, PlusSquare, MinusSquare, Eye, Expand, Download, Save, FileText, Trash2, Copy, Briefcase, UserSquare, FileInput, Rows } from 'lucide-react'; 
+import { Printer, PlusSquare, MinusSquare, Eye, Expand, Download, Save, FileText, Trash2, Copy, Briefcase, UserSquare, FileInput, Rows, Calendar as CalendarIconLucide } from 'lucide-react'; 
 import { format } from 'date-fns';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
-const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://picsum.photos/178/98?random&data-ai-hint=signature+placeholder';
+const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://picsum.photos/seed/stamp/178/98';
 
 
 const AdOrderForm: FC = () => {
@@ -178,8 +180,8 @@ const AdOrderForm: FC = () => {
 
   const generatePdf = useCallback(async () => {
     const elementToPrint = printableAreaRef.current;
-    if (!elementToPrint || typeof window === 'undefined' || !(window as any).html2pdf) {
-        console.error('html2pdf is not loaded or element not found');
+    if (!elementToPrint || typeof window === 'undefined') {
+        console.error('Element not found for PDF generation');
         return;
     }
 
@@ -338,61 +340,54 @@ const AdOrderForm: FC = () => {
         tableHeaders.forEach(th => th.classList.add('print-table-header'));
     }
 
+    // Use html2canvas and jsPDF directly
+    html2canvas(clonedElement, {
+        scale: 3,
+        useCORS: true,
+        logging: false,
+        width: clonedElement.offsetWidth,
+        height: clonedElement.offsetHeight,
+        windowWidth: clonedElement.scrollWidth,
+        windowHeight: clonedElement.scrollHeight,
+        onclone: (documentClone: Document) => {
+            const clonedBody = documentClone.body;
+            clonedBody.classList.add('pdf-export-active');
+            
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const _ = clonedBody.offsetHeight;
 
-    const opt = {
-        margin: [0,0,0,0], 
-        filename: 'release_order_form.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: {
-            scale: 3, 
-            useCORS: true,
-            logging: false, 
-            width: clonedElement.offsetWidth, 
-            height: clonedElement.offsetHeight, 
-            windowWidth: clonedElement.scrollWidth,
-            windowHeight: clonedElement.scrollHeight,
-            onclone: (documentClone: Document) => {
-                const clonedBody = documentClone.body;
-                clonedBody.classList.add('pdf-export-active'); 
+            const textareasInClone = clonedBody.querySelectorAll('.textarea-static-print');
+            textareasInClone.forEach(ta => {
+                const htmlTa = ta as HTMLElement;
+                htmlTa.style.height = 'auto';
                 
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                const _ = clonedBody.offsetHeight; 
+                const computedStyle = getComputedStyle(htmlTa);
+                const maxHeight = parseFloat(computedStyle.maxHeight || '9999');
+                const minHeight = parseFloat(computedStyle.minHeight || '0');
 
-                const textareasInClone = clonedBody.querySelectorAll('.textarea-static-print'); 
-                 textareasInClone.forEach(ta => {
-                    const htmlTa = ta as HTMLElement;
-                    htmlTa.style.height = 'auto'; 
-                    
-                    const computedStyle = getComputedStyle(htmlTa);
-                    const maxHeight = parseFloat(computedStyle.maxHeight || '9999'); 
-                    const minHeight = parseFloat(computedStyle.minHeight || '0'); 
-
-                    let newHeight = htmlTa.scrollHeight;
-                    if (newHeight < minHeight) newHeight = minHeight;
-                    
-                    htmlTa.style.height = `${Math.min(newHeight, maxHeight)}px`; 
-                    htmlTa.style.overflowY = 'hidden'; 
-                });
-            }
-        },
-        jsPDF: {
-            unit: 'mm',
-            format: 'a4',
+                let newHeight = htmlTa.scrollHeight;
+                if (newHeight < minHeight) newHeight = minHeight;
+                
+                htmlTa.style.height = `${Math.min(newHeight, maxHeight)}px`;
+                htmlTa.style.overflowY = 'hidden';
+            });
+        }
+    }).then(canvas => {
+        const imgData = canvas.toDataURL('image/jpeg', 0.98);
+        const pdf = new jsPDF({
             orientation: 'portrait',
-        },
-        pagebreak: { mode: ['css', 'avoid-all'], before: '.page-break-before' } 
-    };
-
-
-    (window as any).html2pdf().from(clonedElement).set(opt).save()
-    .then(() => {
-        document.body.classList.remove('pdf-export-active'); 
-    })
-    .catch((error: any) => {
+            unit: 'mm',
+            format: 'a4'
+        });
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+        pdf.save('release_order_form.pdf');
+        document.body.classList.remove('pdf-export-active');
+    }).catch(error => {
         console.error("Error generating PDF:", error);
         document.body.classList.remove('pdf-export-active');
     });
-
 
   }, [orderDate, stampImage, rowsData, matterText, advManagerInput1, advManagerInput2, clientName, headingCaption, packageName, ron, adjustTextareaHeight]);
 
@@ -448,16 +443,21 @@ const AdOrderForm: FC = () => {
         iframeDoc.write('<html><head><title>Print</title>');
         Array.from(document.styleSheets).forEach(styleSheet => {
             try {
-                const cssRules = Array.from(styleSheet.cssRules || [])
-                    .map(rule => rule.cssText)
-                    .join('\n');
-                if (cssRules) {
-                    iframeDoc.write(`<style>${cssRules}</style>`);
-                } else if (styleSheet.href) { 
-                    iframeDoc.write(`<link rel="stylesheet" type="${styleSheet.type}" href="${styleSheet.href}">`);
+                if (styleSheet.href && styleSheet.href.startsWith('http')) { // Only copy external stylesheets
+                     iframeDoc.write(`<link rel="stylesheet" type="${styleSheet.type || 'text/css'}" href="${styleSheet.href}">`);
+                } else { // For inline styles or relative paths (which might not work well in iframe)
+                    const cssRules = Array.from(styleSheet.cssRules || [])
+                        .map(rule => rule.cssText)
+                        .join('\n');
+                    if (cssRules) {
+                        iframeDoc.write(`<style>${cssRules}</style>`);
+                    }
                 }
             } catch (e) {
                 console.warn("Could not copy stylesheet for printing:", styleSheet.href, e);
+                 if (styleSheet.href) { // Fallback for rules that couldn't be read
+                    iframeDoc.write(`<link rel="stylesheet" type="${styleSheet.type || 'text/css'}" href="${styleSheet.href}">`);
+                }
             }
         });
         iframeDoc.write('</head><body class="printing-from-preview">'); 
@@ -726,7 +726,13 @@ const AdOrderForm: FC = () => {
     <div className="max-w-[210mm] mx-auto p-1 print-root-container bg-background" id="main-application-container">
       
       <div className="flex justify-end items-center gap-2 p-2 mb-2 no-print no-pdf-export action-buttons-container">
-        {/* Buttons removed as per user request */}
+        <Button onClick={handlePrintPreview} variant="outline" size="sm"><Eye className="mr-2 h-4 w-4" />Preview</Button>
+        <Button onClick={generatePdf} variant="default" size="sm"><Download className="mr-2 h-4 w-4" />Download PDF</Button>
+        <Button onClick={() => handleActualPrint(false)} variant="default" size="sm"><Printer className="mr-2 h-4 w-4" />Print</Button>
+        <Button onClick={handleFullScreenPreviewToggle} variant="outline" size="sm">
+            {isFullScreenPreview ? <Rows className="mr-2 h-4 w-4" /> : <Expand className="mr-2 h-4 w-4" />}
+            {isFullScreenPreview ? 'Exit Fullscreen' : 'Fullscreen'}
+        </Button>
       </div>
 
       <div id="printable-area-pdf" ref={printableAreaRef} className={`w-full print-target bg-card text-card-foreground shadow-sm p-2 md:p-4 rounded-lg border-4 border-black ${isFullScreenPreview ? 'fullscreen-preview-active' : ''}`}>
@@ -736,7 +742,7 @@ const AdOrderForm: FC = () => {
 
         <div className="flex flex-col md:flex-row gap-4 mb-5 print-header-box">
             <div className="w-full md:w-[35%] p-3 border-2 border-black rounded box-decoration-clone">
-                <Image src="https://picsum.photos/300/200" alt="Lehar Advertising" width={300} height={200} data-ai-hint="advertising logo" className="w-full h-auto object-contain"/>
+                <Image src="https://picsum.photos/seed/leharlogo/300/200" alt="Lehar Advertising" width={300} height={200} data-ai-hint="company logo address" className="w-full h-auto object-contain"/>
             </div>
             <div className="flex-1 flex flex-col gap-3 p-3 border-2 border-black rounded">
                 <div className="flex gap-3 items-center">
