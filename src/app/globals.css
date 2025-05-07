@@ -52,316 +52,474 @@
     @apply border-border;
   }
   body {
-    /* font-family: Arial, sans-serif from original HTML is applied directly */
     font-family: Arial, sans-serif;
-    font-weight: bold; /* from original body */
-    margin: 0; /* from original body */
-    padding: 0; /* from original body */
+    font-weight: bold; 
+    margin: 0; 
+    padding: 0; 
     @apply bg-background text-foreground;
   }
 }
 
-/* Styles from the user's provided HTML */
+/* General Print Styles - applied when window.print() is called or for PDF generation */
 @media print {
-  #printButton, #downloadPdfButton, #printPreviewButton, #fullScreenButton, .print-icon-container, .no-print {
-    display: none !important; /* Ensure important to override Tailwind possibly */
-  }
   body {
-      margin: 0 !important;
-      padding: 0 !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    background-color: white !important; /* Ensure body background is white for print */
   }
-  #application {
-      width: 210mm !important;
-      min-height: 297mm !important; /* Use min-height for A4 */
-      height: auto !important;
-      margin: 0 !important;
-      padding: 10mm !important; /* Ensure padding for print content within A4 */
-      border: none !important;
-      box-shadow: none !important;
-      page-break-inside: avoid !important;
-  }
-  input, textarea, select {
-      border: none !important;
-      outline: none !important;
-      font-weight: bold !important;
-      font-size: 14px !important;
-      background-color: white !important; /* Ensure inputs are not transparent */
-      color: black !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-  }
-  table {
-      border-collapse: collapse !important;
-      width: 100% !important;
-      border: 2px solid black !important;
-  }
-  table th, table td {
-      border: 1px solid black !important;
-      padding: 6px !important; /* Match screen padding or adjust as needed */
-      text-align: left !important;
-      word-wrap: break-word !important;
-      font-size: 14px !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-  }
-  th {
-      background-color: #f0f0f0 !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-  }
-  .no-underline {
-      text-decoration: none !important;
-  }
-  /* Ensure specific elements like Release Order title and Matter label are styled for print */
-    .release-order-titlebar-print-preview { /* A class for the previewed/printed title */
-        text-align: center !important;
-        margin-top: 10px !important;
-        background-color: black !important;
-        color: white !important;
-        border: 2px solid black !important;
-        padding: 4px 10px !important;
-        font-weight: bold !important;
-        width: fit-content !important;
-        margin-left: auto !important;
-        margin-right: auto !important;
-        border-radius: 4px !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-    }
-    .release-order-titlebar-print-preview h2 {
-        margin: 0 !important;
-        font-size: 22px !important;
-    }
-    .matter-label-print-preview { /* A class for the previewed/printed matter label */
-        writing-mode: vertical-lr !important;
-        text-orientation: upright !important;
-        padding: 2px !important;
-        font-size: 16px !important;
-        font-weight: bold !important;
-        text-align: center !important;
-        border-right: 1px solid black !important;
-        background-color: black !important;
-        color: white !important;
-        width: 38px !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-    }
-    .stamp-container-print-preview { /* Styles for the stamp area in print */
-        width: 160px !important;
-        height: 90px !important;
-        border: 1px dashed #ccc !important; /* Dashed border for placeholder */
-        display: flex !important;
-        justify-content: center !important;
-        align-items: center !important;
-        background-color: #f9f9f9 !important;
-        font-size: 12px !important;
-        color: #555 !important;
-        text-align: center !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-    }
-    .stamp-container-print-preview img {
-        max-width: 100% !important;
-        max-height: 100% !important;
-        object-fit: contain !important;
-    }
-    /* Hide input borders in print if they are textareas */
-    textarea.static-print-text {
-        border: none !important;
-        background-color: transparent !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        height: auto !important; /* Adjust height based on content */
-        min-height: initial !important;
-        resize: none !important;
-        overflow: visible !important; /* Show all content */
-        white-space: pre-wrap !important; /* Preserve line breaks */
-        word-wrap: break-word !important;
-    }
-}
 
-#application {
-  width: 100%;
-  max-width: 210mm;
-  height: auto;
-  margin: 0 auto;
+  .no-print, .no-pdf-export, .no-print-preview {
+    display: none !important;
+  }
+  
+  /* Styles for the main application container when printing */
+  /* Target #printable-area-pdf when printing, not #application directly if #application is just a wrapper */
+  #printable-area-pdf { /* This is the element we pass to html2pdf and for direct print */
+    width: 210mm !important; /* A4 width */
+    min-height: 297mm !important; /* A4 height, use min-height for content flexibility */
+    height: auto !important; /* Allow content to determine height */
+    margin: 0 auto !important; /* Center on page if browser adds margins */
+    padding: 10mm !important; /* Consistent padding for print */
+    border: 4px solid black !important; /* Retain border for print */
+    box-shadow: none !important;
+    page-break-inside: avoid !important; /* Try to keep the whole form on one page */
+    background-color: white !important; /* Ensure background is white */
+    color: black !important; /* Ensure text is black */
+    overflow: visible !important; /* Ensure all content is visible */
+  }
+
+  /* Ensure the root container for the form also respects print media queries */
+  .print-root-container {
+      background-color: transparent !important; /* Avoid double background if body is already white */
+  }
+
+  /* Static text replacements for inputs/textareas */
+  .static-print-text {
+    display: inline-block !important; /* Or block, depending on original element */
+    padding: 2px 0 !important; /* Minimal padding */
+    margin: 0 !important;
+    font-weight: bold !important;
+    font-size: 14px !important; /* Match original input text size */
+    color: black !important;
+    background-color: transparent !important;
+    border: none !important;
+    border-bottom: 1px solid black !important; /* Underline to mimic input field */
+    width: auto !important; /* Adjust based on content or original width */
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    white-space: pre-wrap !important; /* Preserve line breaks for textareas */
+    word-wrap: break-word !important;
+  }
+
+  .textarea-static-print {
+    border-bottom: none !important; /* Textareas usually don't have just an underline */
+    height: auto !important; /* Adjust height based on content */
+    min-height: initial !important; /* Override screen min-height */
+    resize: none !important;
+    overflow: visible !important;
+    white-space: pre-wrap !important;
+    word-wrap: break-word !important;
+  }
+  
+  /* Specific for main Matter textarea when converted to static for print */
+  .matter-container-print .textarea-static-print {
+    border-top: 1px solid black !important;
+    border-bottom: 1px solid black !important;
+    padding: 2px !important; /* Match padding of original textarea for content alignment */
+  }
+
+
+  /* Table specific print styles */
+  .print-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    border: 2px solid black !important; /* Main table border */
+    font-size: 12px !important; /* Slightly smaller for print if needed */
+     -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .print-table th, .print-table td {
+    border: 1px solid black !important; /* Cell borders */
+    padding: 4px !important; /* Reduced padding for print */
+    text-align: left !important;
+    word-wrap: break-word !important;
+    color: black !important;
+    background-color: white !important; /* Ensure cell backgrounds are white */
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .print-table th.print-table-header, .print-table-header > tr > th {
+    background-color: #f0f0f0 !important; /* Header background */
+    font-weight: bold !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .print-table .print-textarea.textarea-static-print { /* For textareas inside table cells */
+    font-size: 12px !important;
+    min-height: auto !important; /* Let content define height */
+    padding: 2px !important;
+    border: none !important; /* No borders for converted textareas in cells */
+  }
+
+
+  /* Release Order Title - Print specific styling */
+  .release-order-titlebar-print-preview { 
+    text-align: center !important;
+    margin-top: 0px !important; /* Adjust as needed for A4 layout */
+    margin-bottom: 10px !important;
+    background-color: black !important;
+    color: white !important;
+    border: 2px solid black !important;
+    padding: 4px 10px !important;
+    font-weight: bold !important;
+    width: fit-content !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    border-radius: 4px !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .release-order-titlebar-print-preview h2 {
+    margin: 0 !important;
+    font-size: 20px !important; /* Adjust for print if needed */
+  }
+
+  /* Matter Label - Print specific styling */
+  .matter-label-print-preview {
+    writing-mode: vertical-lr !important;
+    text-orientation: mixed !important; /* Changed to mixed for better CJK character handling if any, or use 'upright' */
+    transform: rotate(180deg); /* Keep if text should read top-to-bottom */
+    padding: 2px !important;
+    font-size: 14px !important; /* Adjust for print */
+    font-weight: bold !important;
+    text-align: center !important;
+    border-right: 1px solid black !important; /* If it's on the left of content */
+    background-color: black !important;
+    color: white !important;
+    width: 38px !important; /* Fixed width */
+    height: auto !important; /* Let parent flex define height */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+   .matter-label-print-preview span { /* If the text is wrapped in a span */
+      display: block;
+   }
+
+
+  /* Stamp Area - Print specific styling */
+  .stamp-container-print-preview {
+    width: 160px !important; /* Fixed width for print */
+    height: 90px !important;  /* Fixed height for print */
+    border: 1px dashed #ccc !important; /* Dashed border for placeholder appearance */
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    background-color: #f9f9f9 !important; /* Light background for stamp area */
+    font-size: 10px !important; /* Smaller text for placeholder */
+    color: #555 !important;
+    text-align: center !important;
+    overflow: hidden !important; /* Ensure image fits */
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .stamp-container-print-preview img {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+  }
+
+  /* Generic hide for elements that should not appear in PDF/Print */
+  .no-pdf, .html2pdf__page-break { /* html2pdf might add its own page break elements */
+      display: none !important;
+  }
+
+  /* Ensure all flex containers behave as expected in print */
+  .flex {
+    display: flex !important;
+  }
+  
+  /* Try to avoid page breaks within these major sections */
+  .print-footer-box, .print-header-box, .print-table-container, .matter-container-print {
+    page-break-inside: avoid !important;
+  }
+  .page-break-before {
+    page-break-before: always !important;
+  }
+
+} /* End of @media print */
+
+
+/* Screen styles (remains largely the same, but some overrides might be needed if print styles conflict) */
+
+/* Default styles for the application container on screen */
+#main-application-container {
   font-family: Arial, sans-serif;
-  padding: 10px;
-  border: 4px solid black;
   font-weight: bold;
-  position: relative;
+  color: #000; /* Default text color for the form content */
+}
+
+/* Styles for the printable area on screen */
+#printable-area-pdf {
+  width: 100%; /* Full width for responsiveness on screen */
+  max-width: 210mm; /* A4 width limit */
+  min-height: 297mm; /* A4 height for visual representation */
+  height: auto; /* Auto height for content */
+  margin: 0 auto; /* Center on screen */
+  padding: 10px; /* Default padding */
+  border: 4px solid black; /* Border for screen */
+  background-color: white; /* Explicit white background */
   box-sizing: border-box;
-  color: #000;
-  background-color: #fff; /* Ensure white background for the form */
 }
-.button-container {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 10px;
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 100;
+
+/* Inputs, Textareas, Selects on screen */
+/* Using Tailwind classes primarily, but can add overrides here if needed */
+#printable-area-pdf input[type="text"],
+#printable-area-pdf input[type="number"],
+#printable-area-pdf input[type="date"],
+#printable-area-pdf textarea {
+    border-bottom: 1px solid black; /* Default bottom border for inputs */
+    padding: 4px; 
+    background-color: white; /* Ensure inputs are white on screen */
+    color: black; /* Ensure text in inputs is black */
 }
-/* Buttons in user HTML are #printPreviewButton, #downloadPdfButton */
-/* The below rule targets #printButton which might be a typo or for another button */
-#printButton, #downloadPdfButton, #printPreviewButton, #fullScreenButton {
-  background-color: #dc3545; /* This is a red color, ShadCN uses primary */
+#printable-area-pdf textarea {
+  border-top: 1px solid black; /* For matter textarea consistency */
+}
+/* Remove border for table cell textareas if they are meant to be borderless within cell */
+#printable-area-pdf .main-table-bordered textarea.print-textarea {
+    border: none !important; 
+}
+
+
+/* Table styling for screen - uses Tailwind classes but can be refined */
+.main-table-bordered {
+  border-collapse: collapse;
+  border: 2px solid black; /* Main table border */
+}
+.main-table-bordered th,
+.main-table-bordered td {
+  border: 1px solid black; /* Cell borders */
+  padding: 6px; /* Padding for cells */
+}
+.main-table-bordered th {
+  background-color: #f0f0f0; /* Header background color */
+}
+
+
+/* Release Order Title for Screen */
+.release-order-title-screen {
+  text-align: center;
+  margin-top: 10px; /* Original margin */
+  margin-bottom: 20px; /* Original margin */
+}
+.release-order-title-screen h2 {
+  display: inline-block; /* To allow padding and background */
+  background-color: black;
   color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
+  border: 2px solid black;
+  padding: 4px 10px;
+  font-weight: bold;
+  font-size: 22px; /* Original size */
+  border-radius: 4px;
+  margin:0;
+}
+
+/* Matter Label for Screen */
+.matter-label-screen {
+  writing-mode: vertical-lr;
+  text-orientation: mixed; /* or 'upright' */
+  transform: rotate(180deg); /* if text should read top-to-bottom */
+  background-color: black;
+  color: white;
+  padding: 2px;
   font-size: 16px;
-  margin-left: 10px;
+  font-weight: bold;
+  text-align: center;
+  border-right: 1px solid black; /* Assuming it's on the left of content */
+  width: 38px; /* Fixed width */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-#printButton:hover, #downloadPdfButton:hover, #printPreviewButton:hover, #fullScreenButton:hover {
-  background-color: #c82333;
+.matter-label-screen span {
+    display:block; /* if the text is wrapped in a span */
 }
 
-/* .no-print class is correctly handled by @media print */
-
-.full-width {
-  width: 100%;
-  box-sizing: border-box;
-}
-.print-preview {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.8);
+/* Stamp Container for Screen */
+.stamp-container-screen {
+  width: 180px; /* Adjusted width */
+  height: 100px; /* Adjusted height */
+  border: 0px; /* Make border invisible by default on screen */
+  /* border: 2px dashed #ccc; */ /* Use this if you want a visible dash border on screen */
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
-  overflow: auto;
-}
-.print-preview-content {
-  background-color: white;
-  width: 210mm;
-  /* height: 297mm; /* Fixed height might cause issues if content overflows */
-  min-height: 297mm; /* Use min-height */
-  padding: 20px; /* Original HTML padding */
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-  margin: 20px; /* Added for spacing if preview modal is smaller than viewport */
-  box-sizing: border-box;
-  /* overflow: visible; /* Content should be visible for preview */
-}
-.print-icon-container {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 100; /* Ensure it's above other elements if #application is relative */
-}
-.print-icon {
-  font-size: 24px;
-  color: black;
+  text-align: center;
+  font-size: 12px;
+  color: #555;
+  background-color: transparent; /* Transparent background */
+  border-radius: 4px;
   cursor: pointer;
+  position: relative; /* For placeholder text if needed */
 }
-input, textarea, select {
-  border: none; /* Original HTML style */
-  outline: none; /* Original HTML style */
-  font-weight: bold;
-  font-size: 14px;
-  color: #000;
-  background-color: #fff;
-  /* box-shadow: 0 0 0 1px black; */ /* This was commented out in original */
-  /* For ShadCN inputs, these are controlled by Tailwind vars */
+.stamp-container-screen img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border: 1px dashed #d1d5db; /* Light dashed border around the image itself */
 }
-/* Table styles from original HTML */
-table {
-  border-collapse: collapse;
-  border: 2px solid black; /* Main table border */
-  width: 100%;
-}
-table th, table td {
-  /* border: none; /* Original HTML style - but cells DO have borders in screenshot */
-  border: 1px solid black; /* Matching screenshot and common table styling */
-  padding: 6px; /* Original HTML used 8px, but 6px is common for compact tables */
-  text-align: left;
-  word-wrap: break-word;
-  color: #000;
-}
-th {
-  background-color: #f0f0f0; /* Light gray for headers */
-  /* border: 1px solid black; /* Ensured by table th, table td rule */
-}
-
-textarea {
-  box-shadow: none; /* Original HTML style */
-}
-
-/* New row buttons from original HTML */
-.new-row-buttons {
-    display: flex;
-    justify-content: center;
-    margin-top: 10px;
-}
-.new-row-buttons button {
-    margin: 0 5px;
-    padding: 8px 16px;
-    background-color: #4CAF50; /* Green button */
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-}
-.new-row-buttons button:hover {
-    background-color: #367c39;
-}
-
-/* Ensure inputs within the form that need a bottom border for data entry appearance have it */
-/* This is a general approach; specific inputs might need individual styling if they differ */
-#application input[type="text"],
-#application input[type="number"],
-#application input[type="date"],
-#application textarea:not(#tableBody textarea) /* Exclude table textareas if they are borderless by design */
-{
-    border-bottom: 1px solid black; /* Default bottom border for inputs */
-    padding: 4px; /* From original internal input styles */
-}
-
-/* Specific for table cell textareas, ensuring they are visually distinct if needed */
-#tableBody textarea {
-    /* border: 1px solid #ccc; /* Example: light border for table cells */
-    /* padding: 4px; */
-    /* min-height: 60px; /* Example min-height */
-}
-
-/* Matter textarea specific border from original script logic (focus/blur) */
-/* This is handled by JS, but a base style for print can be here if needed */
-#application textarea[placeholder="Enter matter here..."] {
-    border-top: 1px solid black;
-    border-bottom: 1px solid black;
-    /* border-left: none;  Implicit from flex container */
-    /* border-right: none; Implicit from flex container */
+.stamp-container-screen > div:not(img) { /* For the "Upload Image" placeholder div */
+    border: 2px dashed #9ca3af;
+    background-color: #f9fafb;
 }
 
 
-/* Styling for the stamp image placeholder */
-.stamp-placeholder {
-    width: 160px;
-    height: 90px;
-    border: 2px dashed #ccc; /* Dashed border for placeholder */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    font-size: 12px;
-    color: #555;
-    background-color: #f9f9f9;
-    border-radius: 4px;
-    cursor: pointer; /* If it's clickable */
-}
-.stamp-placeholder img {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
+/* Print Preview Modal specific styles */
+body.print-preview-active > #main-application-container > *:not(#printPreviewOverlay) {
+  /* display: none; This would hide the main form, but we want it visible under the overlay */
+  /* Instead, we rely on the overlay to cover it */
 }
 
-    
+#printPreviewOverlay {
+  /* Styles defined in component using Tailwind or inline */
+  /* background-color: rgba(0,0,0,0.75); */
+}
+
+#printPreviewModalContentContainer {
+  /* Styles defined in component */
+  /* background-color: white; */
+  /* width: 210mm; etc. */
+}
+/* This ensures the cloned content within the preview modal also adheres to print styles */
+#printPreviewContent #printable-area-pdf {
+    margin: 0 !important; /* Override any margin from screen styles for the clone */
+    border: none !important; /* The modal itself has shadow, content doesn't need border */
+    box-shadow: none !important;
+    /* Apply print-specific padding directly if needed, or ensure it inherits from .print-preview-content */
+    padding: 10mm !important; /* Match print padding */
+}
+
+/* Fullscreen Preview Specific Styles */
+#printable-area-pdf.fullscreen-preview-active {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw !important;  /* Full viewport width */
+  height: 100vh !important; /* Full viewport height */
+  max-width: none !important; /* Override A4 max-width */
+  margin: 0 !important;
+  padding: 20px !important; /* Add some padding for content within fullscreen */
+  border: none !important; /* No border in fullscreen */
+  box-shadow: none !important;
+  background-color: white !important;
+  overflow: auto !important; /* Allow scrolling if content exceeds viewport */
+  z-index: 2000; /* Ensure it's above other content */
+  /* The content inside #printable-area-pdf will use its screen styles by default */
+}
+
+#fullscreen-content-host {
+    /* This div is a direct child of body when isFullScreenPreview is true.
+       It hosts buttons and potentially the cloned #printable-area-pdf if that strategy is used.
+       Currently, #printable-area-pdf itself becomes fullscreen.
+    */
+}
+
+.date-picker-trigger-button {
+  @apply justify-start text-left font-normal;
+}
+
+.date-picker-trigger-button svg {
+ @apply ml-auto h-4 w-4 opacity-50;
+}
+
+.no-underline-print {
+    text-decoration: none !important;
+}
+
+/* Ensure specific elements like Release Order title and Matter label are styled for print */
+.release-order-titlebar-print-preview { /* A class for the previewed/printed title */
+    text-align: center !important;
+    margin-top: 0px !important; /* Minimal margin for print */
+    margin-bottom: 10px !important;
+    background-color: black !important;
+    color: white !important;
+    border: 2px solid black !important;
+    padding: 4px 10px !important;
+    font-weight: bold !important;
+    width: fit-content !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    border-radius: 4px !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    page-break-before: avoid !important; /* Try to keep with content below */
+    page-break-after: avoid !important;
+}
+.release-order-titlebar-print-preview h2 {
+    margin: 0 !important;
+    font-size: 20px !important;
+}
+.matter-label-print-preview { /* A class for the previewed/printed matter label */
+    writing-mode: vertical-lr !important;
+    text-orientation: mixed !important;
+    transform: rotate(180deg); /* To read top-to-bottom */
+    padding: 2px !important;
+    font-size: 14px !important;
+    font-weight: bold !important;
+    text-align: center !important;
+    border-right: 1px solid black !important;
+    background-color: black !important;
+    color: white !important;
+    width: 38px !important; /* Keep fixed width */
+    height: auto !important; /* Fit content height or stretch in flex */
+    display: flex !important; /* Use flex for alignment */
+    align-items: center !important;
+    justify-content: center !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    page-break-inside: avoid !important;
+}
+.matter-label-print-preview span {
+    display: block;
+}
+
+.stamp-container-print-preview { /* Styles for the stamp area in print */
+    width: 160px !important;
+    height: 90px !important;
+    border: 1px dashed #ccc !important; /* Dashed border for placeholder */
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    background-color: #f9f9f9 !important;
+    font-size: 10px !important;
+    color: #555 !important;
+    text-align: center !important;
+    overflow: hidden !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    page-break-inside: avoid !important;
+}
+.stamp-container-print-preview img {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+}
+
+/* Styling for the main table cells to ensure borders are consistent */
+.main-table-bordered td, .main-table-bordered th {
+    border: 1px solid black !important;
+}
+
+.no-bottom-border input {
+  border-bottom: none !important;
+}
+
+/* Additional style to ensure the printable area itself tries to fit on one page for html2pdf */
+.html2pdf__container {
+  page-break-inside: avoid !important;
+}
