@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { DatePicker } from '@/components/ui/date-picker'; // Corrected import
+import { DatePicker } from '@/components/ui/date-picker';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Image from 'next/image';
@@ -42,7 +42,7 @@ const AdOrderForm: React.FC = () => {
         setOrderDate(new Date());
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); 
+  }, []);
 
 
   const handleDateChange = (date: Date | undefined) => {
@@ -189,15 +189,14 @@ const AdOrderForm: React.FC = () => {
 
     const clonedElement = element.cloneNode(true) as HTMLElement;
     
-    // Apply specific styles for PDF generation to the clone for A4 fitting
     clonedElement.style.width = '210mm';
-    clonedElement.style.height = '297mm'; // A4 height
-    clonedElement.style.padding = '5mm'; // Reduced padding
-    clonedElement.style.fontSize = '9pt'; // Reduced base font size for PDF
+    clonedElement.style.height = '297mm'; 
+    clonedElement.style.padding = '5mm'; 
+    clonedElement.style.fontSize = '9pt'; 
     clonedElement.style.lineHeight = '1.1';
     clonedElement.style.borderWidth = '2px';
     clonedElement.style.boxSizing = 'border-box';
-    clonedElement.style.overflow = 'hidden'; // Important to prevent content from making canvas larger than A4
+    clonedElement.style.overflow = 'hidden'; 
 
 
     const inputsToConvert = clonedElement.querySelectorAll('input[type="text"], input[type="number"], input[type="date"]');
@@ -208,19 +207,19 @@ const AdOrderForm: React.FC = () => {
         if (input.id === 'orderDate' && orderDate) {
              value = format(orderDate, 'dd.MM.yyyy');
         } else if (input.type === 'date' && !input.value && input.placeholder) {
-            value = ''; // Keep placeholder for empty dates for PDF if needed or make empty
+            value = ''; 
         }
-        p.textContent = value || ''; // Ensure some content or empty string
+        p.textContent = value || ''; 
         p.className = 'static-print-text';
         p.style.display = 'inline-block';
         p.style.width = getComputedStyle(input).width;
         p.style.fontFamily = getComputedStyle(input).fontFamily;
-        p.style.fontSize = '9pt'; // Ensure consistent smaller font for PDF
+        p.style.fontSize = '9pt'; 
         p.style.fontWeight = getComputedStyle(input).fontWeight;
-        p.style.lineHeight = '1.1'; // Ensure consistent smaller line height for PDF
+        p.style.lineHeight = '1.1'; 
         p.style.color = 'black';
         p.style.borderBottom = '1px solid black';
-        p.style.padding = '1px 0'; // Reduced padding
+        p.style.padding = '1px 0'; 
         p.style.backgroundColor = 'transparent';
         input.parentNode?.replaceChild(p, input);
     });
@@ -229,35 +228,32 @@ const AdOrderForm: React.FC = () => {
     textareasToConvert.forEach(textareaEl => {
         const div = document.createElement('div');
         const textarea = textareaEl as HTMLTextAreaElement;
-        div.innerHTML = textarea.value.replace(/\n/g, '<br>') || '&nbsp;'; // Use &nbsp; for empty to maintain height
+        div.innerHTML = textarea.value.replace(/\n/g, '<br>') || '&nbsp;'; 
         div.className = 'static-print-text textarea-static-print';
          if (textarea.id === 'matterTextarea') {
              div.classList.add('matter-container-print');
         }
-        // Copy relevant computed styles, but override sizing for PDF
         div.style.fontFamily = getComputedStyle(textarea).fontFamily;
-        div.style.fontSize = '9pt'; // Ensure consistent smaller font for PDF
+        div.style.fontSize = '9pt'; 
         div.style.fontWeight = getComputedStyle(textarea).fontWeight;
-        div.style.lineHeight = '1.1'; // Ensure consistent smaller line height for PDF
+        div.style.lineHeight = '1.1'; 
         div.style.color = 'black';
         div.style.backgroundColor = 'transparent';
         div.style.border = 'none';
          if (textarea.id === 'matterTextarea') {
             div.style.borderTop = '1px solid black';
             div.style.borderBottom = '1px solid black';
-            div.style.padding = '1px'; // Reduced padding
+            div.style.padding = '1px'; 
         }
-        div.style.height = 'auto'; // Let content define height initially
-        div.style.minHeight = 'unset'; // Remove min-height for PDF
-        div.style.overflow = 'visible'; // Show all content
+        div.style.height = 'auto'; 
+        div.style.minHeight = 'unset'; 
+        div.style.overflow = 'visible'; 
         div.style.whiteSpace = 'pre-wrap';
         div.style.wordWrap = 'break-word';
         textarea.parentNode?.replaceChild(div, textarea);
-        // After replacing, ensure the div's height is set to its scrollHeight to capture all content
         div.style.height = `${div.scrollHeight}px`;
     });
 
-    // Specific class changes for PDF styling
     const releaseOrderTitleClone = clonedElement.querySelector('.release-order-title-screen') as HTMLElement;
     if (releaseOrderTitleClone) releaseOrderTitleClone.className = 'release-order-titlebar-print-preview';
     const matterLabelClone = clonedElement.querySelector('.matter-label-screen') as HTMLElement;
@@ -267,11 +263,11 @@ const AdOrderForm: React.FC = () => {
         stampContainerClone.className = 'stamp-container-print-preview';
         if (stampImage) {
             const img = stampContainerClone.querySelector('img');
-            if (img) { // If image is already there from screen version
+            if (img) { 
                 img.style.maxWidth = "100%";
                 img.style.maxHeight = "100%";
                 img.style.objectFit = "contain";
-            } else { // Create image if not present
+            } else { 
                 const newImg = document.createElement('img');
                 newImg.src = stampImage;
                 newImg.alt = "Stamp";
@@ -287,8 +283,8 @@ const AdOrderForm: React.FC = () => {
     }
     const tableClone = clonedElement.querySelector('.main-table-bordered');
     if (tableClone) {
-        tableClone.classList.remove('main-table-bordered'); // remove screen class
-        tableClone.classList.add('print-table'); // add pdf specific class
+        tableClone.classList.remove('main-table-bordered'); 
+        tableClone.classList.add('print-table'); 
         const tableHeaders = tableClone.querySelectorAll('th');
         tableHeaders.forEach(th => th.classList.add('print-table-header'));
     }
@@ -299,29 +295,26 @@ const AdOrderForm: React.FC = () => {
         filename: 'application_form.pdf',
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: {
-            scale: 2, // Higher scale can improve quality but increase size/time
+            scale: 2, 
             useCORS: true,
             logging: false,
-            scrollY: -window.scrollY, // Capture from top
+            scrollY: -window.scrollY, 
             windowWidth: clonedElement.scrollWidth, 
-            windowHeight: clonedElement.scrollHeight, // Crucial: use scrollHeight of the *clonedElement*
-            // Ensure the cloned element has finished rendering and styles applied before capturing
+            windowHeight: clonedElement.scrollHeight, 
             onclone: (documentClone: Document) => {
                 const clonedBody = documentClone.body;
                 clonedBody.classList.add('pdf-export-active');
-                // Force reflow, critical for html2canvas to get correct dimensions
                 clonedBody.style.display = 'none';
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                const _ = clonedBody.offsetHeight; // Reading offsetHeight triggers reflow
+                const _ = clonedBody.offsetHeight; 
                 clonedBody.style.display = '';
 
-                // Adjust textareas within the clone again if necessary, ensuring they are sized to content
                 const textareasInClone = clonedBody.querySelectorAll('.textarea-static-print');
                  textareasInClone.forEach(ta => {
                     const htmlTa = ta as HTMLElement;
                     htmlTa.style.height = 'auto'; 
                     htmlTa.style.height = `${htmlTa.scrollHeight}px`; 
-                    htmlTa.style.overflow = 'hidden'; // Prevent scrollbars in PDF
+                    htmlTa.style.overflow = 'hidden'; 
                 });
             }
         },
@@ -330,14 +323,12 @@ const AdOrderForm: React.FC = () => {
             format: 'a4',
             orientation: 'portrait',
         },
-        // Attempt to keep elements together, but single page is the goal
         pagebreak: { mode: ['css', 'avoid-all'], before: '.page-break-before' } 
     };
 
 
     (window as any).html2pdf().from(clonedElement).set(opt).save()
     .then(() => {
-        // Restore original input values and styles
         inputs.forEach(input => {
             const original = originalValues.find(ov => ov.el === input);
             if (original) {
@@ -353,7 +344,6 @@ const AdOrderForm: React.FC = () => {
     })
     .catch((error: any) => {
         console.error("Error generating PDF:", error);
-        // Restore original input values and styles on error
         inputs.forEach(input => {
             const original = originalValues.find(ov => ov.el === input);
             if (original) {
@@ -482,9 +472,9 @@ const AdOrderForm: React.FC = () => {
             if (input.id === 'orderDate' && orderDate) {
                  value = format(orderDate, 'dd.MM.yyyy');
             } else if (!input.value && input.placeholder && input.type !== 'date') {
-                value = ''; // Keep placeholder for empty dates if desired or make empty
+                value = ''; 
             } else if (input.type === 'date' && !input.value) {
-                 value = ''; // Explicitly empty for date inputs
+                 value = ''; 
             }
             p.textContent = value;
             p.className = 'static-print-text'; 
@@ -497,7 +487,7 @@ const AdOrderForm: React.FC = () => {
             const textarea = textareaEl as HTMLTextAreaElement;
             let value = textarea.value.replace(/\n/g, '<br>') || '';
             if (!textarea.value && textarea.placeholder) {
-                value = ''; // Keep placeholder for empty textareas if desired or make empty
+                value = ''; 
             }
             div.innerHTML = value;
             div.className = 'static-print-text textarea-static-print'; 
