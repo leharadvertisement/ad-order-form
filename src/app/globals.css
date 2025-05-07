@@ -62,7 +62,7 @@
 
 /* General Print Styles - applied when window.print() is called or for PDF generation */
 @media print {
-  body {
+  body, body.printing-from-preview, body.direct-print-active { /* Apply to direct print and preview print */
     margin: 0 !important;
     padding: 0 !important;
     -webkit-print-color-adjust: exact !important;
@@ -70,13 +70,16 @@
     background-color: white !important; /* Ensure body background is white for print */
   }
 
-  .no-print, .no-pdf-export, .no-print-preview {
+  .no-print, .no-pdf-export, .no-print-preview, .action-buttons-container, #printPreviewOverlay {
     display: none !important;
   }
   
-  #printable-area-pdf { 
+  /* Styles for the main printable area OR the preview content when printing from preview */
+  #printable-area-pdf, 
+  body.printing-from-preview #printPreviewContent > div, /* Target the cloned #printable-area-pdf inside preview */
+  body.direct-print-active #printable-area-pdf {
     width: 210mm !important; 
-    min-height: 297mm !important; 
+    min-height: 297mm !important; /* Or auto if content varies */
     height: auto !important; 
     margin: 0 auto !important; 
     padding: 5mm !important; /* Reduced padding for print */
@@ -91,18 +94,25 @@
     line-height: 1.1 !important; /* Reduced line height for print */
   }
 
-  #printable-area-pdf .p-3 {
-    padding: 2px !important; /* Reduce padding for elements using p-3 */
+  /* Ensure specific element selectors work in both contexts */
+  #printable-area-pdf .p-3, 
+  body.printing-from-preview #printPreviewContent .p-3,
+  body.direct-print-active #printable-area-pdf .p-3 {
+    padding: 2px !important; /* Reduce padding */
   }
-  #printable-area-pdf .gap-4 {
-    gap: 0.5rem !important; /* Reduce gap for elements using gap-4 */
+  #printable-area-pdf .gap-4, 
+  body.printing-from-preview #printPreviewContent .gap-4,
+  body.direct-print-active #printable-area-pdf .gap-4 {
+    gap: 0.5rem !important; /* Reduce gap */
   }
-   #printable-area-pdf .mb-5 {
+   #printable-area-pdf .mb-5, 
+   body.printing-from-preview #printPreviewContent .mb-5,
+   body.direct-print-active #printable-area-pdf .mb-5 {
     margin-bottom: 0.5rem !important;
   }
 
 
-  .print-root-container {
+  .print-root-container { /* This class is on the main div in ad-order-form.tsx */
       background-color: transparent !important; 
   }
 
@@ -124,7 +134,7 @@
     line-height: 1.1 !important;
   }
 
-  .textarea-static-print {
+  .textarea-static-print { /* For converted textareas */
     border-bottom: none !important; 
     height: auto !important; 
     min-height: initial !important; 
@@ -136,7 +146,10 @@
     line-height: 1.1 !important;
   }
   
-  .matter-container-print .textarea-static-print {
+  /* Ensure matter container styling applies during print, whether direct or from preview */
+  #printable-area-pdf .matter-container-print .textarea-static-print,
+  body.printing-from-preview #printPreviewContent .matter-container-print .textarea-static-print,
+  body.direct-print-active #printable-area-pdf .matter-container-print .textarea-static-print {
     border-top: 1px solid black !important;
     border-bottom: 1px solid black !important;
     padding: 1px !important; 
@@ -170,7 +183,7 @@
     print-color-adjust: exact !important;
     font-size: 8pt !important;
   }
-  .print-table .print-textarea.textarea-static-print { 
+  .print-table .print-textarea.textarea-static-print { /* For textareas inside table cells when printed */
     font-size: 8pt !important;
     min-height: auto !important; 
     padding: 1px !important;
@@ -266,27 +279,28 @@
   }
 
   /* Reduce font size for company details and other text */
-  #printable-area-pdf .text-lg { font-size: 12pt !important; }
-  #printable-area-pdf .text-md { font-size: 10pt !important; }
-  #printable-area-pdf .text-sm { font-size: 9pt !important; }
-  #printable-area-pdf .text-xs { font-size: 8pt !important; }
-  #printable-area-pdf .leading-snug { line-height: 1.2 !important; }
-  #printable-area-pdf label { font-size: 9pt !important; margin-right: 4px !important; }
-  #printable-area-pdf ol.list-decimal li { font-size: 8pt !important; }
+  #printable-area-pdf .text-lg, body.printing-from-preview #printPreviewContent .text-lg, body.direct-print-active #printable-area-pdf .text-lg { font-size: 12pt !important; }
+  #printable-area-pdf .text-md, body.printing-from-preview #printPreviewContent .text-md, body.direct-print-active #printable-area-pdf .text-md { font-size: 10pt !important; }
+  #printable-area-pdf .text-sm, body.printing-from-preview #printPreviewContent .text-sm, body.direct-print-active #printable-area-pdf .text-sm { font-size: 9pt !important; }
+  #printable-area-pdf .text-xs, body.printing-from-preview #printPreviewContent .text-xs, body.direct-print-active #printable-area-pdf .text-xs { font-size: 8pt !important; }
+  #printable-area-pdf .leading-snug, body.printing-from-preview #printPreviewContent .leading-snug, body.direct-print-active #printable-area-pdf .leading-snug { line-height: 1.2 !important; }
+  #printable-area-pdf label, body.printing-from-preview #printPreviewContent label, body.direct-print-active #printable-area-pdf label { font-size: 9pt !important; margin-right: 4px !important; }
+  #printable-area-pdf ol.list-decimal li, body.printing-from-preview #printPreviewContent ol.list-decimal li, body.direct-print-active #printable-area-pdf ol.list-decimal li { font-size: 8pt !important; }
 
 }
 
 
+/* Screen Styles (non-print) */
 #main-application-container {
   font-family: Arial, sans-serif;
   font-weight: bold;
   color: #000; 
 }
 
-#printable-area-pdf {
+#printable-area-pdf { /* This is the main form container on screen */
   width: 100%; 
   max-width: 210mm; 
-  min-height: 297mm; 
+  min-height: 297mm; /* Ensure it looks like an A4 page */
   height: auto; 
   margin: 0 auto; 
   padding: 10px; 
@@ -294,7 +308,7 @@
   background-color: white; 
   box-sizing: border-box;
   position: relative; 
-  overflow: hidden; 
+  overflow: hidden; /* Hide overflow on screen unless in fullscreen */
 }
 
 #printable-area-pdf input[type="text"],
@@ -306,8 +320,11 @@
     background-color: white; 
     color: black; 
 }
-#printable-area-pdf textarea {
-  border-top: 1px solid black; 
+#printable-area-pdf textarea { /* For table textareas primarily */
+  border-top: 1px solid black; /* Add top border for textareas in table for consistency */
+}
+#printable-area-pdf #matterTextarea { /* Specific for matter textarea, remove top border as it's part of the styled container */
+    border-top: none;
 }
 
 #printable-area-pdf .main-table-bordered textarea.print-textarea {
@@ -373,8 +390,8 @@
 }
 
 .stamp-container-screen {
-  width: 160px; 
-  height: 90px; 
+  width: 178px; 
+  height: 98px; 
   border: 0px; 
   display: flex;
   justify-content: center;
@@ -399,24 +416,29 @@
 
 
 body.print-preview-active > #main-application-container > *:not(#printPreviewOverlay) {
-  /* display: none; This would hide the main form, but we want it visible under the overlay */
+  /* Main form is visible under overlay */
 }
 
 #printPreviewOverlay {
-  /* background-color: rgba(0,0,0,0.75); */
+  /* background-color: rgba(0,0,0,0.75); /* Default is fine */
 }
 
 #printPreviewModalContentContainer {
   /* background-color: white; */
-  /* width: 210mm; etc. */
+  /* width, height, etc. defined in JS or by the #printPreviewContent > div styles */
 }
 
-#printPreviewContent #printable-area-pdf {
+/* Styles for the content *inside* the print preview modal */
+#printPreviewContent #printable-area-pdf, /* This refers to the cloned #printable-area-pdf div */
+#printPreviewContent > div { /* General fallback for direct child of #printPreviewContent if it's the cloned form */
     margin: 0 !important; 
-    border: none !important; 
+    border: none !important; /* Preview doesn't need its own border if modal provides frame */
     box-shadow: none !important;
-    padding: 5mm !important; 
+    padding: 5mm !important; /* Consistent padding with actual print */
     overflow: visible !important; /* Ensure preview also shows all content */
+    width: 100% !important; /* Fill the modal content area */
+    height: 100% !important; /* Fill the modal content area */
+    box-sizing: border-box;
 }
 
 
@@ -457,105 +479,10 @@ body.print-preview-active > #main-application-container > *:not(#printPreviewOve
 }
 
 
-.release-order-titlebar-print-preview { 
-    text-align: center !important;
-    margin-top: 0px !important; 
-    margin-bottom: 10px !important;
-    background-color: black !important;
-    color: white !important;
-    border: 2px solid black !important;
-    padding: 4px 10px !important;
-    font-weight: bold !important;
-    width: fit-content !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-    border-radius: 4px !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-    page-break-before: avoid !important; 
-    page-break-after: avoid !important;
-}
-.release-order-titlebar-print-preview h2 {
-    margin: 0 !important;
-    font-size: 20px !important;
-}
-.matter-label-print-preview { 
-    writing-mode: vertical-lr !important;
-    text-orientation: mixed !important;
-    transform: rotate(180deg); 
-    padding: 2px !important;
-    font-size: 14px !important;
-    font-weight: bold !important;
-    text-align: center !important;
-    border-right: 1px solid black !important;
-    background-color: black !important;
-    color: white !important;
-    width: 38px !important; 
-    height: auto !important; 
-    display: flex !important; 
-    align-items: center !important;
-    justify-content: center !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-    page-break-inside: avoid !important;
-}
-.matter-label-print-preview span {
-    display: block;
-}
-
-.stamp-container-print-preview { 
-    width: 160px !important;
-    height: 90px !important;
-    border: 0px !important; 
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    background-color: transparent !important; 
-    font-size: 10px !important;
-    color: #555 !important;
-    text-align: center !important;
-    overflow: hidden !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-    page-break-inside: avoid !important;
-}
-.stamp-container-print-preview img {
-    max-width: 100% !important;
-    max-height: 100% !important;
-    object-fit: contain !important;
-}
-.stamp-container-print-preview > div:not(img) { 
-    border: 0px !important; 
-    background-color: transparent !important; 
-}
-
-.main-table-bordered td, .main-table-bordered th {
-    border: 1px solid black !important;
-}
-
-.no-bottom-border input {
-  border-bottom: none !important;
-}
-
-.html2pdf__container {
-  page-break-inside: avoid !important;
-}
-
-.textarea-align-top {
-  vertical-align: top;
-}
-
-.print-border {
-    border: 2px solid black !important;
-}
-.print-border td, .print-border th {
-    border: 1px solid black !important;
-}
-
-/* Ensure specific styles for PDF generation via html2pdf */
+/* Styles specifically for PDF generation via html2pdf */
 body.pdf-export-active #printable-area-pdf {
     padding: 5mm !important; 
-    border-width: 2px !important; /* Standardized border width */
+    border-width: 2px !important;
     border-color: black !important;
     font-size: 9pt !important;
     line-height: 1.1 !important;
@@ -563,20 +490,22 @@ body.pdf-export-active #printable-area-pdf {
     height: 297mm !important; /* A4 height - fixed for single page */
     box-sizing: border-box !important;
     overflow: hidden !important; /* Important to prevent content from making canvas larger than A4 */
-    position: relative !important; /* Ensure positioning context for children */
+    position: relative !important; 
     background-color: white !important;
     color: black !important;
+    --pdf-textarea-min-height: 20px; /* Example CSS variable for PDF textarea min height */
+    --pdf-table-textarea-min-height: 15px;
+    --pdf-matter-textarea-min-height: 30px;
+    --pdf-matter-textarea-max-height: 60px; 
+    --pdf-table-textarea-max-height: 40px;
 }
 
 body.pdf-export-active #printable-area-pdf * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-    box-sizing: border-box !important; /* Ensure all children use border-box */
-    /* Careful with aggressive font/line-height inherits, can lead to issues.
-       Be specific where needed. */
+    box-sizing: border-box !important;
 }
 
-/* Reduce padding and margins for PDF export */
 body.pdf-export-active #printable-area-pdf .p-1,
 body.pdf-export-active #printable-area-pdf .p-2,
 body.pdf-export-active #printable-area-pdf .p-3,
@@ -587,7 +516,7 @@ body.pdf-export-active #printable-area-pdf .py-1,
 body.pdf-export-active #printable-area-pdf .py-2,
 body.pdf-export-active #printable-area-pdf .py-3,
 body.pdf-export-active #printable-area-pdf .p-1\.5 {
-    padding: 1px !important; /* Minimal padding */
+    padding: 1px !important;
 }
 body.pdf-export-active #printable-area-pdf .m-1,
 body.pdf-export-active #printable-area-pdf .m-2,
@@ -598,13 +527,13 @@ body.pdf-export-active #printable-area-pdf .mb-2,
 body.pdf-export-active #printable-area-pdf .mb-3,
 body.pdf-export-active #printable-area-pdf .mb-4,
 body.pdf-export-active #printable-area-pdf .mb-5 {
-    margin: 0.5px !important; /* Minimal margin */
+    margin: 0.5px !important;
 }
 body.pdf-export-active #printable-area-pdf .gap-1,
 body.pdf-export-active #printable-area-pdf .gap-2,
 body.pdf-export-active #printable-area-pdf .gap-3,
 body.pdf-export-active #printable-area-pdf .gap-4 {
-    gap: 1px !important; /* Minimal gap */
+    gap: 1px !important;
 }
 
 
@@ -614,65 +543,66 @@ body.pdf-export-active .release-order-titlebar-print-preview {
     border-width: 1px !important;
     padding: 2px 4px !important;
     margin-bottom: 3px !important;
+    font-size: 12pt !important; /* Reduced further */
 }
 body.pdf-export-active .release-order-titlebar-print-preview h2 {
-    font-size: 12pt !important; /* Reduced further */
+    font-size: 12pt !important;
 }
 
 body.pdf-export-active .matter-label-print-preview {
     background-color: black !important;
     color: white !important;
-    font-size: 8pt !important; /* Reduced */
-    width: 20px !important; /* Reduced */
+    font-size: 8pt !important;
+    width: 20px !important;
     padding: 1px !important;
 }
 
 body.pdf-export-active .print-table {
-    font-size: 7pt !important; /* Reduced */
+    font-size: 7pt !important;
     border-width: 1px !important;
 }
 body.pdf-export-active .print-table th, 
 body.pdf-export-active .print-table td {
     padding: 1px !important;
-    font-size: 6.5pt !important; /* Reduced further */
+    font-size: 6.5pt !important;
     line-height: 1.0 !important;
     border-width: 1px !important;
-    vertical-align: top !important; /* Ensure text starts top for PDF */
+    vertical-align: top !important;
 }
 body.pdf-export-active .print-table th {
-    background-color: #e0e0e0 !important; /* Lighter grey for PDF */
-    font-size: 7pt !important; /* Reduced */
+    background-color: #e0e0e0 !important;
+    font-size: 7pt !important;
 }
 
 body.pdf-export-active .static-print-text {
     color: black !important;
-    border-bottom: 0.5px solid black !important; /* Thinner border */
-    font-size: 8pt !important; /* Reduced */
+    border-bottom-width: 0.5px !important; /* Thinner border */
+    font-size: 8pt !important;
     padding: 0.5px 0 !important;
     line-height: 1.0 !important;
 }
 body.pdf-export-active .textarea-static-print {
     color: black !important;
-    font-size: 8pt !important; /* Reduced */
+    font-size: 8pt !important;
     line-height: 1.0 !important;
     min-height: initial !important; 
-    overflow: hidden !important; /* Clip content if too long */
+    overflow: hidden !important;
 }
 body.pdf-export-active .matter-container-print .textarea-static-print {
     padding: 1px !important;
     border-top-width: 0.5px !important;
     border-bottom-width: 0.5px !important;
-    min-height: 30px !important; /* Specific min-height for matter in PDF */
-    max-height: 60px !important; /* Specific max-height for matter in PDF */
+    min-height: var(--pdf-matter-textarea-min-height, 30px) !important;
+    max-height: var(--pdf-matter-textarea-max-height, 60px) !important;
 }
 
 
 body.pdf-export-active .stamp-container-print-preview {
     background-color: transparent !important;
     border: 0px !important;
-    width: 90px !important; /* Reduced */
-    height: 50px !important; /* Reduced */
-    font-size: 6pt !important; /* Reduced */
+    width: 90px !important;
+    height: 50px !important;
+    font-size: 6pt !important;
 }
 body.pdf-export-active .stamp-container-print-preview > div:not(img) {
     border: 0px !important;
@@ -696,13 +626,13 @@ body.pdf-export-active #printable-area-pdf .print-footer-box li {
     line-height: 1.05 !important;
 }
 body.pdf-export-active #printable-area-pdf .main-table-bordered td textarea.print-textarea,
-body.pdf-export-active #printable-area-pdf .print-table td .textarea-static-print { /* Target generated divs too */
+body.pdf-export-active #printable-area-pdf .print-table td .textarea-static-print { 
     height: auto !important; 
-    min-height: 15px !important; /* Small min-height */
-    max-height: 30px !important; /* Max height to prevent overflow */
+    min-height: var(--pdf-table-textarea-min-height, 15px) !important;
+    max-height: var(--pdf-table-textarea-max-height, 30px) !important;
     font-size: 6.5pt !important;
     line-height: 1.0 !important;
-    overflow: hidden !important; /* Clip content */
+    overflow: hidden !important;
 }
 
 body.pdf-export-active #printable-area-pdf hr {
@@ -711,25 +641,22 @@ body.pdf-export-active #printable-area-pdf hr {
     margin-bottom: 1px !important;
 }
 
-/* Ensure table textareas take full height and align text to top */
 .main-table-bordered td textarea.print-textarea {
-    height: 100%; /* Make textarea fill cell height */
-    min-height: 120px; 
-    display: block; /* Ensure it behaves as a block element */
+    height: 100%; 
+    min-height: 150px; /* Default min height for screen */
+    display: block; 
 }
 
 
-/* CSS for PDF output adjustments */
 body.pdf-export-active #printable-area-pdf {
     transform: scale(1); 
 }
 
-/* General fixes for html2pdf rendering issues if they arise */
 body.pdf-export-active #printable-area-pdf img {
-    max-width: 100% !important; /* Ensure images don't overflow their containers */
+    max-width: 100% !important;
     height: auto !important;
 }
 body.pdf-export-active #printable-area-pdf .box-decoration-clone {
-    box-decoration-break: clone; /* For elements spanning multiple lines/pages */
+    box-decoration-break: clone;
     -webkit-box-decoration-break: clone;
 }
