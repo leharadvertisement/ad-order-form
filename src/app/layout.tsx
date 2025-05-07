@@ -1,12 +1,11 @@
 
 import type { Metadata } from 'next';
 import './globals.css';
-// Toaster related imports are removed as they are not used in the simple HTML version
 import Script from 'next/script';
 
 export const metadata: Metadata = {
-  title: 'Printable Application Form', // Kept updated title
-  description: 'Generates a printable application form.', // Kept updated description
+  title: 'Printable Application Form', // From user's HTML
+  description: 'Generates a printable application form.', // Generic description
 };
 
 export default function RootLayout({
@@ -17,17 +16,20 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* FontAwesome CDN for icons if used directly in HTML (e.g. print icon) */}
+        <meta charSet="UTF-8" /> {/* From user's HTML */}
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" /> {/* From user's HTML */}
+        {/* FontAwesome CDN from user's HTML */}
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
       </head>
-      {/* Removed font-arial class, Arial is set as default in globals.css body */}
       <body>
         <main>
           {children}
         </main>
-        {/* html2pdf.js loaded here to ensure it's available after page content */}
+        {/* html2pdf.js loaded here, as in user's HTML */}
         <Script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js" strategy="lazyOnload" />
       </body>
     </html>
   );
 }
+
+    
