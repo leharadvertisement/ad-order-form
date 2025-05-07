@@ -18,8 +18,8 @@ export default function ApplicationFormPage() {
     const textareas = document.querySelectorAll('#tableBody textarea');
     textareas.forEach(textarea => {
       const ta = textarea as HTMLTextAreaElement;
-      ta.style.height = 'auto';
-      ta.style.height = `${ta.scrollHeight}px`;
+      ta.style.height = 'auto'; // Reset height to shrink if text is deleted
+      ta.style.height = `${ta.scrollHeight}px`; // Set to scroll height
     });
   }, []);
 
@@ -31,14 +31,29 @@ export default function ApplicationFormPage() {
         const cell = document.createElement('td');
         cell.style.border = '1px solid black';
         cell.style.padding = '6px';
-        // Ensure textarea is tall enough by default, adjustTextareaHeight will refine it
-        cell.innerHTML = '<textarea style="width: 100%; height: auto; min-height: 160px; border: none; outline: none; font-weight: bold; font-size: 14px; color: #000; background-color: #fff; box-sizing: border-box; resize: none;" aria-label="Enter table row"></textarea>';
+        cell.style.verticalAlign = 'top'; // Align text to the top
+        const textarea = document.createElement('textarea');
+        textarea.style.width = '100%';
+        textarea.style.height = 'auto';
+        textarea.style.minHeight = '160px'; // Increased min-height
+        textarea.style.border = 'none';
+        textarea.style.outline = 'none';
+        textarea.style.fontWeight = 'bold';
+        textarea.style.fontSize = '14px';
+        textarea.style.color = '#000';
+        textarea.style.backgroundColor = '#fff';
+        textarea.style.boxSizing = 'border-box';
+        textarea.style.resize = 'none';
+        textarea.setAttribute('aria-label', 'Enter table row');
+        textarea.addEventListener('input', adjustTextareaHeight); // Adjust height on input
+        cell.appendChild(textarea);
         newRow.appendChild(cell);
       }
       table.appendChild(newRow);
-      adjustTextareaHeight(); // Adjust height after adding new row
+      // No need to call adjustTextareaHeight here as individual textareas will adjust on input or initial load if they have content
     }
   }, [adjustTextareaHeight]);
+
 
   const deleteRow = useCallback(() => {
     const table = document.getElementById('tableBody');
@@ -50,7 +65,6 @@ export default function ApplicationFormPage() {
   const generatePdf = useCallback(() => {
     const element = applicationRef.current;
     if (element && window.html2pdf) {
-      // Temporarily hide buttons for PDF generation
       const buttonsToHide = element.querySelectorAll('.button-container, .print-icon-container, .new-row-buttons');
       buttonsToHide.forEach(btn => (btn as HTMLElement).style.display = 'none');
 
@@ -58,11 +72,10 @@ export default function ApplicationFormPage() {
         margin: 10,
         filename: 'application.pdf',
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, width: element.scrollWidth, height: element.scrollHeight, windowWidth: element.scrollWidth, windowHeight: element.scrollHeight },
+        html2canvas: { scale: 2, useCORS: true, scrollX: 0, scrollY: 0, windowWidth: element.scrollWidth, windowHeight: element.scrollHeight },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
       window.html2pdf().from(element).set(opt).save().then(() => {
-        // Restore button visibility
         buttonsToHide.forEach(btn => (btn as HTMLElement).style.display = '');
       });
     }
@@ -70,11 +83,62 @@ export default function ApplicationFormPage() {
 
   const showPrintPreview = useCallback(() => {
     if (printPreviewContainerRef.current && printPreviewContentRef.current && applicationRef.current) {
-      // Clone the application content, excluding specific buttons for preview
       const clonedApp = applicationRef.current.cloneNode(true) as HTMLElement;
-      clonedApp.querySelectorAll('.button-container, .print-icon-container, .new-row-buttons, #printPreviewButton, #downloadPdfButton').forEach(el => el.remove());
+      clonedApp.querySelectorAll('.button-container, .print-icon-container, .new-row-buttons, #printPreviewButton, #downloadPdfButton, #fullScreenButton, .no-print-in-preview').forEach(el => el.remove());
       
-      printPreviewContentRef.current.innerHTML = ''; // Clear previous content
+      // Ensure styles for print preview are applied, especially for matter and release order
+      const matterDivPreview = clonedApp.querySelector('[data-ai-id="matter-text-container"]');
+      if (matterDivPreview) {
+        (matterDivPreview as HTMLElement).style.backgroundColor = 'black';
+        (matterDivPreview as HTMLElement).style.color = 'white';
+      }
+      const releaseOrderDivPreview = clonedApp.querySelector('[data-ai-id="release-order-title"]');
+      if (releaseOrderDivPreview) {
+        (releaseOrderDivPreview as HTMLElement).style.backgroundColor = 'black';
+        (releaseOrderDivPreview as HTMLElement).style.color = 'white';
+      }
+      
+      const textareasPreview = clonedApp.querySelectorAll('textarea');
+        textareasPreview.forEach(ta => {
+            const p = document.createElement('p');
+            p.textContent = ta.value;
+            p.style.whiteSpace = 'pre-wrap'; // Preserve line breaks and spaces
+            p.style.fontWeight = 'bold';
+            p.style.fontSize = '14px';
+            p.style.margin = '0';
+            p.style.padding = '0';
+            p.style.minHeight = ta.style.minHeight; // Keep min height for layout
+            if(ta.parentElement && ta.parentElement.style.verticalAlign === 'top'){
+                 p.style.verticalAlign = 'top';
+            }
+            ta.parentNode?.replaceChild(p, ta);
+        });
+
+        const inputsPreview = clonedApp.querySelectorAll('input[type="text"], input[type="number"], input[type="date"]');
+        inputsPreview.forEach(inp => {
+            const inputElement = inp as HTMLInputElement;
+            const p = document.createElement('p');
+            if (inputElement.type === 'date') {
+                p.textContent = inputElement.value ? new Date(inputElement.value).toLocaleDateString('en-GB') : ''; // Format date as dd/mm/yyyy
+            } else {
+                p.textContent = inputElement.value;
+            }
+            p.style.fontWeight = 'bold';
+            p.style.fontSize = '14px';
+            p.style.margin = '0';
+            p.style.padding = inputElement.style.padding || '0';
+            p.style.width = '100%';
+            p.style.boxSizing = 'border-box';
+            if (inputElement.placeholder && !inputElement.value) {
+              // Optionally show placeholder if value is empty, or leave it blank
+              // p.textContent = inputElement.placeholder;
+              // p.style.color = '#aaa'; // Placeholder color
+            }
+            inp.parentNode?.replaceChild(p, inp);
+        });
+
+
+      printPreviewContentRef.current.innerHTML = ''; 
       printPreviewContentRef.current.appendChild(clonedApp);
       printPreviewContainerRef.current.style.display = 'flex';
     }
@@ -89,51 +153,73 @@ export default function ApplicationFormPage() {
   const printFullScreen = useCallback(() => {
     window.print();
   }, []);
+  
+  const [currentDate, setCurrentDate] = React.useState('');
 
   useEffect(() => {
-    addRow(); // Add initial row
+    const today = new Date();
+    const dd = String(today.getDate()).padStart(2, '0');
+    const mm = String(today.getMonth() + 1).padStart(2, '0'); // January is 0!
+    const yyyy = today.getFullYear();
+    setCurrentDate(`${yyyy}-${mm}-${dd}`);
+  }, []);
+
+  useEffect(() => {
+    const dateInput = document.getElementById('date') as HTMLInputElement | null;
+    if (dateInput && currentDate) {
+      dateInput.value = currentDate;
+    }
+  }, [currentDate]);
+
+
+  useEffect(() => {
+    addRow(); 
 
     const matterTextArea = document.querySelector('#application textarea[placeholder="Enter matter here..."]') as HTMLTextAreaElement | null;
     if (matterTextArea) {
-      matterTextArea.style.border = 'none'; // Initial state
-      const handleFocus = () => { if(matterTextArea) matterTextArea.style.border = '1px solid black'; };
-      const handleBlur = () => { if(matterTextArea) matterTextArea.style.border = 'none'; };
+      matterTextArea.style.borderTop = '1px solid black'; 
+      matterTextArea.style.borderBottom = '1px solid black'; 
+      const handleFocus = () => { 
+          if(matterTextArea) {
+            matterTextArea.style.borderTop = '1px solid black';
+            matterTextArea.style.borderBottom = '1px solid black';
+          }
+      };
+      const handleBlur = () => { 
+          if(matterTextArea) {
+            matterTextArea.style.borderTop = '1px solid black';
+            matterTextArea.style.borderBottom = '1px solid black';
+          }
+      };
       matterTextArea.addEventListener('focus', handleFocus);
       matterTextArea.addEventListener('blur', handleBlur);
       
-      // Cleanup
       return () => {
         matterTextArea.removeEventListener('focus', handleFocus);
         matterTextArea.removeEventListener('blur', handleBlur);
       };
     }
-  }, [addRow]); // addRow is stable due to useCallback with empty dependency array
+  }, [addRow]);
 
-  // Event listeners for buttons
   useEffect(() => {
     const downloadPdfButton = document.getElementById('downloadPdfButton');
     const printPreviewButton = document.getElementById('printPreviewButton');
-    // printFullScreen is called by onclick on the icon directly
+    const fullScreenButton = document.getElementById('fullScreenButton');
+
 
     if (downloadPdfButton) downloadPdfButton.addEventListener('click', generatePdf);
     if (printPreviewButton) printPreviewButton.addEventListener('click', showPrintPreview);
+    if (fullScreenButton) fullScreenButton.addEventListener('click', printFullScreen);
     
-    // Set current date for date input
-    const dateInput = document.getElementById('date') as HTMLInputElement | null;
-    if(dateInput){
-        const today = new Date();
-        const yyyy = today.getFullYear();
-        const mm = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
-        const dd = String(today.getDate()).padStart(2, '0');
-        dateInput.value = `${yyyy}-${mm}-${dd}`;
-    }
-
+    // Set initial height for textareas in existing rows (if any)
+    adjustTextareaHeight();
 
     return () => {
       if (downloadPdfButton) downloadPdfButton.removeEventListener('click', generatePdf);
       if (printPreviewButton) printPreviewButton.removeEventListener('click', showPrintPreview);
+      if (fullScreenButton) fullScreenButton.removeEventListener('click', printFullScreen);
     };
-  }, [generatePdf, showPrintPreview, printFullScreen]);
+  }, [generatePdf, showPrintPreview, printFullScreen, adjustTextareaHeight]);
 
 
   return (
@@ -142,13 +228,10 @@ export default function ApplicationFormPage() {
         <div className="button-container no-print">
           <button id="printPreviewButton" aria-label="Print Preview">Print Preview</button>
           <button id="downloadPdfButton" aria-label="Download as PDF">Download as PDF</button>
+          <button id="fullScreenButton" aria-label="Full Screen Print">Print</button>
         </div>
-        {/* The print icon for full screen print is within the .print-icon-container */}
-        <div className="print-icon-container no-print">
-            <i className="fas fa-print print-icon" onClick={printFullScreen} aria-hidden="true" aria-label="Print"></i>
-        </div>
-
-        <div style={{ textAlign: 'center', marginTop: '10px', backgroundColor: 'black', color: 'white', border: '2px solid black', padding: '4px 10px', fontWeight: 'bold', width: 'fit-content', marginLeft: 'auto', marginRight: 'auto', borderRadius: '4px', position: 'relative', top: '0' }}>
+        
+        <div data-ai-id="release-order-title" style={{ textAlign: 'center', marginTop: '10px', backgroundColor: 'black', color: 'white', border: '2px solid black', padding: '4px 10px', fontWeight: 'bold', width: 'fit-content', marginLeft: 'auto', marginRight: 'auto', borderRadius: '4px', position: 'relative', top: '0' }}>
             <h2 style={{ margin: '0', fontSize: '22px' }}>RELEASE ORDER</h2>
         </div>
 
@@ -166,21 +249,21 @@ export default function ApplicationFormPage() {
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center', border: '2px solid black', borderRadius: '4px', padding: '6px' }}>
                     <div style={{ flex: '1', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxSizing: 'border-box', marginRight: '10px' }}>
                         <label htmlFor="roNumber" style={{ fontSize: '16px', fontWeight: 'bold', color: '#000', marginRight: '8px', whiteSpace: 'nowrap' }}>R.O. No. LN:</label>
-                        <input type="number" id="roNumber" name="roNumber" placeholder="Enter Number" className="full-width" aria-label="R.O. Number"/>
+                        <input type="number" id="roNumber" name="roNumber" placeholder="Enter Number" className="full-width" aria-label="R.O. Number" style={{padding: '4px'}}/>
                     </div>
                     <div style={{ flex: '1', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxSizing: 'border-box' }}>
                         <label htmlFor="date" style={{ fontSize: '16px', fontWeight: 'bold', color: '#000', marginRight: '8px', whiteSpace: 'nowrap' }}>Date:</label>
-                        <input type="date" id="date" name="date" className="full-width" aria-label="Date"/>
+                        <input type="date" id="date" name="date" className="full-width" aria-label="Date" style={{padding: '3px'}}/>
                     </div>
                 </div>
                 <div style={{ marginTop: '12px', border: '2px solid black', borderRadius: '4px', padding: '6px 10px', display: 'flex', alignItems: 'center', boxSizing: 'border-box' }}>
                     <label htmlFor="client" style={{ fontSize: '16px', fontWeight: 'bold', color: '#000', marginRight: '8px', whiteSpace: 'nowrap' }}>Client:</label>
-                    <input type="text" id="client" name="client" placeholder="Client Name" className="full-width" aria-label="Client Name"/>
+                    <input type="text" id="client" name="client" placeholder="Client Name" className="full-width" aria-label="Client Name" style={{padding: '4px'}}/>
                 </div>
                 <div style={{ marginTop: '12px', border: '2px solid black', borderRadius: '4px', padding: '10px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <label style={{ fontSize: '16px', fontWeight: 'bold', color: '#000' }}>The Advertisement Manager</label>
-                    <input type="text" placeholder="Input 1" className="full-width" aria-label="Input 1"/>
-                    <input type="text" placeholder="Input 2" className="full-width" aria-label="Input 2"/>
+                    <input type="text" placeholder="Input 1" className="full-width" aria-label="Input 1" style={{padding: '4px'}}/>
+                    <input type="text" placeholder="Input 2" className="full-width" aria-label="Input 2" style={{padding: '4px'}}/>
                 </div>
                 <div style={{ marginTop: '10px', borderTop: '1px solid black', paddingTop: '6px' }}>
                     <p style={{ fontSize: '15px', fontWeight: 'bold', color: '#000', margin: '0' }}>Kindly insert the advertisement/s in your issue/s for the following date/s</p>
@@ -191,11 +274,11 @@ export default function ApplicationFormPage() {
         <div style={{ width: '100%', marginTop: '20px', display: 'flex', gap: '12px' }}>
             <div className="full-width" style={{ flex: '1', border: '2px solid black', borderRadius: '4px', padding: '8px', boxSizing: 'border-box' }}>
                 <label htmlFor="caption" style={{ fontSize: '16px', fontWeight: 'bold', display: 'block', marginBottom: '4px', color: '#000' }}>Heading/Caption:</label>
-                <input type="text" id="caption" name="caption" placeholder="Enter caption here" className="full-width" aria-label="Heading Caption"/>
+                <input type="text" id="caption" name="caption" placeholder="Enter caption here" className="full-width" aria-label="Heading Caption" style={{padding: '4px'}}/>
             </div>
             <div className="full-width" style={{ width: '30%', border: '2px solid black', borderRadius: '4px', padding: '8px', boxSizing: 'border-box' }}>
                 <label htmlFor="package" style={{ fontSize: '16px', fontWeight: 'bold', display: 'block', marginBottom: '4px', color: '#000' }}>Package:</label>
-                <input type="text" id="package" name="package" placeholder="Enter package name" className="full-width" aria-label="Package Name"/>
+                <input type="text" id="package" name="package" placeholder="Enter package name" className="full-width" aria-label="Package Name" style={{padding: '4px'}}/>
             </div>
         </div>
 
@@ -212,7 +295,6 @@ export default function ApplicationFormPage() {
                     </tr>
                 </thead>
                 <tbody id="tableBody">
-                  {/* Rows will be added by JavaScript */}
                 </tbody>
             </table>
              <div className="new-row-buttons no-print">
@@ -220,9 +302,9 @@ export default function ApplicationFormPage() {
                 <button onClick={deleteRow}>Delete Row</button>
             </div>
         </div>
-
-        <div style={{ width: '100%', marginTop: '20px', padding: '0px', boxSizing: 'border-box', height: 'auto', minHeight: '100px', display: 'flex', alignItems: 'stretch', color: '#000', borderRadius: '4px', border: '2px solid black' /* Added border here */ }}>
-            <div style={{ writingMode: 'vertical-lr', textOrientation: 'upright', padding: '2px', fontSize: '16px', fontWeight: 'bold', textAlign: 'center', borderRight: '1px solid black', backgroundColor: 'black', color: 'white', width: '38px' }}>
+        
+        <div style={{ width: '100%', marginTop: '20px', padding: '0px', boxSizing: 'border-box', height: 'auto', minHeight: '100px', display: 'flex', alignItems: 'stretch', color: '#000', borderRadius: '4px', border: '2px solid black' }}>
+            <div data-ai-id="matter-text-container" style={{ writingMode: 'vertical-lr', textOrientation: 'mixed', alignItems:'center', justifyContent:'center', display:'flex', padding: '2px', fontSize: '16px', fontWeight: 'bold', textAlign: 'center', borderRight: '1px solid black', backgroundColor: 'black', color: 'white', width: '38px' }}>
                 MATTER
             </div>
             <div className="full-width" style={{ flex: '1', paddingLeft: '0px', alignItems: 'flex-start' }}>
@@ -242,7 +324,27 @@ export default function ApplicationFormPage() {
                     </div>
                 </div>
                 <div style={{ width: '38%', height: '100%', margin: '0', display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', padding: '10px', boxSizing: 'border-box', position: 'relative', alignSelf: 'flex-end' }}>
-                    <div style={{ width: '160px', height: '90px', border: '2px solid black', display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '0px', marginRight: '0px', position: 'absolute', top: '10px', right: '0px', backgroundColor: '#fff', cursor: 'pointer' }} onClick={() => { const uploader = document.getElementById('stampUploader') as HTMLInputElement; if(uploader) uploader.click();}}>
+                    <div 
+                        style={{ 
+                            width: '180px', // Adjusted width
+                            height: '100px', // Adjusted height
+                            border: '2px dashed #ccc', 
+                            display: 'flex', 
+                            justifyContent: 'center', 
+                            alignItems: 'center', 
+                            marginBottom: '0px', 
+                            marginRight: '0px', 
+                            position: 'absolute', 
+                            top: '10px', 
+                            right: '0px', 
+                            backgroundColor: '#f9f9f9', 
+                            cursor: 'pointer',
+                            borderRadius: '4px',
+                            overflow: 'hidden' // Ensures image stays within bounds
+                        }} 
+                        onClick={() => { const uploader = document.getElementById('stampUploader') as HTMLInputElement; if(uploader) uploader.click();}}
+                        data-ai-hint="stamp placeholder"
+                    >
                         <p style={{ fontSize: '12px', textAlign: 'center', color: '#aaa', margin: '0px' }}>Upload Image</p>
                         <input type="file" id="stampUploader" accept="image/*" style={{display: 'none'}} onChange={(e) => {
                             const file = e.target.files?.[0];
@@ -252,7 +354,8 @@ export default function ApplicationFormPage() {
                                     const imgContainer = e.target.previousElementSibling?.parentElement;
                                     if(imgContainer && event.target?.result){
                                         imgContainer.innerHTML = `<img src="${event.target.result}" alt="Stamp Preview" style="width: 100%; height: 100%; object-fit: contain;" />`;
-                                        (imgContainer as HTMLElement).style.border = 'none';
+                                        (imgContainer as HTMLElement).style.border = 'none'; // Remove border after image upload
+                                        (imgContainer as HTMLElement).style.backgroundColor = 'transparent'; // Make background transparent
                                     }
                                 }
                                 reader.readAsDataURL(file);
@@ -274,7 +377,7 @@ export default function ApplicationFormPage() {
         </div>
       </div>
 
-      <div id="printPreviewContainer" className="print-preview" style={{ display: 'none' }} ref={printPreviewContainerRef}>
+      <div id="printPreviewContainer" className="print-preview no-print-in-preview" style={{ display: 'none' }} ref={printPreviewContainerRef}>
         <div className="print-preview-content" id="printPreviewContent" ref={printPreviewContentRef}>
             {/* Content will be cloned here by JavaScript */}
         </div>
@@ -283,4 +386,3 @@ export default function ApplicationFormPage() {
     </>
   );
 }
-
