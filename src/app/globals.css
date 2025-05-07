@@ -441,7 +441,7 @@ body.print-preview-active > #main-application-container > *:not(#printPreviewOve
 }
 
 .date-picker-trigger-button {
-  @apply justify-start text-left font-normal bg-transparent;
+  @apply justify-center text-center font-normal bg-transparent;
 }
 
 .date-picker-trigger-button:hover {
@@ -449,7 +449,7 @@ body.print-preview-active > #main-application-container > *:not(#printPreviewOve
 }
 
 .date-picker-trigger-button svg {
- @apply ml-auto h-4 w-4 opacity-50;
+ @apply h-4 w-4 opacity-50; /* Removed ml-auto */
 }
 
 .no-underline-print {
@@ -733,5 +733,3 @@ body.pdf-export-active #printable-area-pdf .box-decoration-clone {
     box-decoration-break: clone; /* For elements spanning multiple lines/pages */
     -webkit-box-decoration-break: clone;
 }
-
-    

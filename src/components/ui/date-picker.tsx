@@ -23,7 +23,7 @@ interface DatePickerProps {
   placeholderText?: string; 
 }
 
-export function DatePicker({ selected, onChange, className, dateFormat = "PPP", id, placeholderText = "Pick a date" }: DatePickerProps) {
+export function DatePicker({ selected, onChange, className, dateFormat = "dd.MM.yyyy", id, placeholderText = "Pick a date" }: DatePickerProps) {
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -31,7 +31,7 @@ export function DatePicker({ selected, onChange, className, dateFormat = "PPP", 
           variant={"outline"}
           id={id}
           className={cn(
-            "w-full justify-center text-center font-normal date-picker-trigger-button", // Changed justify-start to justify-center and text-left to text-center
+            "w-full justify-center text-center font-normal date-picker-trigger-button", 
             !selected && "text-muted-foreground",
             className 
           )}
