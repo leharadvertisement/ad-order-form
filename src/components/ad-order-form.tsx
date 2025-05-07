@@ -56,6 +56,7 @@ const AdOrderForm: React.FC = () => {
       if (!isPrintingOrPdf) {
         textarea.style.height = `${textarea.scrollHeight}px`;
       } else if (isPreviewing || isFullScreenPreview) {
+        // For preview, allow scrollHeight to dictate size, but css will cap it for A4.
         textarea.style.height = `${textarea.scrollHeight}px`;
       }
     }
@@ -189,6 +190,9 @@ const AdOrderForm: React.FC = () => {
 
     const clonedElement = element.cloneNode(true) as HTMLElement;
     
+    // Remove buttons from cloned element for PDF
+    clonedElement.querySelectorAll('.no-pdf-export').forEach(el => el.remove());
+    
     clonedElement.style.width = '210mm';
     clonedElement.style.height = '297mm'; 
     clonedElement.style.padding = '5mm'; 
@@ -251,6 +255,7 @@ const AdOrderForm: React.FC = () => {
         div.style.whiteSpace = 'pre-wrap';
         div.style.wordWrap = 'break-word';
         textarea.parentNode?.replaceChild(div, textarea);
+        // Set height after replacing to ensure scrollHeight is calculated correctly
         div.style.height = `${div.scrollHeight}px`;
     });
 
@@ -274,11 +279,11 @@ const AdOrderForm: React.FC = () => {
                 newImg.style.maxWidth = "100%";
                 newImg.style.maxHeight = "100%";
                 newImg.style.objectFit = "contain";
-                stampContainerClone.innerHTML = '';
+                stampContainerClone.innerHTML = ''; // Clear placeholder if any
                 stampContainerClone.appendChild(newImg);
             }
         } else {
-            stampContainerClone.textContent = 'Stamp Area';
+            stampContainerClone.textContent = 'Stamp Area'; // Placeholder text if no image
         }
     }
     const tableClone = clonedElement.querySelector('.main-table-bordered');
@@ -303,18 +308,18 @@ const AdOrderForm: React.FC = () => {
             windowHeight: clonedElement.scrollHeight, 
             onclone: (documentClone: Document) => {
                 const clonedBody = documentClone.body;
-                clonedBody.classList.add('pdf-export-active');
-                clonedBody.style.display = 'none';
+                clonedBody.classList.add('pdf-export-active'); // Apply PDF specific styles to the cloned document
+                // Force reflow/repaint
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 const _ = clonedBody.offsetHeight; 
-                clonedBody.style.display = '';
+                clonedBody.style.display = ''; // Make it visible for html2canvas to capture
 
                 const textareasInClone = clonedBody.querySelectorAll('.textarea-static-print');
                  textareasInClone.forEach(ta => {
                     const htmlTa = ta as HTMLElement;
-                    htmlTa.style.height = 'auto'; 
-                    htmlTa.style.height = `${htmlTa.scrollHeight}px`; 
-                    htmlTa.style.overflow = 'hidden'; 
+                    htmlTa.style.height = 'auto'; // Reset height to auto
+                    htmlTa.style.height = `${htmlTa.scrollHeight}px`; // Set to scrollHeight
+                    htmlTa.style.overflow = 'hidden'; // Hide overflow for PDF
                 });
             }
         },
@@ -329,6 +334,7 @@ const AdOrderForm: React.FC = () => {
 
     (window as any).html2pdf().from(clonedElement).set(opt).save()
     .then(() => {
+        // Restore original input values and styles
         inputs.forEach(input => {
             const original = originalValues.find(ov => ov.el === input);
             if (original) {
@@ -542,6 +548,8 @@ const AdOrderForm: React.FC = () => {
 
   return (
     <div className="max-w-[210mm] mx-auto p-1 print-root-container bg-background" id="main-application-container">
+      {/* Top action buttons removed as per user request */}
+      {/* 
       <Card className="mb-4 shadow-lg no-print">
         <CardContent className="p-4 flex flex-wrap gap-2 justify-center">
           <Button onClick={saveDraft} variant="outline"><Save className="mr-2 h-4 w-4" />Save Draft</Button>
@@ -555,6 +563,7 @@ const AdOrderForm: React.FC = () => {
           </Button>
         </CardContent>
       </Card>
+      */}
 
       <div id="printable-area-pdf" ref={printableAreaRef} className={`w-full print-target bg-card text-card-foreground shadow-sm p-2 md:p-4 rounded-lg border-4 border-black ${isFullScreenPreview ? 'fullscreen-preview-active' : ''}`}>
         <div className="text-center mt-2 mb-4 release-order-title-screen">
@@ -692,7 +701,7 @@ const AdOrderForm: React.FC = () => {
           <div className="mt-2 pt-2 border-t border-black">
             <p className="text-xs font-bold underline decoration-black decoration-2 underline-offset-2 mb-1">Note:</p>
             <ol className="list-decimal list-inside text-xs space-y-0.5">
-              <li>Space reserved vide our letter No.</li>
+              <li>Space reserved vide our letter</li>
               <li>No two advertisements of the same client should appear in the same issue.</li>
               <li>Please quote R.O. No. in all your bills and letters.</li>
               <li>Please send two voucher copies of the good reproduction to us within 3 days of the publishing.</li>
@@ -706,7 +715,7 @@ const AdOrderForm: React.FC = () => {
           id="printPreviewOverlay"
           className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[1000] p-4 no-print"
           onClick={(e) => {
-             if (e.target === e.currentTarget) {
+             if (e.target === e.currentTarget) { // Close only if overlay itself is clicked
                 handleClosePrintPreview();
             }
           }}
@@ -714,7 +723,7 @@ const AdOrderForm: React.FC = () => {
           <div
             id="printPreviewModalContentContainer"
             className="bg-white w-auto max-w-[210mm] min-h-[297mm] h-auto max-h-[95vh] p-0 shadow-2xl overflow-y-auto print-preview-modal-content no-print"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the modal content
           >
              <div id="printPreviewContent" className="print-preview-inner-content">
                  {/* Preview content will be injected here by useEffect */}
@@ -731,7 +740,7 @@ const AdOrderForm: React.FC = () => {
            <Button
             onClick={handleActualPrint}
             variant="default"
-            className="fixed top-4 right-48 z-[1001] no-print no-pdf-export"
+            className="fixed top-4 right-48 z-[1001] no-print no-pdf-export" // Adjusted position
             aria-label="Print document"
           >
             <Printer className="mr-2 h-4 w-4" /> Print
@@ -741,6 +750,7 @@ const AdOrderForm: React.FC = () => {
 
       {isFullScreenPreview && (
          <div id="fullscreen-content-host" className="fixed inset-0 bg-white z-[2000] overflow-auto p-4 no-print">
+            {/* No explicit buttons here, rely on browser's fullscreen UI and print shortcut */}
             <Button
                 onClick={handleExitFullScreenPreview}
                 variant="destructive"
@@ -750,9 +760,9 @@ const AdOrderForm: React.FC = () => {
                 <X className="mr-2 h-4 w-4" /> Exit Full Screen
             </Button>
             <Button
-                onClick={handleActualPrint}
+                onClick={handleActualPrint} // Added print button for fullscreen as well
                 variant="default"
-                className="fixed top-4 right-56 z-[2001] no-print no-pdf-export"
+                className="fixed top-4 right-56 z-[2001] no-print no-pdf-export" // Ensure enough space from Exit button
                 aria-label="Print document from fullscreen"
             >
                 <Printer className="mr-2 h-4 w-4" /> Print
