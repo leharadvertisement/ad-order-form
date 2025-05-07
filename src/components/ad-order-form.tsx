@@ -1,4 +1,3 @@
-
 'use client';
 
 import type { ChangeEvent } from 'react';
@@ -428,18 +427,6 @@ export default function AdOrderForm() {
                           <h1 className="text-xl m-0 font-bold">RELEASE ORDER</h1>
                         </div>
 
-                        {/* Heading & Package Section */}
-                       <div className="heading-package-container flex gap-2 mb-2"> {/* Reduced gap/margin */}
-                         <div className="heading-caption-box flex-1 print-border rounded p-1.5 border border-black"> {/* Reduced padding */}
-                           <Label htmlFor="captionPreview" className="block mb-0.5 text-sm">Heading/Caption:</Label>
-                           <p id="captionPreview" className="w-full px-1 py-0.5 text-xs font-bold min-h-[1.2em] border-b border-black">{caption || <span className="text-muted-foreground italic text-xs">Not entered</span>}</p>
-                         </div>
-                         <div className="package-box w-[30%] print-border rounded p-1.5 border border-black"> {/* Reduced padding */}
-                           <Label htmlFor="packagePreview" className="block mb-0.5 text-sm">Package:</Label>
-                            <p id="packagePreview" className="w-full px-1 py-0.5 text-xs font-bold min-h-[1.2em] border-b border-black">{packageName || <span className="text-muted-foreground italic text-xs">Not entered</span>}</p>
-                         </div>
-                       </div>
-
                        {/* Address Boxes Container */}
                        <div className="address-container flex justify-between gap-2 mb-2"> {/* Reduced gap/margin */}
                          {/* Left Address Box */}
@@ -484,6 +471,18 @@ export default function AdOrderForm() {
                            </div>
                            <p className="text-[7pt] mt-0.5">Kindly insert the advertisement/s in your issue/s for the following date/s</p> {/* Smaller font */}
                          </div>
+
+                        {/* Heading & Package Section */}
+                       <div className="heading-package-container flex gap-2 mb-2"> {/* Reduced gap/margin */}
+                         <div className="heading-caption-box flex-1 print-border rounded p-1.5 border border-black"> {/* Reduced padding */}
+                           <Label htmlFor="captionPreview" className="block mb-0.5 text-sm">Heading/Caption:</Label>
+                           <p id="captionPreview" className="w-full px-1 py-0.5 text-xs font-bold min-h-[1.2em] border-b border-black">{caption || <span className="text-muted-foreground italic text-xs">Not entered</span>}</p>
+                         </div>
+                         <div className="package-box w-[30%] print-border rounded p-1.5 border border-black"> {/* Reduced padding */}
+                           <Label htmlFor="packagePreview" className="block mb-0.5 text-sm">Package:</Label>
+                            <p id="packagePreview" className="w-full px-1 py-0.5 text-xs font-bold min-h-[1.2em] border-b border-black">{packageName || <span className="text-muted-foreground italic text-xs">Not entered</span>}</p>
+                         </div>
+                       </div>
 
 
                         {/* Schedule Table */}
@@ -619,32 +618,6 @@ export default function AdOrderForm() {
             <h1 className="text-xl m-0 font-bold">RELEASE ORDER</h1>
           </div>
 
-          {/* Heading & Package Section */}
-          <div className="heading-package-container flex gap-2 mb-3"> {/* Reduced gap/margin */}
-            <div className="heading-caption-box flex-1 print-border rounded p-1.5 border border-black"> {/* Reduced padding */}
-              <Label htmlFor="caption" className="block mb-0.5 text-sm">Heading/Caption:</Label>
-              <Input
-                id="caption"
-                type="text"
-                placeholder="Enter caption here"
-                className="w-full border-0 border-b border-input rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                value={caption}
-                onChange={(e) => setCaption(e.target.value)}
-              />
-            </div>
-            <div className="package-box w-[30%] print-border rounded p-1.5 border border-black"> {/* Reduced padding */}
-              <Label htmlFor="package" className="block mb-0.5 text-sm">Package:</Label>
-              <Input
-                id="package"
-                type="text"
-                placeholder="Enter package name"
-                className="w-full border-0 border-b border-input rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
-                value={packageName}
-                onChange={(e) => setPackageName(e.target.value)}
-              />
-            </div>
-          </div>
-
           {/* Address Boxes Container */}
           <div className="address-container flex justify-between gap-2 mb-3"> {/* Reduced gap/margin */}
             {/* Left Address Box */}
@@ -766,6 +739,31 @@ export default function AdOrderForm() {
              <p className="text-xs mt-1">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
            </div>
 
+          {/* Heading & Package Section */}
+          <div className="heading-package-container flex gap-2 mb-3"> {/* Reduced gap/margin */}
+            <div className="heading-caption-box flex-1 print-border rounded p-1.5 border border-black"> {/* Reduced padding */}
+              <Label htmlFor="caption" className="block mb-0.5 text-sm">Heading/Caption:</Label>
+              <Input
+                id="caption"
+                type="text"
+                placeholder="Enter caption here"
+                className="w-full border-0 border-b border-input rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                value={caption}
+                onChange={(e) => setCaption(e.target.value)}
+              />
+            </div>
+            <div className="package-box w-[30%] print-border rounded p-1.5 border border-black"> {/* Reduced padding */}
+              <Label htmlFor="package" className="block mb-0.5 text-sm">Package:</Label>
+              <Input
+                id="package"
+                type="text"
+                placeholder="Enter package name"
+                className="w-full border-0 border-b border-input rounded-none px-1 py-0.5 text-sm font-bold focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none h-auto"
+                value={packageName}
+                onChange={(e) => setPackageName(e.target.value)}
+              />
+            </div>
+          </div>
 
 
           {/* Schedule Table */}
@@ -941,4 +939,3 @@ export default function AdOrderForm() {
     </div>
   );
 }
-
