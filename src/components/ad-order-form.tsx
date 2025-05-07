@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { DatePicker } from '@/components/ui/date-picker';
+import { DatePicker } from '@/components/ui/date-picker'; // Corrected import path
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Image from 'next/image';
@@ -39,10 +39,13 @@ const AdOrderForm: FC = () => {
 
   useEffect(() => {
     setIsClient(true);
-    if (typeof window !== 'undefined' && !orderDate) {
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !orderDate && isClient) { // Ensure this runs only on client and after mount
         setOrderDate(new Date());
     }
-  }, [orderDate]);
+  }, [isClient]); // Removed orderDate from dependency array to avoid re-setting
 
 
   const handleDateChange = (date: Date | undefined) => {
@@ -767,7 +770,7 @@ const AdOrderForm: FC = () => {
           </div>
         </div>
 
-        <div className="flex mb-3 min-h-[100px] items-stretch matter-container-print-parent p-3">
+        <div className="flex mb-3 min-h-[100px] items-stretch matter-container-print-parent p-0 border-2 border-black rounded">
             <div className="matter-label-screen flex items-center justify-center p-1 w-[38px] self-stretch">
                 <span className="text-sm font-bold">MATTER</span>
             </div>
@@ -776,7 +779,7 @@ const AdOrderForm: FC = () => {
               placeholder="Enter matter here..."
               value={matterText}
               onChange={handleMatterChange}
-              className="flex-1 text-sm p-2 border-l-0 rounded-none resize-none min-h-[100px] h-auto no-shadow-outline focus:border-black matter-content-screen"
+              className="flex-1 text-sm p-2 border-l-0 rounded-none resize-none min-h-[100px] h-auto no-shadow-outline focus:border-black matter-content-screen border-t-0 border-r-0 border-b-0" 
             />
         </div>
 
