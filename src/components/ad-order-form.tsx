@@ -1,6 +1,7 @@
 // src/components/ad-order-form.tsx
 'use client';
 
+import type { ChangeEvent, FC } from 'react';
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,7 +16,7 @@ import { format } from 'date-fns';
 const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://picsum.photos/180/100?random&data-ai-hint=signature+placeholder';
 
 
-const AdOrderForm: React.FC = () => {
+const AdOrderForm: FC = () => {
   const [ron, setRon] = useState<string>('');
   const [orderDate, setOrderDate] = useState<Date | undefined>(new Date());
   const [clientName, setClientName] = useState<string>('');
@@ -241,6 +242,12 @@ const AdOrderForm: React.FC = () => {
              value = format(orderDate, 'dd.MM.yyyy');
         } else if (input.type === 'date' && !input.value && input.placeholder) {
             value = '';
+        } else if (input.type === 'date' && input.value){
+            try {
+                value = format(new Date(input.value), 'dd.MM.yyyy');
+            } catch (e) {
+                // if date is invalid, keep original value
+            }
         }
         p.textContent = value || '\u00A0'; // Use non-breaking space for empty values
         p.className = 'static-print-text';
@@ -571,6 +578,12 @@ const AdOrderForm: React.FC = () => {
                 value = '\u00A0'; // Use non-breaking space for empty fields to maintain layout
             } else if (input.type === 'date' && !input.value) { // Handle empty date specifically
                  value = '\u00A0';
+            } else if (input.type === 'date' && input.value){ // Format date if it exists
+                try {
+                    value = format(new Date(input.value), 'dd.MM.yyyy');
+                } catch (e) {
+                    // if date is invalid, keep original value
+                }
             }
             p.textContent = value;
             p.className = 'static-print-text'; // Apply class for styling
@@ -611,6 +624,8 @@ const AdOrderForm: React.FC = () => {
             let value = textarea.value.replace(/\n/g, '<br>') || ''; // Convert newlines, handle empty
             if (!textarea.value && textarea.placeholder) {
                 value = '\u00A0'; // Use non-breaking space if empty but has placeholder
+            } else if(!textarea.value) {
+                value = '\u00A0';
             }
             div.innerHTML = value;
             div.className = 'static-print-text textarea-static-print'; // Apply styling class
@@ -669,16 +684,7 @@ const AdOrderForm: React.FC = () => {
   return (
     <div className="max-w-[210mm] mx-auto p-1 print-root-container bg-background" id="main-application-container">
       <div className="flex justify-end space-x-2 my-2 no-print no-pdf-export">
-        <Button onClick={handlePrintPreview} variant="outline"><Eye className="mr-2" />Preview</Button>
-        <Button onClick={generatePdf}><Download className="mr-2" />Download PDF</Button>
-        <Button onClick={handleActualPrint}><Printer className="mr-2" />Print</Button>
-        <Button onClick={isFullScreenPreview ? handleExitFullScreenPreview : handleFullScreenPreview} variant="outline">
-          {isFullScreenPreview ? <EyeOff className="mr-2"/> : <Maximize className="mr-2"/>}
-          {isFullScreenPreview ? 'Exit Fullscreen' : 'Fullscreen'}
-        </Button>
-        <Button onClick={saveDraft} variant="outline"><Save className="mr-2"/>Save Draft</Button>
-        <Button onClick={loadDraft} variant="outline"><UploadCloud className="mr-2"/>Load Draft</Button>
-        <Button onClick={clearForm} variant="destructive"><Eraser className="mr-2"/>Clear Form</Button>
+        {/* Buttons removed as per user request */}
       </div>
 
       <div id="printable-area-pdf" ref={printableAreaRef} className={`w-full print-target bg-card text-card-foreground shadow-sm p-2 md:p-4 rounded-lg border-4 border-black ${isFullScreenPreview ? 'fullscreen-preview-active' : ''}`}>
@@ -812,7 +818,7 @@ const AdOrderForm: React.FC = () => {
           <hr className="border-black border-b-2 my-2 w-full" />
 
           <div className="flex justify-between items-start mt-0 pt-0">
-            <div className="w-[62%]"> {/* Adjusted width to make space for stamp */}
+            <div className="w-[62%]">
                 <p className="text-xs font-bold underline decoration-black decoration-2 underline-offset-2 mb-1">Note:</p>
                 <ol className="list-decimal list-inside text-xs space-y-0.5">
                   <li>Space reserved vide our letter No.</li>
@@ -875,9 +881,9 @@ const AdOrderForm: React.FC = () => {
             <X className="mr-2 h-4 w-4" /> Close Preview
           </Button>
            <Button
-            onClick={handleActualPrint} // Use the direct print function
+            onClick={handleActualPrint}
             variant="default"
-            className="fixed top-4 right-48 z-[1001] no-print no-pdf-export" // Adjusted position
+            className="fixed top-4 right-48 z-[1001] no-print no-pdf-export" 
             aria-label="Print document"
           >
             <Printer className="mr-2 h-4 w-4" /> Print
@@ -898,9 +904,9 @@ const AdOrderForm: React.FC = () => {
                 <X className="mr-2 h-4 w-4" /> Exit Full Screen
             </Button>
             <Button
-                onClick={handleActualPrint} // Use the direct print function
+                onClick={handleActualPrint} 
                 variant="default"
-                className="fixed top-4 right-56 z-[2001] no-print no-pdf-export" // Adjusted position
+                className="fixed top-4 right-56 z-[2001] no-print no-pdf-export" 
                 aria-label="Print document from fullscreen"
             >
                 <Printer className="mr-2 h-4 w-4" /> Print
@@ -912,4 +918,3 @@ const AdOrderForm: React.FC = () => {
 };
 
 export default AdOrderForm;
-
