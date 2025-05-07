@@ -431,7 +431,7 @@ export default function AdOrderForm() {
                   <Button
                      variant="outline"
                      className="absolute top-2 left-2 z-[1100] print-hidden fullscreen-preview-button"
-                     onClick={handlePrint} // Use the same handlePrint for consistency
+                     onClick={handlePrint}
                    >
                      <Printer className="mr-2 h-4 w-4" /> Print
                    </Button>
@@ -607,6 +607,7 @@ export default function AdOrderForm() {
                                    height={65}
                                    style={{ objectFit: 'contain' }}
                                    className="stamp-print-image max-w-full max-h-full"
+                                   data-ai-hint="signature stamp"
                                  />
                                </div>
                              )}
@@ -622,7 +623,7 @@ export default function AdOrderForm() {
          <Button onClick={handleFullScreenPreview} variant="outline" className="print-hidden fullscreen-preview-button">
              <Expand className="mr-2 h-4 w-4" /> Full Display
          </Button>
-         <Button onClick={handlePrint} variant="outline" className="print-hidden">
+         <Button onClick={handleFullScreenPreview} variant="outline" className="print-hidden">
              <Printer className="mr-2 h-4 w-4" /> Print Preview
          </Button>
         <Button onClick={handleClearForm} variant="destructive" className="print-hidden">
@@ -929,6 +930,7 @@ export default function AdOrderForm() {
                       height={65}
                       style={{ objectFit: 'contain' }}
                       className="block max-w-full max-h-full"
+                      data-ai-hint="signature stamp"
                     />
                     <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                       <span className="text-white text-[10px] font-bold text-center leading-tight">Click/Hover<br />to Change</span>
@@ -949,6 +951,7 @@ export default function AdOrderForm() {
                     height={65}
                     style={{ objectFit: 'contain' }}
                     className="stamp-print-image max-w-full max-h-full"
+                    data-ai-hint="signature stamp"
                   />
                 </div>
               )}
@@ -958,4 +961,5 @@ export default function AdOrderForm() {
     </div>
   );
 }
+
 
