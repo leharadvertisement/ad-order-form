@@ -390,18 +390,16 @@ export default function AdOrderForm() {
    // Function to trigger browser's print dialog
    const handlePrint = useCallback(() => {
       if (typeof window !== 'undefined') {
-        // If in fullscreen preview, ensure it's rendered correctly before printing
         if (isFullScreenPreview) {
-             setTimeout(() => {
-                window.print();
-             }, 100); // Delay to allow DOM updates in fullscreen
+          // Already in fullscreen, ensure content is ready then print
+          setTimeout(() => window.print(), 100);
         } else {
-            // Temporarily enter fullscreen preview mode for printing to use its styles
-            setIsFullScreenPreview(true);
-            setTimeout(() => {
-                window.print();
-                setIsFullScreenPreview(false); // Exit fullscreen after printing
-            }, 100); // Delay to allow DOM updates
+          // Not in fullscreen, activate it, then print, then deactivate
+          setIsFullScreenPreview(true);
+          setTimeout(() => {
+            window.print();
+            // setIsFullScreenPreview(false); // Keep it in fullscreen for manual close or further printing
+          }, 100); // Delay to allow DOM updates for fullscreen styles
         }
       }
    }, [isFullScreenPreview]);
@@ -440,7 +438,7 @@ export default function AdOrderForm() {
                   {/* Render the printable area inside the fullscreen overlay */}
                   <div
                       id="printable-area"
-                      ref={printableAreaRef}
+                      ref={printableAreaRef} // Assign ref here
                       className="w-full print-border-heavy rounded-none shadow-none bg-white overflow-auto"
                       style={{ height: 'auto' }} // Let content determine height
                   >
@@ -482,9 +480,8 @@ export default function AdOrderForm() {
                                  </div>
                                </div>
                         </div>
-
                         {/* Advertisement Manager Section */}
-                         <div className="advertisement-manager-section print-border rounded p-1.5 mb-2 border border-black">
+                        <div className="advertisement-manager-section print-border rounded p-1.5 mb-2 border border-black">
                            <Label className="block mb-0.5 text-sm">The Advertisement Manager</Label>
                            <div className="relative mb-0.5">
                              <p className="w-full px-1 py-0.5 text-xs font-bold min-h-[1.2em] border-b border-black">{advertisementManagerLine1 || <span className="text-muted-foreground italic text-xs">Not entered</span>}</p>
@@ -493,7 +490,7 @@ export default function AdOrderForm() {
                              <p className="w-full px-1 py-0.5 text-xs font-bold min-h-[1.2em] border-b border-black">{advertisementManagerLine2 || <span className="text-muted-foreground italic text-xs">Not entered</span>}</p>
                            </div>
                            <p className="text-[7pt] mt-0.5">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
-                         </div>
+                        </div>
 
                         {/* Heading & Package Section */}
                        <div className="heading-package-container flex gap-2 mb-2">
@@ -623,7 +620,7 @@ export default function AdOrderForm() {
          <Button onClick={handleFullScreenPreview} variant="outline" className="print-hidden fullscreen-preview-button">
              <Expand className="mr-2 h-4 w-4" /> Full Display
          </Button>
-         <Button onClick={handleFullScreenPreview} variant="outline" className="print-hidden">
+         <Button onClick={handlePrint} variant="outline" className="print-hidden fullscreen-preview-button">
              <Printer className="mr-2 h-4 w-4" /> Print Preview
          </Button>
         <Button onClick={handleClearForm} variant="destructive" className="print-hidden">
@@ -737,7 +734,7 @@ export default function AdOrderForm() {
              </div>
           </div>
 
-          {/* Advertisement Manager Section */}
+           {/* Advertisement Manager Section */}
           <div className="advertisement-manager-section print-border rounded p-1.5 mb-3 border border-black">
             <Label className="block mb-0.5 text-sm">The Advertisement Manager</Label>
             <div className="relative mb-0.5">
@@ -762,6 +759,7 @@ export default function AdOrderForm() {
             </div>
             <p className="text-xs mt-1">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
           </div>
+
 
           {/* Heading & Package Section */}
           <div className="heading-package-container flex gap-2 mb-3">
@@ -961,5 +959,3 @@ export default function AdOrderForm() {
     </div>
   );
 }
-
-
