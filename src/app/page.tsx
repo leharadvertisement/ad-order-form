@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-// Note: html2pdf.js and FontAwesome are loaded via CDN in layout.tsx
+// html2pdf.js and FontAwesome are loaded via CDN in layout.tsx
 
 export default function ApplicationFormPage() {
   const applicationRef = useRef<HTMLDivElement>(null);
@@ -11,16 +11,19 @@ export default function ApplicationFormPage() {
   const printPreviewContainerRef = useRef<HTMLDivElement>(null);
   const dateInputRef = useRef<HTMLInputElement>(null);
   
-  const [stampSrc, setStampSrc] = useState<string | null>(null);
+  const [stampSrc, setStampSrc] = useState<string | null>(null); // To store stamp image source
 
-  const adjustTextareaHeightInTable = useCallback(() => {
+  const adjustTextareaHeight = useCallback(() => {
     if (tableBodyRef.current) {
-      const textareas = tableBodyRef.current.querySelectorAll('textarea.table-textarea');
+      const textareas = tableBodyRef.current.querySelectorAll('textarea');
       textareas.forEach(textarea => {
-        const ta = textarea as HTMLTextAreaElement;
-        ta.style.height = 'auto'; // Reset height
-        ta.style.height = `${ta.scrollHeight}px`; // Set to scroll height
+        textarea.style.height = 'auto'; // Reset height
+        textarea.style.height = `${textarea.scrollHeight}px`; // Set to scroll height
       });
+    }
+    if (matterTextareaRef.current) {
+        matterTextareaRef.current.style.height = 'auto';
+        matterTextareaRef.current.style.height = `${matterTextareaRef.current.scrollHeight}px`;
     }
   }, []);
 
@@ -31,27 +34,35 @@ export default function ApplicationFormPage() {
         const cell = newRow.insertCell();
         cell.style.border = '1px solid black';
         cell.style.padding = '6px';
-        cell.style.verticalAlign = 'top';
         const textarea = document.createElement('textarea');
-        textarea.className = 'table-textarea'; // Add class for styling and selection
+        textarea.style.width = '100%';
+        textarea.style.height = 'auto';
+        textarea.style.minHeight = '160px';
+        textarea.style.border = 'none';
+        textarea.style.outline = 'none';
+        textarea.style.fontWeight = 'bold';
+        textarea.style.fontSize = '14px';
+        textarea.style.color = '#000';
+        textarea.style.backgroundColor = '#fff';
+        textarea.style.boxSizing = 'border-box';
+        textarea.style.resize = 'none';
         textarea.setAttribute('aria-label', `Enter table row data column ${i+1}`);
-        textarea.addEventListener('input', () => adjustTextareaHeightInTable());
+        textarea.addEventListener('input', adjustTextareaHeight);
         cell.appendChild(textarea);
       }
-      adjustTextareaHeightInTable(); // Adjust height after adding new row
+      adjustTextareaHeight(); 
     }
-  }, [adjustTextareaHeightInTable]);
+  }, [adjustTextareaHeight]);
 
   const deleteRow = useCallback(() => {
     if (tableBodyRef.current && tableBodyRef.current.rows.length > 0) {
-      tableBodyRef.current.deleteRow(-1); // Delete last row
+      tableBodyRef.current.deleteRow(-1); 
     }
   }, []);
 
   const generatePdf = useCallback(() => {
     const element = applicationRef.current;
     if (element && (window as any).html2pdf) {
-      // Temporarily hide buttons for PDF generation
       const buttonsToHide = element.querySelectorAll('.button-container, .print-icon-container, .new-row-buttons');
       buttonsToHide.forEach(btn => (btn as HTMLElement).style.display = 'none');
       
@@ -59,50 +70,38 @@ export default function ApplicationFormPage() {
         margin: 10,
         filename: 'application.pdf',
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, scrollX: 0, scrollY: -window.scrollY }, // scrollY: -window.scrollY to capture from top
+        html2canvas: { scale: 2, useCORS: true, scrollY: -window.scrollY },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
       (window as any).html2pdf().from(element).set(opt).save().then(() => {
-        // Restore button visibility
-        buttonsToHide.forEach(btn => (btn as HTMLElement).style.display = '');
+        buttonsToHide.forEach(btn => (btn as HTMLElement).style.display = 'flex'); // Use flex for button container
       }).catch((error: any) => {
         console.error("Error generating PDF:", error);
-        buttonsToHide.forEach(btn => (btn as HTMLElement).style.display = '');
+        buttonsToHide.forEach(btn => (btn as HTMLElement).style.display = 'flex');
       });
     }
   }, []);
-
-  const printApplication = useCallback(() => {
-    window.print();
-  }, []);
-
+  
   const showPrintPreview = useCallback(() => {
     if (printPreviewContainerRef.current && printPreviewContentRef.current && applicationRef.current) {
       const clonedApp = applicationRef.current.cloneNode(true) as HTMLElement;
       
-      // Remove non-printable elements from clone
       clonedApp.querySelectorAll('.button-container, .print-icon-container, .new-row-buttons, #printPreviewButton, #downloadPdfButton, #fullScreenButton').forEach(el => el.remove());
       
-      // Convert inputs/textareas to static text for preview
       const textareas = clonedApp.querySelectorAll('textarea');
       textareas.forEach(ta => {
         const p = document.createElement('div');
-        p.textContent = ta.value;
+        p.innerHTML = ta.value.replace(/\n/g, '<br>');
         p.style.whiteSpace = 'pre-wrap';
-        p.style.fontWeight = ta.style.fontWeight || 'bold';
-        p.style.fontSize = ta.style.fontSize || '14px';
-        p.style.color = ta.style.color || '#000';
+        p.style.fontWeight = window.getComputedStyle(ta).fontWeight || 'bold';
+        p.style.fontSize = window.getComputedStyle(ta).fontSize || '14px';
+        p.style.fontFamily = window.getComputedStyle(ta).fontFamily || 'Arial, sans-serif';
+        p.style.color = window.getComputedStyle(ta).color || '#000';
         p.style.width = '100%';
-        p.style.minHeight = ta.style.minHeight || (ta.classList.contains('table-textarea') ? '160px' : '100px');
-        p.style.padding = ta.style.padding || '0px';
+        p.style.minHeight = ta.style.minHeight || 'auto';
+        p.style.padding = window.getComputedStyle(ta).padding || '0px';
         p.style.boxSizing = 'border-box';
         p.style.verticalAlign = 'top';
-
-        if(ta.placeholder === "Enter matter here..."){
-            p.style.borderTop = "1px solid black";
-            p.style.borderBottom = "1px solid black";
-            p.style.padding = "8px"; // Match screen style for matter textarea padding
-        }
         ta.parentNode?.replaceChild(p, ta);
       });
 
@@ -114,43 +113,16 @@ export default function ApplicationFormPage() {
         p.style.fontWeight = 'bold';
         p.style.fontSize = '14px';
         p.style.color = '#000';
-        p.style.margin = '0'; // Reset margin
-        p.style.padding = '6px'; // Match input padding
+        p.style.margin = '0'; 
+        p.style.padding = '6px'; 
         inp.parentNode?.replaceChild(p, inp);
       });
       
-      // Handle stamp image in preview
-      const stampContainerPreview = clonedApp.querySelector('.stamp-upload-container');
-      if (stampContainerPreview) {
-        if (stampSrc) {
-          const img = document.createElement('img');
-          img.src = stampSrc;
-          img.alt = "Stamp Preview";
-          img.style.width = "100%";
-          img.style.height = "100%";
-          img.style.objectFit = "contain";
-          stampContainerPreview.innerHTML = ''; // Clear "Upload Image" text
-          stampContainerPreview.appendChild(img);
-        } else {
-          // Keep "Upload Image" text if no image
-           const p = document.createElement('p');
-           p.textContent = "Upload Image";
-           p.style.fontSize = "12px";
-           p.style.textAlign = "center";
-           p.style.color = "#6c757d";
-           p.style.margin = "0px";
-           stampContainerPreview.innerHTML = '';
-           stampContainerPreview.appendChild(p);
-        }
-        (stampContainerPreview as HTMLElement).classList.add('stamp-placeholder-print');
-      }
-
-
       printPreviewContentRef.current.innerHTML = '';
       printPreviewContentRef.current.appendChild(clonedApp);
       printPreviewContainerRef.current.style.display = 'flex';
     }
-  }, [stampSrc]);
+  }, []);
 
   const closePrintPreview = useCallback(() => {
     if (printPreviewContainerRef.current) {
@@ -159,7 +131,7 @@ export default function ApplicationFormPage() {
   }, []);
   
   const printFullScreen = useCallback(() => {
-    window.print(); // This will trigger the browser's print dialog in full screen if browser supports it
+    window.print();
   }, []);
 
   const handleStampFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -168,7 +140,6 @@ export default function ApplicationFormPage() {
       const reader = new FileReader();
       reader.onloadend = () => {
         setStampSrc(reader.result as string);
-        localStorage.setItem('stampImage', reader.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -176,41 +147,31 @@ export default function ApplicationFormPage() {
 
 
   useEffect(() => {
-    addRow(); // Add initial row
+    addRow(); 
 
     if (matterTextareaRef.current) {
       const matterTextArea = matterTextareaRef.current;
-      // Styles are applied via CSS classes now mostly
+      matterTextArea.style.border = 'none'; 
       const handleFocus = () => {
-        // matterTextArea.style.border = '1px solid black'; // Example: can be handled by :focus in CSS
+        matterTextArea.style.border = '1px solid black';
       };
       const handleBlur = () => {
-        // matterTextArea.style.border = 'none'; // Example: can be handled by default state in CSS
+        matterTextArea.style.border = 'none';
       };
       matterTextArea.addEventListener('focus', handleFocus);
       matterTextArea.addEventListener('blur', handleBlur);
       
-      // Initial adjustment for matter textarea
-      matterTextArea.style.height = 'auto';
-      matterTextArea.style.height = `${matterTextArea.scrollHeight}px`;
-      matterTextArea.addEventListener('input', () => {
-        matterTextArea.style.height = 'auto';
-        matterTextArea.style.height = `${matterTextArea.scrollHeight}px`;
-      });
+      matterTextArea.addEventListener('input', adjustTextareaHeight);
 
       return () => {
         matterTextArea.removeEventListener('focus', handleFocus);
         matterTextArea.removeEventListener('blur', handleBlur);
+        matterTextArea.removeEventListener('input', adjustTextareaHeight);
       };
     }
-  }, [addRow]);
+  }, [addRow, adjustTextareaHeight]);
 
   useEffect(() => {
-    const savedStamp = localStorage.getItem('stampImage');
-    if (savedStamp) {
-      setStampSrc(savedStamp);
-    }
-
     if (dateInputRef.current) {
         const today = new Date();
         const year = today.getFullYear();
@@ -227,130 +188,123 @@ export default function ApplicationFormPage() {
         <div className="button-container no-print">
           <button id="printPreviewButton" aria-label="Print Preview" onClick={showPrintPreview}>Print Preview</button>
           <button id="downloadPdfButton" aria-label="Download as PDF" onClick={generatePdf}>Download as PDF</button>
-          {/* Replaced FontAwesome icon with a button for printFullScreen */}
-          <button id="fullScreenButton" aria-label="Print" onClick={printFullScreen}>Print</button>
+        </div>
+        <div className="print-icon-container no-print">
+            <i className="fas fa-print print-icon" onClick={printFullScreen} aria-hidden="true" aria-label="Print"></i>
         </div>
         
-        {/* Release Order Title */}
-        <div className="release-order-titlebar">
-            <h2>RELEASE ORDER</h2>
+        <div style={{ textAlign: 'center', marginTop: '10px', backgroundColor: 'black', color: 'white', border: '2px solid black', padding: '4px 10px', fontWeight: 'bold', width: 'fit-content', marginLeft: 'auto', marginRight: 'auto', borderRadius: '4px', position: 'relative', top: '0' }}>
+            <h2 style={{ margin: '0', fontSize: '22px' }}>RELEASE ORDER</h2>
         </div>
 
-        {/* Top Section: Lehar Info | Details (RO, Date, Client, Ad Manager) */}
         <div style={{ marginTop: '20px', display: 'flex', gap: '12px' }}>
-            {/* Lehar Info Box */}
-            <div className="lehar-info-box">
-                <h3>Lehar</h3>
-                <h4>ADVERTISING PVT.LTD.</h4>
-                <p>D-9 &amp; D-10, 1st Floor, Pushpa Bhawan,</p>
-                <p>Alaknanda Commercial complex, <br/> New Delhi-110019</p>
-                <p>Tel.: 49573333, 34, 35, 36</p>
-                <p>Fax: 26028101</p>
-                <p style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}><strong>GSTIN:</strong>07AABCL5406F1ZU</p>
+            <div className="full-width" style={{ width: '30%', padding: '8px', border: '2px solid black', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', fontSize: '14px', position: 'relative', borderRadius: '4px', color: '#000' }}>
+                <h3 style={{ margin: '0', textAlign: 'left', fontSize: '16px', color: '#000' }}>Lehar</h3>
+                <h4 style={{ marginTop: '0', textAlign: 'left', fontSize: '15px', color: '#000' }}>ADVERTISING PVT.LTD.</h4>
+                <p style={{ textAlign: 'left', margin: '2px 0', fontSize: '14px', color: '#000' }}>D-9 &amp; D-10, 1st Floor, Pushpa Bhawan,</p>
+                <p style={{ textAlign: 'left', margin: '2px 0', fontSize: '14px', color: '#000' }}>Alaknanda Commercial complex, <br/> New Delhi-110019</p>
+                <p style={{ textAlign: 'left', margin: '2px 0', fontSize: '14px', color: '#000' }}>Tel.: 49573333, 34, 35, 36</p>
+                <p style={{ textAlign: 'left', margin: '2px 0', fontSize: '14px', color: '#000' }}>Fax: 26028101</p>
+                <p style={{ textAlign: 'left', margin: '2px 0', fontSize: '14px', display: 'flex', alignItems: 'baseline', gap: '4px', color: '#000' }}><strong>GSTIN:</strong> 07AABCL5406F1ZU</p>
             </div>
 
-            {/* Details Box */}
-            <div className="details-box">
-                <div className="detail-section">
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginRight: '10px' }}>
-                        <label htmlFor="roNumber">R.O. No. LN:</label>
+            <div className="full-width" style={{ flex: 1, display: 'flex', gap: '12px', flexDirection: 'column', alignItems: 'stretch', boxSizing: 'border-box' }}>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', border: '2px solid black', borderRadius: '4px', padding: '6px' }}>
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxSizing: 'border-box', marginRight: '10px' }}>
+                        <label htmlFor="roNumber" style={{ fontSize: '16px', fontWeight: 'bold', color: '#000', marginRight: '8px', whiteSpace: 'nowrap' }}>R.O. No. LN:</label>
                         <input type="number" id="roNumber" name="roNumber" placeholder="Enter Number" className="full-width" aria-label="R.O. Number"/>
                     </div>
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <label htmlFor="date">Date:</label>
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxSizing: 'border-box' }}>
+                        <label htmlFor="date" style={{ fontSize: '16px', fontWeight: 'bold', color: '#000', marginRight: '8px', whiteSpace: 'nowrap' }}>Date:</label>
                         <input type="date" id="date" name="date" className="full-width" aria-label="Date" ref={dateInputRef} />
                     </div>
                 </div>
-                <div className="detail-section" style={{marginTop: '0px'}}> {/* Adjusted margin */}
-                    <label htmlFor="client">Client:</label>
+                <div style={{ marginTop: '12px', border: '2px solid black', borderRadius: '4px', padding: '6px 10px', display: 'flex', alignItems: 'center', boxSizing: 'border-box' }}>
+                    <label htmlFor="client" style={{ fontSize: '16px', fontWeight: 'bold', color: '#000', marginRight: '8px', whiteSpace: 'nowrap' }}>Client:</label>
                     <input type="text" id="client" name="client" placeholder="Client Name" className="full-width" aria-label="Client Name"/>
                 </div>
-                <div className="detail-section column-layout" style={{marginTop: '0px'}}> {/* Adjusted margin */}
-                    <label style={{marginBottom: '6px'}}>The Advertisement Manager</label>
-                    <input type="text" placeholder="Input 1" className="full-width" aria-label="Input 1" style={{marginBottom:'6px'}}/>
+                <div style={{ marginTop: '12px', border: '2px solid black', borderRadius: '4px', padding: '10px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '16px', fontWeight: 'bold', color: '#000' }}>The Advertisement Manager</label>
+                    <input type="text" placeholder="Input 1" className="full-width" aria-label="Input 1"/>
                     <input type="text" placeholder="Input 2" className="full-width" aria-label="Input 2"/>
                 </div>
-                <div style={{ marginTop: '0px', borderTop: '1px solid black', paddingTop: '6px' }}> {/* Adjusted margin */}
+                <div style={{ marginTop: '10px', borderTop: '1px solid black', paddingTop: '6px' }}>
                     <p style={{ fontSize: '15px', fontWeight: 'bold', color: '#000', margin: 0 }}>Kindly insert the advertisement/s in your issue/s for the following date/s</p>
                 </div>
             </div>
         </div>
 
-        {/* Heading/Caption & Package Section */}
-        <div className="caption-package-container">
-            <div>
-                <label htmlFor="caption">Heading/Caption:</label>
+        <div style={{ width: '100%', marginTop: '20px', display: 'flex', gap: '12px' }}>
+            <div className="full-width" style={{ flex: 1, border: '2px solid black', borderRadius: '4px', padding: '8px', boxSizing: 'border-box' }}>
+                <label htmlFor="caption" style={{ fontSize: '16px', fontWeight: 'bold', display: 'block', marginBottom: '4px', color: '#000' }}>Heading/Caption:</label>
                 <input type="text" id="caption" name="caption" placeholder="Enter caption here" className="full-width" aria-label="Heading Caption"/>
             </div>
-            <div>
-                <label htmlFor="packageInput">Package:</label> {/* Changed id to packageInput to avoid conflict */}
+            <div className="full-width" style={{ width: '30%', border: '2px solid black', borderRadius: '4px', padding: '8px', boxSizing: 'border-box' }}>
+                <label htmlFor="packageInput" style={{ fontSize: '16px', fontWeight: 'bold', display: 'block', marginBottom: '4px', color: '#000' }}>Package:</label>
                 <input type="text" id="packageInput" name="package" placeholder="Enter package name" className="full-width" aria-label="Package Name"/>
             </div>
         </div>
         
-        {/* Schedule Table Section */}
         <div style={{ width: '100%', marginTop: '20px' }}>
-            <table>
+            <table style={{ width: '100%', borderCollapse: 'collapse', border: '2px solid black', fontSize: '14px', textAlign: 'left', borderRadius: '4px', color: '#000' }}>
                 <thead>
-                    <tr>
-                        <th>Key No.</th>
-                        <th>Publication(s)</th>
-                        <th>Edition(s)</th>
-                        <th>Size</th>
-                        <th>Scheduled Date(s)</th>
-                        <th>Position</th>
+                    <tr style={{ backgroundColor: '#f0f0f0' }}>
+                        <th style={{ border: '1px solid black', padding: '6px', width: '16.66%', fontSize: '14px', color: '#000' }}>Key No.</th>
+                        <th style={{ border: '1px solid black', padding: '6px', width: '16.66%', fontSize: '14px', color: '#000' }}>Publication(s)</th>
+                        <th style={{ border: '1px solid black', padding: '6px', width: '16.66%', fontSize: '14px', color: '#000' }}>Edition(s)</th>
+                        <th style={{ border: '1px solid black', padding: '6px', width: '16.66%', fontSize: '14px', color: '#000' }}>Size</th>
+                        <th style={{ border: '1px solid black', padding: '6px', width: '16.66%', fontSize: '14px', color: '#000' }}>Scheduled Date(s)</th>
+                        <th style={{ border: '1px solid black', padding: '6px', width: '16.66%', fontSize: '14px', color: '#000' }}>Position</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody" ref={tableBodyRef}>
-                  {/* Rows will be added here by JavaScript */}
                 </tbody>
             </table>
         </div>
-        <div className="new-row-buttons no-print">
+         <div className="new-row-buttons no-print">
             <button onClick={addRow}>Add Row</button>
-            <button onClick={deleteRow} className="delete-button">Delete Row</button>
+            <button onClick={deleteRow}>Delete Row</button>
         </div>
 
-        {/* Matter Section */}
-        <div className="matter-container" style={{ width: '100%', marginTop: '20px' }}>
-            <div className="matter-label-box">
+        <div style={{ width: '100%', marginTop: '20px', padding: '0px', boxSizing: 'border-box', height: 'auto', minHeight: '100px', display: 'flex', alignItems: 'stretch', color: '#000', borderRadius: '4px' }}>
+            <div style={{ writingMode: 'vertical-lr', textOrientation: 'upright', padding: '2px', fontSize: '16px', fontWeight: 'bold', textAlign: 'center', borderRight: '1px solid black', backgroundColor: 'black', color: 'white', width: '38px' }}>
                 MATTER
             </div>
-            <div className="full-width" style={{ flex: 1, display: 'flex' }}> {/* Added display:flex here */}
+            <div className="full-width" style={{ flex: 1, paddingLeft: '0px', alignItems: 'flex-start' }}>
                 <textarea
                   ref={matterTextareaRef}
                   placeholder="Enter matter here..."
-                  className="matter-content-textarea"
+                  className="full-width"
+                  style={{ width: '100%', height: '100px', border: 'none', padding: '0px', marginTop: '0px', marginLeft: '0px', wordWrap: 'break-word', textAlign: 'left', resize: 'none', boxSizing: 'border-box', fontWeight: 'bold', fontSize: '16px', color: '#000', borderTop: '1px solid black', borderWidth: '1px', backgroundColor: '#fff', borderBottomWidth: '1px' }}
                   aria-label="Enter Matter"
                 ></textarea>
             </div>
         </div>
         
-        {/* Notes & Stamp Section */}
-        <div className="notes-stamp-container">
-            <div className="notes-forwarding-section">
-                <div className="forwarding-info">
-                    <strong>Forward all bills with relevant VTS copy to :-</strong>
-                    <span>D-9 &amp; D-10, 1st Floor, Pushpa Bhawan, <br/> Alaknanda Commercial complex, <br/>New Delhi-110019 <br/>Tel.: 49573333, 34, 35, 36 <br/>Fax: 26028101</span>
+        <div style={{ width: '100%', marginTop: '8px', border: '2px solid black', borderRadius: '4px', padding: '8px', boxSizing: 'border-box', height: 'auto', minHeight: '150px', position: 'relative', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '8px' }}>
+                <div className="full-width" style={{ width: 'calc(60% - 6px)', height: '100%', margin: '0', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'flex-start', position: 'relative', boxSizing:'border-box', paddingRight: '0px' }}>
+                    <span style={{ fontSize: '14px', fontWeight: 'bold', display: 'inline-block', textAlign: 'left', color: '#000', marginBottom: '8px', textDecoration: 'underline', textUnderlineOffset: '2px' }}>Forward all bills with relevant VTS copy to :-</span>
+                    <span style={{ fontSize: '12px', display: 'inline-block', lineHeight: '1.5', color: '#000', fontWeight: 'bold' }}>D-9 &amp; D-10, 1st Floor, Pushpa Bhawan, <br/> Alaknanda Commercial complex, <br/>New Delhi-110019 <br/>Tel.: 49573333, 34, 35, 36 <br/>Fax: 26028101</span>
                 </div>
-                <div className="stamp-area">
-                    <label htmlFor="stampFile" className="stamp-upload-container">
+                <div style={{ width: 'calc(40% - 6px)', height: 'auto', margin: '0', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0px', boxSizing: 'border-box', position: 'relative' }}>
+                    <label htmlFor="stampFile" style={{ width: '170px', height: '100px', border: '2px dashed #ccc', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', backgroundColor: '#f9f9f9', borderRadius: '4px', overflow: 'hidden' }}>
                         {stampSrc ? (
-                            <img src={stampSrc} alt="Stamp Preview" />
+                            <img src={stampSrc} alt="Stamp Preview" style={{ width: '100%', height: '100%', objectFit: 'contain' }} data-ai-hint="signature stamp"/>
                         ) : (
-                            <p>Upload Image</p>
+                            <p style={{ fontSize: '12px', textAlign: 'center', color: '#555', margin: '0px' }}>Upload Image</p>
                         )}
                     </label>
-                    <input type="file" id="stampFile" accept="image/*" onChange={handleStampFileChange} />
+                    <input type="file" id="stampFile" accept="image/*" onChange={handleStampFileChange} style={{ display: 'none' }} />
                 </div>
             </div>
-            <div className="notes-section">
-                <span>Note:</span>
-                <div>
-                    <span>1. Space reserved vide our letter No.</span>
-                    <span>2. No two advertisements of the same client should appear in the same issue.</span>
-                    <span>3. Please quote R.O. No. in all your bills and letters.</span>
-                    <span>4. Please send two voucher copies of the good reproduction to us within 3 days of the publishing.</span>
+            <div style={{ marginTop: '10px', marginLeft: '0px', width: '100%', borderTop: '1px solid black', paddingTop: '6px', display: 'flex', flexDirection: 'column' }}>
+                <span style={{ textDecoration: 'underline', textUnderlineOffset: '3px', fontSize: '14px', fontWeight: 'bold', color:'#000', marginRight: '10px' }}>Note:</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingLeft: '10px' }}>
+                    <span style={{ fontSize: '14px', color: '#000' }}>1. Space reserved vide our letter No.</span>
+                    <span style={{ fontSize: '14px', color: '#000' }}>2. No two advertisements of the same client should appear in the same issue.</span>
+                    <span style={{ fontSize: '14px', color: '#000' }}>3. Please quote R.O. No. in all your bills and letters.</span>
+                    <span style={{ fontSize: '14px', color: '#000', display: 'inline-block', width: '100%' }}>4. Please send two voucher copies of the good reproduction to us within 3 days of the publishing.</span>
                  </div>
             </div>
         </div>
@@ -362,7 +316,7 @@ export default function ApplicationFormPage() {
           <div className="print-preview-content" id="printPreviewContent" ref={printPreviewContentRef}>
               {/* Content will be cloned here by JavaScript */}
           </div>
-          <button onClick={closePrintPreview} className="print-preview-close-button" aria-label="Close Preview">Close</button>
+          <button onClick={closePrintPreview} style={{ position: 'fixed', top: '20px', right: '20px', backgroundColor: '#f44336', color: 'white', border: 'none', padding: '10px 20px', cursor: 'pointer', borderRadius: '5px', zIndex: 1001 }} aria-label="Close Preview">Close</button>
       </div>
     </>
   );

@@ -2,546 +2,309 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
-  --card: 0 0% 100%;
-  --card-foreground: 222.2 84% 4.9%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 222.2 84% 4.9%;
-  --primary: 222.2 47.4% 11.2%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 210 40% 96.1%;
-  --secondary-foreground: 222.2 47.4% 11.2%;
-  --muted: 210 40% 96.1%;
-  --muted-foreground: 215.4 16.3% 46.9%;
-  --accent: 210 40% 96.1%;
-  --accent-foreground: 222.2 47.4% 11.2%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 214.3 31.8% 91.4%;
-  --input: 214.3 31.8% 91.4%;
-  --ring: 222.2 84% 4.9%;
-  --radius: 0.5rem;
-  --chart-1: 12 76% 61%;
-  --chart-2: 173 58% 39%;
-  --chart-3: 197 37% 24%;
-  --chart-4: 43 74% 66%;
-  --chart-5: 27 87% 67%;
-}
-
-.dark {
-  --background: 222.2 84% 4.9%;
-  --foreground: 210 40% 98%;
-  --card: 222.2 84% 4.9%;
-  --card-foreground: 210 40% 98%;
-  --popover: 222.2 84% 4.9%;
-  --popover-foreground: 210 40% 98%;
-  --primary: 210 40% 98%;
-  --primary-foreground: 222.2 47.4% 11.2%;
-  --secondary: 217.2 32.6% 17.5%;
-  --secondary-foreground: 210 40% 98%;
-  --muted: 217.2 32.6% 17.5%;
-  --muted-foreground: 215 20.2% 65.1%;
-  --accent: 217.2 32.6% 17.5%;
-  --accent-foreground: 210 40% 98%;
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 217.2 32.6% 17.5%;
-  --input: 217.2 32.6% 17.5%;
-  --ring: 212.7 26.8% 83.9%;
-  --chart-1: 220 70% 50%;
-  --chart-2: 160 60% 45%;
-  --chart-3: 30 80% 55%;
-  --chart-4: 280 65% 60%;
-  --chart-5: 340 75% 55%;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  font-family: 'Arial', sans-serif;
-  /* font-weight set by Tailwind utilities or specific components */
-  margin: 0;
-  padding: 0;
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* General screen layout for the application form */
-#application {
-  width: 100%; /* Full width of its container */
-  max-width: 210mm; /* A4 width equivalent */
-  min-height: 297mm; /* A4 height equivalent for screen, helps visualize */
-  height: auto; /* Let content determine height */
-  margin: 20px auto; /* Centering for screen view */
-  padding: 20px; /* Padding for screen view */
-  border: 1px solid hsl(var(--border)); /* Subtle border for screen */
-  background-color: hsl(var(--card)); /* Card background */
-  color: hsl(var(--card-foreground)); /* Card text color */
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* Shadow for depth */
-  box-sizing: border-box;
-  position: relative; /* For absolute positioning of buttons if needed */
-}
-
-
-/* Print-specific styles */
+/* Styles from the original HTML prompt */
 @media print {
-  body {
-    margin: 0 !important;
-    padding: 0 !important;
-    background-color: #fff !important; /* Ensure white background for printing */
-    color: #000 !important; /* Ensure black text for printing */
-    -webkit-print-color-adjust: exact !important; /* Chrome, Safari */
-    print-color-adjust: exact !important; /* Firefox, Edge */
-  }
-
-  #application, .print-friendly-content {
-    width: 100% !important; /* Use full printable area width */
-    height: auto !important; /* Adjust height to content */
-    min-height: initial !important; /* Remove min-height for print if it causes issues */
-    margin: 0 !important; /* Remove margins for printing */
-    padding: 10mm !important; /* A4 standard margin, can adjust */
-    border: none !important; /* Remove screen border for printing */
-    box-shadow: none !important; /* Remove screen shadow */
-    background-color: #fff !important;
-    color: #000 !important;
-    page-break-inside: avoid; /* Try to keep the form on one page */
-    font-size: 10pt !important; /* Adjust base font size for print if needed */
-  }
-  
-  .no-print, .print-icon-container, .new-row-buttons, #printPreviewButton, #downloadPdfButton, #fullScreenButton, .print-preview-close-button {
+  #printButton, #downloadPdfButton, #printPreviewButton, #fullScreenButton, .print-icon-container, .no-print {
     display: none !important;
+  }
+  body {
+      margin: 0 !important;
+      padding: 0 !important;
+      background-color: #fff !important; /* Ensure white background for printing */
+      color: #000 !important; /* Ensure black text for printing */
+     -webkit-print-color-adjust: exact !important; /* Chrome, Safari */
+      print-color-adjust: exact !important; /* Firefox, Edge */
+      font-family: Arial, sans-serif !important; /* Ensure Arial font for print */
+  }
+  #application {
+      width: 210mm !important;
+      min-height: 297mm !important; /* Use min-height to allow content to expand if needed */
+      height: auto !important; /* Allow content to determine height */
+      margin: 0 auto !important;
+      padding: 10mm !important; /* Standard A4 margin */
+      border: none !important;
+      box-shadow: none !important;
+      background-color: #fff !important;
+      color: #000 !important;
+      page-break-inside: avoid;
+      font-size: 10pt !important; /* Adjust base font size for print if needed */
+      font-weight: normal !important; /* Ensure normal font weight for print consistency */
   }
 
   input, textarea, select {
-    border: 1px solid #ccc !important; /* Light border for inputs in print for clarity */
-    outline: none !important;
-    font-weight: normal !important; /* Adjust font weight if bold is too much for print */
-    font-size: 10pt !important;
-    color: #000 !important;
-    background-color: #fff !important;
-    padding: 4px !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+      border: none !important;
+      outline: none !important;
+      font-weight: bold !important;
+      font-size: 14px !important; /* Keep original font size for form elements in print */
+      color: #000 !important;
+      background-color: #fff !important;
+      padding: 0px !important; /* Minimal padding for print if needed */
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
   }
-
+  
   /* Styles for text content that replaces inputs/textareas in print preview/PDF */
   .static-text-replacement {
-    font-weight: normal !important;
-    font-size: 10pt !important;
+    font-weight: bold !important; /* Match input style */
+    font-size: 14px !important; /* Match input style */
+    font-family: Arial, sans-serif !important;
     color: #000 !important;
-    padding: 4px !important;
+    padding: 0px !important; /* Match input padding (or lack thereof) */
     margin: 0 !important;
     white-space: pre-wrap !important;
     word-wrap: break-word !important;
-    min-height: auto !important; /* Adjust as needed */
-  }
-  
-  .print-table, .print-table th, .print-table td {
-    border: 1px solid black !important;
-    border-collapse: collapse !important;
-    padding: 4px !important; /* Reduced padding for print */
-    font-size: 9pt !important; /* Smaller font for table content */
-    word-wrap: break-word !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-  .print-table-header th {
-    background-color: #e0e0e0 !important; /* Lighter gray for print headers */
-    font-weight: bold !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-  
-  .release-order-titlebar {
-    background-color: black !important;
-    color: white !important;
-    border: 1px solid black !important;
-    padding: 3px 8px !important;
-    font-size: 14pt !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-  .release-order-titlebar h2 {
-      margin: 0 !important;
-      font-size: inherit !important;
+    min-height: auto !important; 
+    border: none !important; /* No border for static text */
   }
 
-  .matter-label-box {
-    background-color: black !important;
-    color: white !important;
-    border-right: 1px solid black !important;
-    padding: 3px !important;
-    font-size: 11pt !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-    writing-mode: vertical-lr !important;
-    text-orientation: mixed !important;
+  table {
+      border-collapse: collapse !important;
+      width: 100% !important;
+      border: 2px solid black !important; /* Ensure table border is visible */
+  }
+  th, td {
+      border: 1px solid black !important; /* Ensure cell borders are visible */
+      padding: 6px !important; /* Original padding for table cells */
+      text-align: left !important;
+      word-wrap: break-word !important;
+      font-size: 14px !important; /* Ensure consistent font size */
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      font-family: Arial, sans-serif !important;
+  }
+  th {
+      background-color: #f0f0f0 !important;
+      font-weight: bold !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
   }
   
+  /* Release order title bar in print */
+  .release-order-titlebar-print {
+    text-align: center !important;
+    margin-top: 10px !important;
+    background-color: black !important;
+    color: white !important;
+    border: 2px solid black !important;
+    padding: 4px 10px !important;
+    font-weight: bold !important;
+    width: fit-content !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    border-radius: 4px !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .release-order-titlebar-print h2 {
+      margin: 0 !important;
+      font-size: 22px !important;
+  }
+
+  /* Matter label in print */
+  .matter-label-print {
+    writing-mode: vertical-lr !important;
+    text-orientation: upright !important;
+    background-color: black !important;
+    color: white !important;
+    padding: 2px !important;
+    font-size: 16px !important;
+    font-weight: bold !important;
+    text-align: center !important;
+    border-right: 1px solid black !important;
+    width: 38px !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    display: flex !important; /* Ensure flex properties for centering */
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
   .matter-content-textarea.static-text-replacement,
-  .matter-content-textarea ~ div /* for the static replacement */ {
+  .matter-content-textarea ~ div {
     border-top: 1px solid black !important;
     border-bottom: 1px solid black !important;
-    padding: 6px !important;
+    border-left: none !important; /* Matter content area should not have left border as label has right */
+    border-right: none !important; /* Should not have right border from main container */
+    padding: 0px !important;
+    margin-left:0px !important;
   }
 
-  .stamp-upload-container.stamp-placeholder-print {
-    border: 1px dashed #999 !important; /* Dashed border for stamp placeholder in print */
-    background-color: #f5f5f5 !important; /* Light background for placeholder */
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  .stamp-upload-container-print {
+    border: 2px dashed #ccc !important; 
+    background-color: #f9f9f9 !important; 
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
-   .stamp-upload-container.stamp-placeholder-print p {
+   .stamp-upload-container-print p {
       color: #555 !important;
-      font-size: 9pt !important;
+      font-size: 12px !important;
    }
 
-  .stamp-upload-container img {
+  .stamp-upload-container-print img {
     object-fit: contain !important;
-    max-width: 100%;
-    max-height: 100%;
+    max-width: 100% !important;
+    max-height: 100% !important;
   }
 
-  /* Ensure links are not underlined by default in print unless specified */
-  a {
-    text-decoration: none !important;
-    color: inherit !important;
+  .no-underline {
+      text-decoration: none !important;
   }
+   textarea.table-textarea.static-text-replacement, /* For print preview where textarea is replaced */
+   textarea.table-textarea { /* For direct print */
+     min-height: 160px !important; /* Ensure min-height for PDF/Print */
+     padding: 6px !important;
+     font-size: 14px !important;
+   }
 }
 
+/* Base body styles */
+body {
+  font-family: Arial, sans-serif;
+  font-weight: bold; /* This was in original body, keep if it's global bold requirement */
+  margin: 0;
+  padding: 0;
+  background-color: #f0f0f0; /* A light gray background for screen */
+}
 
-/* Button container for top-right action buttons on screen */
+#application {
+  width: 100%;
+  max-width: 210mm; /* A4 width */
+  min-height: 297mm; /* A4 height */
+  margin: 20px auto; /* Centering for screen view */
+  padding: 20px; /* Padding for screen view */
+  border: 4px solid black;
+  font-weight: bold;
+  position: relative;
+  box-sizing: border-box;
+  color: #000;
+  background-color: #fff; /* White background for the form itself */
+  box-shadow: 0 0 10px rgba(0,0,0,0.1); /* Subtle shadow for screen */
+}
+
 .button-container {
   display: flex;
   justify-content: flex-end;
-  padding: 10px; /* Add some padding */
-  position: sticky; /* Make buttons sticky at the top */
-  top: 0;
-  background-color: hsl(var(--background) / 0.8); /* Semi-transparent background */
-  backdrop-filter: blur(4px); /* Blur effect */
-  z-index: 50; /* Ensure it's above other content */
-  border-bottom: 1px solid hsl(var(--border)); /* Separator */
+  margin-bottom: 10px;
+  position: absolute; /* Kept absolute positioning as per original */
+  top: 10px;
+  right: 10px;
+  z-index: 100;
 }
 
-/* Styling for individual buttons in the top container */
-.button-container > .shadcn-button { /* Assuming ShadCN buttons are used */
-  margin-left: 8px;
+#printButton, #downloadPdfButton, #printPreviewButton, #fullScreenButton {
+  background-color: #dc3545; /* Reddish color from original */
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-left: 10px;
+}
+#printButton:hover, #downloadPdfButton:hover, #printPreviewButton:hover, #fullScreenButton:hover {
+  background-color: #c82333; /* Darker red on hover */
+}
+
+.print-icon-container {
+    position: absolute;
+    top: 10px;
+    right: 10px; /* It might overlap with button-container, adjust if needed */
+    z-index: 100; /* Ensure it's above other content if positioned similarly */
+}
+.print-icon {
+    font-size: 24px;
+    color: black;
+    cursor: pointer;
+    margin-left: 10px; /* Space from other buttons if they are also in this container */
 }
 
 
-/* General Input, Textarea, Select Styling for Screen */
-input, textarea, select {
-  border: 1px solid hsl(var(--input)); /* ShadCN input border */
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
-  padding: 0.5rem 0.75rem; /* Tailwind-like padding */
-  border-radius: var(--radius);
-  font-size: 0.875rem; /* text-sm */
-  font-weight: 500; /* medium */
-  width: 100%; /* Default to full width */
-  box-sizing: border-box;
-  transition: border-color 0.2s;
-}
-input:focus, textarea:focus, select:focus {
-  outline: none;
-  border-color: hsl(var(--ring)); /* ShadCN ring color on focus */
-  box-shadow: 0 0 0 1px hsl(var(--ring));
-}
-textarea {
-  min-height: 80px; /* Default min-height for textareas */
-  resize: vertical; /* Allow vertical resize */
-}
-
-/* Specific styles for table textareas to blend in */
-.table-textarea {
-  border: none !important; /* No border inside table cells */
-  outline: none !important;
-  background-color: transparent !important; /* Transparent background */
-  padding: 0.25rem; /* Minimal padding */
-  margin: 0;
+.full-width {
   width: 100%;
-  height: auto; /* Auto height based on content */
-  min-height: 60px; /* Default min-height for table textareas */
-  resize: none; /* Disable resize or set to vertical if needed */
-  box-shadow: none !important;
-  font-weight: normal;
-  font-size: 0.875rem; /* text-sm */
-  overflow-y: hidden; /* Hide scrollbar if content fits */
+  box-sizing: border-box;
 }
-.table-textarea:focus {
-  box-shadow: none !important; /* No focus shadow for table textareas */
+
+input, textarea, select {
+  border: none; /* Original spec */
+  outline: none; /* Original spec */
+  font-weight: bold; /* Original spec */
+  font-size: 14px; /* Original spec */
+  color: #000; /* Original spec */
+  background-color: #fff; /* Original spec */
+  padding: 4px; /* Added some padding for better editing experience on screen */
+  box-sizing: border-box;
+  width: 100%; /* Make form elements take full width of their container by default */
+}
+
+/* Specific styling for table textareas */
+#tableBody textarea {
+    width: 100%;
+    height: auto; /* auto height based on content */
+    min-height: 160px; /* default min-height for table textareas */
+    border: none !important;
+    outline: none !important;
+    font-weight: bold;
+    font-size: 14px;
+    color: #000;
+    background-color: #fff;
+    box-sizing: border-box;
+    resize: none; /* disable resize or set to vertical if needed */
+    padding: 6px; /* Match cell padding */
+    margin: 0;
+    overflow-y: hidden; /* Hide scrollbar if content fits */
 }
 
 
-/* Table Styling */
-.print-table { /* ShadCN like table styling */
+/* Table styling for screen */
+table {
   width: 100%;
   border-collapse: collapse;
-  border: 1px solid hsl(var(--border));
-  font-size: 0.875rem; /* text-sm */
+  border: 2px solid black; /* Original spec */
+  font-size: 14px; /* Original spec */
+  text-align: left; /* Original spec */
+  color: #000; /* Original spec */
 }
-.print-table th, .print-table td {
-  border: 1px solid hsl(var(--border));
-  padding: 0.5rem; /* p-2 */
-  text-align: left;
-  vertical-align: top; /* Align content to the top */
-  word-wrap: break-word;
+th, td {
+  border: 1px solid black; /* Original spec for cells */
+  padding: 6px; /* Original spec for cells */
+  word-wrap: break-word; /* Original spec */
+  vertical-align: top; /* Align content to top for textareas */
 }
-.print-table th {
-  background-color: hsl(var(--muted)); /* Muted background for headers */
-  font-weight: 600; /* semibold */
-}
-
-/* Release Order Title Bar */
-.release-order-titlebar {
-    text-align: center;
-    margin-top: 1rem; /* mt-4 */
-    background-color: hsl(var(--primary)); /* Primary background */
-    color: hsl(var(--primary-foreground)); /* Primary text color */
-    border: 1px solid hsl(var(--primary));
-    padding: 0.5rem 1rem; /* p-2 px-4 */
-    font-weight: bold;
-    width: fit-content;
-    margin-left: auto;
-    margin-right: auto;
-    border-radius: var(--radius);
-}
-.release-order-titlebar h2 {
-    margin: 0;
-    font-size: 1.25rem; /* text-xl */
+th {
+  background-color: #f0f0f0; /* Original spec */
 }
 
-/* Lehar Info Box & Details Box common styles */
-.lehar-info-box, .details-box, .advertisement-manager-box {
-    padding: 0.75rem; /* p-3 */
-    border: 1px solid hsl(var(--border));
-    border-radius: var(--radius);
-    box-sizing: border-box;
-    color: hsl(var(--foreground));
-    font-size: 0.875rem; /* text-sm */
-}
-.lehar-info-box h3 { font-size: 1rem; /* text-base */ font-weight: bold; margin-bottom: 0.25rem; }
-.lehar-info-box h4 { font-size: 0.875rem; /* text-sm */ font-semibold; margin-bottom: 0.5rem; }
-.lehar-info-box p { margin: 0.125rem 0; /* my-0.5 */ line-height: 1.4; }
 
-.details-box .detail-section, .advertisement-manager-box .detail-section {
-    border: 1px solid hsl(var(--border));
-    border-radius: var(--radius);
-    padding: 0.75rem; /* p-3 */
+/* Matter section textarea specific focus/blur from original JS */
+#application textarea[placeholder="Enter matter here..."] {
+  border: none; /* Default state */
+  /* transition for border color can be added if desired */
+}
+#application textarea[placeholder="Enter matter here..."]:focus {
+  border: 1px solid black; /* On focus */
+}
+
+/* Add/Delete row buttons styling */
+.new-row-buttons {
     display: flex;
-    align-items: center;
-    gap: 0.5rem; /* gap-2 */
+    justify-content: center; /* Center align as per original prompt */
+    margin-top: 10px;
+    margin-bottom: 10px; /* Added some bottom margin */
 }
-.details-box .detail-section.column-layout, .advertisement-manager-box.column-layout {
-    flex-direction: column;
-    align-items: flex-start;
-}
-.details-box .detail-section label, .advertisement-manager-box label {
-    font-size: 0.875rem; /* text-sm */
-    font-weight: bold;
-    margin-right: 0.5rem; /* mr-2 */
-    white-space: nowrap;
-}
-
-
-/* Caption & Package Section */
-.caption-package-container {
-    width: 100%;
-    margin-top: 1.25rem; /* mt-5 */
-    display: flex;
-    flex-direction: column; /* Stack on small screens */
-    gap: 0.75rem; /* gap-3 */
-}
-
-@media (min-width: 768px) { /* md breakpoint */
-  .caption-package-container {
-    flex-direction: row; /* Side-by-side on medium screens and up */
-  }
-}
-
-.caption-package-container > div {
-    border: 1px solid hsl(var(--border));
-    border-radius: var(--radius);
-    padding: 0.75rem; /* p-3 */
-    box-sizing: border-box;
-}
-.caption-package-container > div label {
-    font-size: 0.875rem; /* text-sm */
-    font-weight: bold;
-    display: block;
-    margin-bottom: 0.25rem; /* mb-1 */
-}
-
-
-/* Matter Section */
-.matter-container {
-    border: 1px solid hsl(var(--border));
-    border-radius: var(--radius);
-    display: flex;
-    margin-top: 1.25rem; /* mt-5 */
-}
-.matter-label-box {
-    writing-mode: vertical-lr;
-    text-orientation: mixed;
-    padding: 0.5rem; /* p-2 */
-    font-size: 0.875rem; /* text-sm */
-    font-weight: bold;
-    text-align: center;
-    border-right: 1px solid hsl(var(--border));
-    background-color: hsl(var(--primary));
-    color: hsl(var(--primary-foreground));
-    min-width: 38px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-top-left-radius: var(--radius);
-    border-bottom-left-radius: var(--radius);
-}
-.matter-content-textarea {
-    width: 100%;
-    border: none !important;
-    padding: 0.75rem; /* p-3 */
-    margin: 0;
-    word-wrap: break-word;
-    text-align: left;
-    resize: vertical;
-    box-sizing: border-box;
-    font-weight: normal;
-    font-size: 0.875rem; /* text-sm */
-    background-color: transparent;
-    border-top: 1px solid hsl(var(--border)) !important; /* For print and screen consistency if needed */
-    border-bottom: 1px solid hsl(var(--border)) !important;
-    box-shadow: none !important;
-    border-top-right-radius: var(--radius);
-    border-bottom-right-radius: var(--radius);
-}
-.matter-content-textarea:focus {
-    outline: none !important;
-    box-shadow: none !important;
-}
-
-
-/* Notes & Stamp Section */
-.notes-stamp-container {
-    width: 100%;
-    margin-top: 0.5rem; /* mt-2 */
-    border: 1px solid hsl(var(--border));
-    border-radius: var(--radius);
-    padding: 0.75rem; /* p-3 */
-    box-sizing: border-box;
-    min-height: 150px;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-}
-.notes-forwarding-section {
-    display: flex;
-    flex-direction: column; /* Stack on small screens */
-    justify-content: space-between;
-    padding-bottom: 0.75rem; /* pb-3 */
-    gap: 0.75rem; /* gap-3 */
-}
-@media (min-width: 768px) { /* md breakpoint */
-  .notes-forwarding-section {
-    flex-direction: row; /* Side-by-side on medium screens */
-  }
-}
-
-.forwarding-info {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-}
-@media (min-width: 768px) { /* md breakpoint */
-  .forwarding-info {
-    width: calc(60% - 0.375rem); /* Adjust width for gap */
-  }
-}
-
-.forwarding-info strong {
-    font-size: 0.875rem; /* text-sm */
-    font-weight: bold;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-    margin-bottom: 0.25rem; /* mb-1 */
-}
-.forwarding-info span {
-    font-size: 0.8125rem; /* slightly smaller than sm */
-    line-height: 1.4;
-    font-weight: normal;
-}
-
-.stamp-area {
-    width: 100%;
-    display: flex;
-    justify-content: center; /* Center on small screens */
-    align-items: flex-start;
-}
-@media (min-width: 768px) { /* md breakpoint */
-  .stamp-area {
-    width: calc(40% - 0.375rem); /* Adjust width for gap */
-    justify-content: flex-end; /* Align stamp to the right on medium screens */
-  }
-}
-
-.stamp-upload-container {
-    width: 160px;
-    height: 90px;
-    border: 2px dashed hsl(var(--border));
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.new-row-buttons button {
+    margin: 0 5px;
+    padding: 8px 16px;
+    background-color: #4CAF50; /* Green from original */
+    color: white;
+    border: none;
+    border-radius: 5px;
     cursor: pointer;
-    background-color: hsl(var(--muted));
-    border-radius: var(--radius);
-    overflow: hidden;
-    position: relative;
+    font-size: 14px;
+    font-weight: bold; /* Match other form elements */
 }
-.stamp-upload-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-.stamp-upload-container p {
-    font-size: 0.75rem; /* text-xs */
-    text-align: center;
-    color: hsl(var(--muted-foreground));
-    margin: 0;
-}
-.stamp-upload-container:hover {
-    border-color: hsl(var(--ring));
-}
-
-.notes-section {
-    padding-top: 0.75rem; /* pt-3 */
-    border-top: 1px solid hsl(var(--border));
-    width: 100%;
-}
-.notes-section > span:first-child { /* "Note:" text */
-    text-decoration: underline;
-    text-underline-offset: 3px;
-    font-size: 0.875rem; /* text-sm */
-    font-weight: bold;
-    display: block;
-    margin-bottom: 0.25rem; /* mb-1 */
-}
-.notes-section div { /* Container for note items */
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem; /* gap-1 */
-    padding-left: 1.25rem; /* pl-5, indent note items */
-}
-.notes-section div span {
-    font-size: 0.875rem; /* text-sm */
-    line-height: 1.5;
+.new-row-buttons button:hover {
+    background-color: #367c39; /* Darker green on hover */
 }
 
 
@@ -552,7 +315,7 @@ textarea {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.85); /* Darker overlay */
+  background-color: rgba(0, 0, 0, 0.8); /* Dark overlay */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -572,55 +335,25 @@ textarea {
   transform-origin: top center;
   overflow: visible; /* Ensure all content is visible */
 }
-.print-preview-close-button {
+.print-preview-close-button { /* Renamed from original to be more specific */
     position: fixed !important;
-    top: 30px !important;
-    right: 30px !important;
-    background-color: hsl(var(--destructive)) !important;
-    color: hsl(var(--destructive-foreground)) !important;
+    top: 20px !important; /* Adjusted for better visibility */
+    right: 20px !important; /* Adjusted for better visibility */
+    background-color: #f44336 !important; /* Red for close button */
+    color: white !important;
     border: none !important;
-    padding: 0.5rem 1rem !important; /* p-2 px-4 */
+    padding: 10px 20px !important;
     cursor: pointer !important;
-    border-radius: var(--radius) !important;
-    z-index: 1001 !important;
-    font-size: 0.875rem !important; /* text-sm */
+    border-radius: 5px !important;
+    z-index: 1001 !important; /* Above preview content */
+    font-size: 16px !important;
     font-weight: bold !important;
-    display: flex;
-    align-items: center;
 }
 .print-preview-close-button:hover {
-    background-color: hsl(var(--destructive) / 0.9) !important;
+    background-color: #d32f2f !important; /* Darker red on hover */
 }
 
-/* Add Row / Delete Row Buttons */
-.new-row-buttons {
-    display: flex;
-    justify-content: flex-start; /* Align buttons to the left */
-    margin-top: 0.5rem; /* mt-2 */
-    margin-bottom: 1.25rem; /* mb-5 */
-    gap: 0.5rem; /* gap-2 */
-}
-.new-row-buttons button { /* This will style ShadCN buttons if used or plain buttons */
-    /* ShadCN Button component handles its own styling. These are fallbacks or can be more specific. */
-    padding: 0.375rem 0.75rem; /* py-1.5 px-3 */
-    font-size: 0.75rem; /* text-xs */
-    height: auto; /* Override fixed height if needed */
-}
-
-/* Utility for full screen elements */
-.fullscreen-preview {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: white; /* Or a neutral background */
-  z-index: 2000; /* Above everything else */
-  overflow: auto; /* Scroll if content exceeds viewport */
-  padding: 20px; /* Optional padding */
-}
-
-/* Ensure Tailwind's responsive prefixes work */
-@layer base {
-  /* Example: md:flex-direction-row would work due to Tailwind's processing */
+/* Ensure FontAwesome icons are styled if used via class, e.g., for print icon */
+.fas {
+  font-family: "Font Awesome 5 Free"; /* Ensure correct font family for FA icons */
 }
