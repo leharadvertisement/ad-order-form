@@ -6,11 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { DatePicker } from '@/components/ui/date-picker';
+import { DatePicker } from '@/components/ui/date-picker'; // Corrected import path
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Image from 'next/image';
-import { Download, Printer, Eye, X, Save, Trash2, UploadCloud, Search, Eraser, CheckCircle, FileText, Settings, Copy, Palette, Briefcase, Users, Building, CalendarDays, FileDown, Maximize, EyeOff, Undo, ExternalLink } from 'lucide-react';
+import { Download, Printer, Eye, X, Save, UploadCloud, Search, Eraser, CheckCircle, FileText, Settings, Copy, Palette, Briefcase, Users, Building, CalendarDays, FileDown, Maximize, EyeOff, Undo, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 
 const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://picsum.photos/180/100?random&data-ai-hint=signature+placeholder';
@@ -212,7 +212,7 @@ const AdOrderForm: React.FC = () => {
     
     // Ensure all textareas are adjusted for PDF context before cloning
     const textareasOnPage = element.querySelectorAll('textarea');
-    textareasOnPage.forEach(ta => adjustTextareaHeight(ta)); // adjustTextareaHeight should check for 'pdf-export-active'
+    textareasOnPage.forEach(ta => adjustTextareaHeight(ta)); 
 
     const clonedElement = element.cloneNode(true) as HTMLElement;
     
@@ -220,10 +220,10 @@ const AdOrderForm: React.FC = () => {
     
     // Apply A4 dimensions and styles directly for html2pdf
     clonedElement.style.width = '210mm';
-    clonedElement.style.height = '297mm'; // Strict A4 height
+    clonedElement.style.height = '297mm'; 
     clonedElement.style.minHeight = '297mm';
     clonedElement.style.maxHeight = '297mm';
-    clonedElement.style.overflow = 'hidden'; // Critical for single page A4
+    clonedElement.style.overflow = 'hidden'; 
     clonedElement.style.padding = '5mm'; 
     clonedElement.style.fontSize = '9pt'; 
     clonedElement.style.lineHeight = '1.1';
@@ -247,9 +247,9 @@ const AdOrderForm: React.FC = () => {
         p.style.width = getComputedStyle(input).width; 
         p.style.minHeight = '1em'; 
         p.style.fontFamily = getComputedStyle(input).fontFamily;
-        p.style.fontSize = 'inherit'; // Inherit from parent which is 9pt
+        p.style.fontSize = 'inherit'; 
         p.style.fontWeight = getComputedStyle(input).fontWeight;
-        p.style.lineHeight = 'inherit'; // Inherit 1.1
+        p.style.lineHeight = 'inherit'; 
         p.style.color = 'black';
         p.style.borderBottom = '1px solid black';
         p.style.padding = '1px 0'; 
@@ -279,7 +279,7 @@ const AdOrderForm: React.FC = () => {
         p.style.fontFamily = 'Arial, sans-serif';
         p.style.fontSize = '8pt'; 
         p.style.fontWeight = 'bold';
-        p.style.lineHeight = '1.0'; // Tighter for table cells in PDF
+        p.style.lineHeight = '1.0'; 
         p.style.color = 'black';
         p.style.padding = '1px';
         p.style.backgroundColor = 'transparent';
@@ -370,21 +370,20 @@ const AdOrderForm: React.FC = () => {
 
 
     const opt = {
-        margin: [5, 5, 5, 5], // Reduced margin for A4
+        margin: [5, 5, 5, 5], 
         filename: 'release_order_form.pdf',
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: {
             scale: 2, 
             useCORS: true,
             logging: false,
-            width: clonedElement.offsetWidth, // Use offsetWidth for consistency
-            height: clonedElement.offsetHeight, // Use offsetHeight
+            width: clonedElement.offsetWidth, 
+            height: clonedElement.offsetHeight, 
             windowWidth: clonedElement.scrollWidth,
             windowHeight: clonedElement.scrollHeight,
             onclone: (documentClone: Document) => {
                 const clonedBody = documentClone.body;
-                clonedBody.classList.add('pdf-export-active'); // Ensure class is on cloned body
-                // Force reflow/restyle
+                clonedBody.classList.add('pdf-export-active'); 
                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 const _ = clonedBody.offsetHeight; 
 
@@ -443,11 +442,11 @@ const AdOrderForm: React.FC = () => {
              handleClosePrintPreview();
         }
         
-        document.body.classList.add('direct-print-active'); // Apply print styles
+        document.body.classList.add('direct-print-active'); 
         
         setTimeout(() => {
             window.print();
-            document.body.classList.remove('direct-print-active'); // Clean up
+            document.body.classList.remove('direct-print-active'); 
             // if (wasPreviewing && !wasFullScreen) handlePrintPreview(); // Optionally restore preview
         }, 100); 
     }
@@ -779,7 +778,7 @@ const AdOrderForm: React.FC = () => {
         <div className="p-3 border-2 border-black rounded flex flex-col print-footer-box relative">
           <div className="flex flex-col md:flex-row justify-between gap-4 pb-2">
             <div className="w-full md:w-[58%]">
-              <p className="text-xs font-bold underline decoration-black decoration-2 underline-offset-2 mb-1">Forward all bills with relevant VTS copy to :-</p>
+              <p className="text-xs font-bold mb-1">Forward all bills with relevant VTS copy to :-</p>
               <p className="text-xs leading-snug">D-9 &amp; D-10, 1st Floor, Pushpa Bhawan, <br /> Alaknanda Commercial complex, <br />New Delhi-110019 <br />Tel.: 49573333, 34, 35, 36 <br />Fax: 26028101</p>
             
               <div className="mt-4 pt-2 border-t border-black">
@@ -880,3 +879,4 @@ const AdOrderForm: React.FC = () => {
 };
 
 export default AdOrderForm;
+
