@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { DatePicker } from '@/components/ui/date-picker'; // Corrected import
+import { DatePicker } from '@/components/ui/date-picker';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Image from 'next/image';
@@ -59,7 +59,7 @@ const AdOrderForm: FC = () => {
     if (textarea) {
       textarea.style.height = 'auto';
       const computedStyle = typeof window !== 'undefined' ? getComputedStyle(textarea) : null;
-      let minHeight = 110; // Default min-height for table textareas
+      let minHeight = 120; // Default min-height for table textareas, increased from 110px
 
       if (textarea.id === 'matterTextarea') {
         minHeight = 100; // Default min-height for matter textarea
@@ -179,7 +179,7 @@ const AdOrderForm: FC = () => {
     clonedElement.style.padding = '5mm';
     clonedElement.style.fontSize = '9pt';
     clonedElement.style.lineHeight = '1.1';
-    clonedElement.style.borderWidth = '2px'; // Ensure outer border is consistent for PDF
+    clonedElement.style.borderWidth = '2px'; 
     clonedElement.style.boxSizing = 'border-box';
 
 
@@ -393,17 +393,37 @@ const AdOrderForm: FC = () => {
   const handleActualPrint = useCallback(() => {
     if (typeof window !== 'undefined') {
         const wasPreviewing = isPreviewing;
+        const wasFullScreen = isFullScreenPreview;
 
-        if(wasPreviewing) {
+        if(wasFullScreen && document.fullscreenElement) {
+            document.exitFullscreen().then(() => {
+                setTimeout(() => { // Ensure fullscreen exit completes
+                    printInternal();
+                }, 100);
+            });
+        } else if (wasPreviewing) {
              handleClosePrintPreview();
+             setTimeout(() => { // Ensure preview modal closes
+                printInternal();
+            }, 100);
+        } else {
+            printInternal();
         }
+    }
+  }, [isPreviewing, isFullScreenPreview, handleClosePrintPreview]);
+
+  const printInternal = () => {
+    if (typeof window !== 'undefined') {
         document.body.classList.add('direct-print-active');
+        const allTextareas = document.querySelectorAll('#printable-area-pdf textarea');
+        allTextareas.forEach(ta => adjustTextareaHeight(ta as HTMLTextAreaElement));
+
         setTimeout(() => {
             window.print();
             document.body.classList.remove('direct-print-active');
-        }, 100); 
+        }, 200); // Increased delay slightly
     }
-  }, [isPreviewing, handleClosePrintPreview]);
+  };
 
 
   const handleFullScreenPreview = useCallback(() => {
@@ -439,13 +459,15 @@ const AdOrderForm: FC = () => {
             document.body.classList.remove('fullscreen-body-active');
             element.classList.remove('fullscreen-preview-active');
           }
+          const allTextareas = document.querySelectorAll('#printable-area-pdf textarea');
+          allTextareas.forEach(ta => adjustTextareaHeight(ta as HTMLTextAreaElement));
       }
     };
     document.addEventListener('fullscreenchange', fullscreenChangeHandler);
     return () => {
       document.removeEventListener('fullscreenchange', fullscreenChangeHandler);
     };
-  }, []);
+  }, [adjustTextareaHeight]);
 
 
   useEffect(() => {
@@ -571,7 +593,7 @@ const AdOrderForm: FC = () => {
             div.style.color = 'black'; 
             div.style.backgroundColor = 'transparent'; 
             div.style.height = 'auto'; 
-            div.style.minHeight = getComputedStyle(textarea).minHeight || (textarea.id === 'matterTextarea' ? '100px' :'120px'); // Increased from 110px
+            div.style.minHeight = getComputedStyle(textarea).minHeight || (textarea.id === 'matterTextarea' ? '100px' :'120px'); 
             div.style.overflow = 'visible'; 
             div.style.whiteSpace = 'pre-wrap'; 
             div.style.wordWrap = 'break-word'; 
@@ -591,7 +613,7 @@ const AdOrderForm: FC = () => {
         previewContentDiv.innerHTML = ''; 
         previewContentDiv.appendChild(previewNode);
 
-        const textareasInPreview = previewContentDiv.querySelectorAll('.textarea-static-print');
+        const textareasInPreview = previewContentDiv.querySelectorAll('.textarea-static-print, .static-print-text');
         textareasInPreview.forEach(ta => {
             const htmlTa = ta as HTMLElement;
             htmlTa.style.height = 'auto'; 
@@ -724,7 +746,7 @@ const AdOrderForm: FC = () => {
           </div>
         </div>
 
-        <div className="flex mb-3 min-h-[100px] items-stretch matter-container-print-parent p-3">
+        <div className="flex mb-3 min-h-[100px] items-stretch matter-container-print-parent p-3 border-2 border-black rounded">
             <div className="matter-label-screen flex items-center justify-center p-1 w-[38px] self-stretch">
                 <span className="text-sm font-bold">MATTER</span>
             </div>
@@ -747,7 +769,7 @@ const AdOrderForm: FC = () => {
 
           <div className="flex justify-between items-start mt-0 pt-0">
             <div className="w-[62%]">
-                <p className="text-xs font-bold underline decoration-black decoration-2 underline-offset-2 mb-1">Note:</p>
+                <p className="text-sm font-bold underline decoration-black decoration-2 underline-offset-2 mb-1">Note:</p>
                 <ol className="list-decimal list-inside text-xs space-y-0.5">
                   <li>Space reserved vide our letter No.</li>
                   <li>No two advertisements of the same client should appear in the same issue.</li>
@@ -841,3 +863,5 @@ const AdOrderForm: FC = () => {
 };
 
 export default AdOrderForm;
+
+    
