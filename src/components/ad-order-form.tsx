@@ -10,17 +10,18 @@ import { Label } from '@/components/ui/label';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Image from 'next/image';
-import { Printer, PlusSquare, MinusSquare, Eye, Expand, Download, Save, FileText, Trash2, Copy, Briefcase, UserSquare, FileInput, Rows, Calendar as CalendarIconLucide, XCircle } from 'lucide-react';
+import { Printer, PlusSquare, MinusSquare, Eye, Expand, Save, FileText, Trash2, Copy, Briefcase, UserSquare, FileInput, Rows, Calendar as CalendarIconLucide, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import html2canvas from 'html2canvas';
 // import jsPDF from 'jspdf'; // Commented out as per previous instructions related to PDF generation issues
 
 const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://picsum.photos/seed/stamp/178/98';
+const COMPANY_LOGO_PLACEHOLDER = "https://picsum.photos/seed/leharlogo/200/100";
 
 
 const AdOrderForm: FC = () => {
   const [ron, setRon] = useState<string>('');
-  const [orderDate, setOrderDate] = useState<Date | undefined>(undefined); // Initialized to undefined for SSR
+  const [orderDate, setOrderDate] = useState<Date | undefined>(undefined);
   const [clientName, setClientName] = useState<string>('');
   const [advManagerInput1, setAdvManagerInput1] = useState<string>('');
   const [advManagerInput2, setAdvManagerInput2] = useState<string>('');
@@ -29,25 +30,46 @@ const AdOrderForm: FC = () => {
   const [matterText, setMatterText] = useState<string>('');
 
   const [stampImage, setStampImage] = useState<string | null>(null);
+  const [companyLogo, setCompanyLogo] = useState<string>(COMPANY_LOGO_PLACEHOLDER);
   const [rowsData, setRowsData] = useState<Array<Record<string, string | Date | undefined | null>>>(() => [
     { keyNo: '', publication: '', edition: '', size: '', scheduledDate: null, position: '' },
   ]);
 
   const printableAreaRef = useRef<HTMLDivElement>(null);
   const stampInputRef = useRef<HTMLInputElement>(null);
+  const companyLogoInputRef = useRef<HTMLInputElement>(null);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [isFullScreenPreview, setIsFullScreenPreview] = useState(false);
-  const [isClient, setIsClient] = useState(false); // Kept for other potential client-side checks if any
+  const [isClient, setIsClient] = useState(false); 
 
   useEffect(() => {
     setIsClient(true);
-    // Set initial date on client-side to avoid hydration mismatch and ensure it's only done once.
-    // This runs once on mount (client-side).
-    if (!orderDate) { // Only set if it hasn't been set by some other means already
+    if (!orderDate) { 
         setOrderDate(new Date());
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Empty dependency array ensures this runs once on mount
+  }, []); 
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedImage = localStorage.getItem('uploadedStampImage');
+      if (savedImage) {
+        setStampImage(savedImage);
+      } else {
+        setStampImage(DEFAULT_STAMP_IMAGE_PLACEHOLDER);
+      }
+
+      const savedLogo = localStorage.getItem('uploadedCompanyLogo');
+      if (savedLogo) {
+        setCompanyLogo(savedLogo);
+      } else {
+        setCompanyLogo(COMPANY_LOGO_PLACEHOLDER);
+      }
+    } else {
+        setStampImage(DEFAULT_STAMP_IMAGE_PLACEHOLDER);
+        setCompanyLogo(COMPANY_LOGO_PLACEHOLDER);
+    }
+  }, []);
 
 
   const handleDateChange = (date: Date | undefined) => {
@@ -68,8 +90,8 @@ const AdOrderForm: FC = () => {
       let minHeightScreen = 120;
       if (textarea.id === 'matterTextarea') {
         minHeightScreen = 100;
-      } else if (textarea.classList.contains('print-textarea')) { // For table textareas
-        minHeightScreen = 150; // Default min height for table textareas on screen
+      } else if (textarea.classList.contains('print-textarea')) { 
+        minHeightScreen = 150; 
       }
 
 
@@ -167,18 +189,23 @@ const AdOrderForm: FC = () => {
     stampInputRef.current?.click();
   };
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedImage = localStorage.getItem('uploadedStampImage');
-      if (savedImage) {
-        setStampImage(savedImage);
-      } else {
-        setStampImage(DEFAULT_STAMP_IMAGE_PLACEHOLDER);
-      }
-    } else {
-        setStampImage(DEFAULT_STAMP_IMAGE_PLACEHOLDER);
+  const handleCompanyLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setCompanyLogo(result);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('uploadedCompanyLogo', result);
+        }
+      };
+      reader.readAsDataURL(event.target.files[0]);
     }
-  }, []);
+  };
+
+  const triggerCompanyLogoUpload = () => {
+    companyLogoInputRef.current?.click();
+  };
 
 
   const generatePdf = useCallback(async () => {
@@ -202,13 +229,24 @@ const AdOrderForm: FC = () => {
 
 
     clonedElement.style.width = '210mm';
-    clonedElement.style.height = '297mm';
+    clonedElement.style.height = '297mm'; 
     clonedElement.style.minHeight = '297mm';
     clonedElement.style.maxHeight = '297mm';
-    clonedElement.style.overflow = 'hidden';
+    clonedElement.style.overflow = 'hidden'; 
     clonedElement.style.padding = '5mm';
     clonedElement.style.borderWidth = '2px';
     clonedElement.style.boxSizing = 'border-box';
+    
+    const logoContainer = clonedElement.querySelector('.company-logo-container-pdf') as HTMLElement;
+    if (logoContainer) {
+        const imgElement = logoContainer.querySelector('img');
+        if (imgElement && companyLogo && companyLogo !== COMPANY_LOGO_PLACEHOLDER) {
+            imgElement.src = companyLogo;
+        } else if (imgElement && (!companyLogo || companyLogo === COMPANY_LOGO_PLACEHOLDER)) {
+             // Keep placeholder or remove if not desired in PDF
+             imgElement.src = COMPANY_LOGO_PLACEHOLDER; // Or some default
+        }
+    }
 
 
     const inputsToConvert = clonedElement.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], input.custom-input-pdf');
@@ -345,24 +383,23 @@ const AdOrderForm: FC = () => {
     }
 
     (window as any).html2pdf().from(clonedElement).set({
-        margin: 5, // Reduced margin for better fit
+        margin: [5,5,5,5], // [top, right, bottom, left]
         filename: 'release_order_form.pdf',
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: {
-            scale: 2, // Adjust scale for quality vs size
+            scale: 2, 
             useCORS: true,
             logging: false,
             onclone: (documentClone: Document) => {
                 const clonedBody = documentClone.body;
                 clonedBody.classList.add('pdf-export-active');
-                 // Force reflow/restyle if needed
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                
                 const _ = clonedBody.offsetHeight;
 
                 const textareasInClone = clonedBody.querySelectorAll('.textarea-static-print');
                 textareasInClone.forEach(ta => {
                     const htmlTa = ta as HTMLElement;
-                    htmlTa.style.height = 'auto'; // Recalculate height before capture
+                    htmlTa.style.height = 'auto'; 
 
                     const computedStyle = getComputedStyle(htmlTa);
                     const maxHeight = parseFloat(computedStyle.maxHeight || '9999');
@@ -372,7 +409,7 @@ const AdOrderForm: FC = () => {
                     if (newHeight < minHeight) newHeight = minHeight;
 
                     htmlTa.style.height = `${Math.min(newHeight, maxHeight)}px`;
-                    htmlTa.style.overflowY = 'hidden'; // Ensure content is clipped
+                    htmlTa.style.overflowY = 'hidden'; 
                 });
             }
         },
@@ -384,7 +421,7 @@ const AdOrderForm: FC = () => {
         document.body.classList.remove('pdf-export-active');
     });
 
-  }, [orderDate, stampImage, rowsData, matterText, advManagerInput1, advManagerInput2, clientName, headingCaption, packageName, ron, adjustTextareaHeight]);
+  }, [orderDate, stampImage, companyLogo, rowsData, matterText, advManagerInput1, advManagerInput2, clientName, headingCaption, packageName, ron, adjustTextareaHeight]);
 
 
   const handlePrintPreview = useCallback(() => {
@@ -455,11 +492,10 @@ const AdOrderForm: FC = () => {
                 }
             }
         });
-        iframeDoc.write('</head><body class="printing-from-preview direct-print-active">'); // Added direct-print-active for consistency
+        iframeDoc.write('</head><body class="printing-from-preview direct-print-active">'); 
 
         const clonedContent = contentSourceElement.cloneNode(true) as HTMLElement;
-        // Ensure print styles are applied correctly within the iframe
-        clonedContent.id = "printable-area-pdf"; // Ensure the ID is consistent for CSS targeting
+        clonedContent.id = "printable-area-pdf"; 
 
 
         iframeDoc.body.appendChild(clonedContent);
@@ -495,7 +531,6 @@ const AdOrderForm: FC = () => {
                 const textareasOnPage = printableAreaRef.current?.querySelectorAll('textarea');
                 textareasOnPage?.forEach(ta => adjustTextareaHeight(ta));
                 window.print();
-                // Remove class after print dialog is likely closed or action taken
                 setTimeout(() => document.body.classList.remove('direct-print-active'), 1000);
             }, 100);
         };
@@ -507,7 +542,6 @@ const AdOrderForm: FC = () => {
             });
         } else if (isPreviewing) {
             handleClosePrintPreview();
-            // Short delay to allow DOM updates from closing preview
             setTimeout(exitFullscreenAndPrint, 50);
         } else {
             exitFullscreenAndPrint();
@@ -587,32 +621,25 @@ const AdOrderForm: FC = () => {
             }
         }
 
+        const companyLogoContainer = previewNode.querySelector('.company-logo-container-screen');
+        if (companyLogoContainer) {
+            const imgElement = companyLogoContainer.querySelector('img');
+             if (companyLogo && companyLogo !== COMPANY_LOGO_PLACEHOLDER && imgElement) {
+                 imgElement.src = companyLogo;
+             } else if (imgElement) {
+                 imgElement.src = COMPANY_LOGO_PLACEHOLDER;
+             }
+        }
+
         const stampContainer = previewNode.querySelector('.stamp-container-screen');
         if(stampContainer) {
             stampContainer.className = 'stamp-container-print-preview';
             const imgElement = stampContainer.querySelector('img');
-            // const placeholderDiv = stampContainer.querySelector('div.placeholder-div');
-
-
-            if (stampImage && stampImage !== DEFAULT_STAMP_IMAGE_PLACEHOLDER) {
-                 const newImg = document.createElement('img');
-                 newImg.src = stampImage;
-                 newImg.alt = "Stamp";
-                 stampContainer.innerHTML = '';
-                 stampContainer.appendChild(newImg);
-            } else if (!imgElement) { // If no image and no existing placeholder, create one
-                 const pDiv = document.createElement('div');
-                 pDiv.className = "w-full h-full flex items-center justify-center bg-gray-50"; // Placeholder styling
-                 const placeholderImg = document.createElement('img');
-                 placeholderImg.src = DEFAULT_STAMP_IMAGE_PLACEHOLDER;
-                 placeholderImg.alt = "Upload Stamp Placeholder";
-                 placeholderImg.width = 178;
-                 placeholderImg.height = 98;
-                 placeholderImg.className = "object-contain";
-                 placeholderImg.setAttribute('data-ai-hint', "upload placeholder");
-                 pDiv.appendChild(placeholderImg);
-                 stampContainer.innerHTML = '';
-                 stampContainer.appendChild(pDiv);
+            
+            if (stampImage && stampImage !== DEFAULT_STAMP_IMAGE_PLACEHOLDER && imgElement) {
+                 imgElement.src = stampImage;
+             } else if (imgElement) { 
+                 imgElement.src = DEFAULT_STAMP_IMAGE_PLACEHOLDER;
             }
         }
 
@@ -722,9 +749,9 @@ const AdOrderForm: FC = () => {
         const previewContentDiv = document.getElementById('printPreviewContent');
         if (previewContentDiv) previewContentDiv.innerHTML = '';
     }
-  }, [isPreviewing, isFullScreenPreview, orderDate, stampImage, rowsData, matterText, clientName, advManagerInput1, advManagerInput2, headingCaption, packageName, ron, adjustTextareaHeight ]);
+  }, [isPreviewing, isFullScreenPreview, orderDate, companyLogo, stampImage, rowsData, matterText, clientName, advManagerInput1, advManagerInput2, headingCaption, packageName, ron, adjustTextareaHeight ]);
 
-  if (!isClient && !orderDate) { // Show loading only if not client and orderDate is not yet set (to avoid flash)
+  if (!isClient && !orderDate) { 
     return <div className="flex justify-center items-center h-screen"><p>Loading form...</p></div>;
   }
 
@@ -733,7 +760,7 @@ const AdOrderForm: FC = () => {
 
       <div className="flex justify-end items-center gap-2 p-2 mb-2 no-print no-pdf-export action-buttons-container sticky top-0 bg-background z-50">
         <Button onClick={handlePrintPreview} variant="outline" size="sm"><Eye className="mr-2 h-4 w-4" />Preview</Button>
-        <Button onClick={generatePdf} variant="default" size="sm"><Download className="mr-2 h-4 w-4" />Download PDF</Button>
+        
         <Button onClick={() => handleActualPrint(false)} variant="default" size="sm"><Printer className="mr-2 h-4 w-4" />Print</Button>
         <Button onClick={handleFullScreenPreviewToggle} variant="outline" size="sm">
             {isFullScreenPreview ? <XCircle className="mr-2 h-4 w-4" /> : <Expand className="mr-2 h-4 w-4" />}
@@ -747,8 +774,13 @@ const AdOrderForm: FC = () => {
         </div>
 
         <div className="flex flex-col md:flex-row gap-4 mb-5 print-header-box">
-            <div className="w-full md:w-[30%] p-3 border-2 border-black rounded box-decoration-clone">
-                <Image src="https://picsum.photos/seed/leharlogo/200/100" alt="Lehar Advertising" width={200} height={100} data-ai-hint="company logo" className="w-full h-auto object-contain"/>
+            <div 
+                className="w-full md:w-[30%] p-3 border-2 border-black rounded box-decoration-clone company-logo-container-screen company-logo-container-pdf cursor-pointer"
+                onClick={triggerCompanyLogoUpload}
+                title="Click to upload company logo"
+            >
+                <Image src={companyLogo} alt="Lehar Advertising" width={200} height={100} data-ai-hint="company logo" className="w-full h-auto object-contain"/>
+                <Input type="file" ref={companyLogoInputRef} onChange={handleCompanyLogoUpload} accept="image/*" className="hidden" />
             </div>
             <div className="flex-1 flex flex-col gap-3 p-3 border-2 border-black rounded">
                 <div className="flex gap-3 items-center">
@@ -896,7 +928,7 @@ const AdOrderForm: FC = () => {
           id="printPreviewOverlay"
           className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[1000] p-4 no-print"
           onClick={(e) => {
-             if (e.target === e.currentTarget) { // Close only if overlay itself is clicked
+             if (e.target === e.currentTarget) { 
                 handleClosePrintPreview();
             }
           }}
@@ -904,7 +936,7 @@ const AdOrderForm: FC = () => {
           <div
             id="printPreviewModalContentContainer"
             className="bg-white w-auto max-w-[210mm] min-h-[297mm] h-auto max-h-[95vh] p-0 shadow-2xl overflow-y-auto print-preview-modal-content no-print"
-            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal content
+            onClick={(e) => e.stopPropagation()} 
           >
              <div className="flex justify-end p-2 sticky top-0 bg-white z-10 border-b">
                 <Button onClick={() => handleActualPrint(true)} variant="outline" size="sm" className="mr-2">
