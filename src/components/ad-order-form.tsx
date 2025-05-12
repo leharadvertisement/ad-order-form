@@ -759,13 +759,7 @@ const AdOrderForm: FC = () => {
     <div className="max-w-[210mm] mx-auto p-1 print-root-container bg-background" id="main-application-container">
 
       <div className="flex justify-end items-center gap-2 p-2 mb-2 no-print no-pdf-export action-buttons-container sticky top-0 bg-background z-50">
-        <Button onClick={handlePrintPreview} variant="outline" size="sm"><Eye className="mr-2 h-4 w-4" />Preview</Button>
-        
-        <Button onClick={() => handleActualPrint(false)} variant="default" size="sm"><Printer className="mr-2 h-4 w-4" />Print</Button>
-        <Button onClick={handleFullScreenPreviewToggle} variant="outline" size="sm">
-            {isFullScreenPreview ? <XCircle className="mr-2 h-4 w-4" /> : <Expand className="mr-2 h-4 w-4" />}
-            {isFullScreenPreview ? 'Exit Fullscreen' : 'Fullscreen'}
-        </Button>
+        {/* Removed PDF Download, Print, Preview, and Fullscreen buttons */}
       </div>
 
       <div id="printable-area-pdf" ref={printableAreaRef} className={`w-full print-target bg-card text-card-foreground shadow-sm p-2 md:p-4 border-4 border-black ${isFullScreenPreview ? 'fullscreen-preview-active' : ''}`}>
