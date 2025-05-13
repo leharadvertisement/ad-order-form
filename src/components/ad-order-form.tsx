@@ -14,7 +14,7 @@ import { Printer, PlusSquare, MinusSquare, Eye, Expand, Download, XCircle, Trash
 import { format } from 'date-fns';
 
 const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://picsum.photos/seed/stamp/178/98';
-const COMPANY_LOGO_PLACEHOLDER = "https://picsum.photos/seed/leharlogo/400/200";
+const COMPANY_LOGO_PLACEHOLDER = "https://picsum.photos/seed/leharlogo/200/300";
 
 
 const AdOrderForm: FC = () => {
@@ -797,15 +797,16 @@ const AdOrderForm: FC = () => {
 
         <div className="flex flex-col md:flex-row gap-4 mb-5 print-header-box">
             <div
-                className="w-full md:w-[30%] p-3 border-2 border-black rounded box-decoration-clone company-logo-container-screen company-logo-container-pdf cursor-pointer flex flex-col items-center justify-center relative"
+                className="w-full md:w-[30%] p-3 border-2 border-black rounded box-decoration-clone company-logo-container-screen company-logo-container-pdf cursor-pointer flex flex-col items-start justify-start relative"
                 onClick={triggerCompanyLogoUpload}
                 title="Click to upload company logo"
             >
-                <div className="w-full h-full flex items-center justify-center">
+                <div className="w-full h-full flex items-start justify-center">
                      <Image 
                         src={companyLogo} 
                         alt="Company Logo" 
-                        layout="fill"
+                        width={200}
+                        height={300}
                         objectFit="contain"
                         data-ai-hint="company logo"
                         className="max-h-full"
