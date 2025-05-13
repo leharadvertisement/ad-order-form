@@ -16,8 +16,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <meta charSet="UTF-8" /> {/* From user's HTML */}
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" /> {/* From user's HTML */}
+        <meta charSet="UTF-8" />{/* From user's HTML */}
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />{/* From user's HTML */}
         {/* FontAwesome CDN from user's HTML */}
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
       </head>
