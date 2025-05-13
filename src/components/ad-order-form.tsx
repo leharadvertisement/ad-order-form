@@ -1,4 +1,3 @@
-
 // src/components/ad-order-form.tsx
 'use client';
 
@@ -11,11 +10,11 @@ import { Label } from '@/components/ui/label';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Image from 'next/image';
-import { Printer, PlusSquare, MinusSquare, Eye, Expand, Download, XCircle, Trash2, UploadCloud } from 'lucide-react';
+import { Printer, PlusSquare, MinusSquare, Eye, Expand, Download, XCircle, Trash2, UploadCloud, CalendarDays } from 'lucide-react';
 import { format } from 'date-fns';
 
 const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://picsum.photos/seed/stamp/178/98';
-const DEFAULT_COMPANY_LOGO_PLACEHOLDER = "https://picsum.photos/seed/leharlogo/200/250";
+const DEFAULT_COMPANY_LOGO_PLACEHOLDER = "https://picsum.photos/seed/leharlogo/280/280";
 
 
 const AdOrderForm: FC = () => {
@@ -227,9 +226,9 @@ const AdOrderForm: FC = () => {
 
 
   const generatePdf = useCallback(async () => {
-    if (typeof window === 'undefined' || typeof window.html2pdf === 'undefined') {
+    if (typeof window === 'undefined' || !window.html2pdf) {
       console.error('html2pdf.js not loaded or window object not available.');
-      alert('PDF generation library not loaded. Please try again later.');
+      alert('PDF generation library not loaded or not in a browser environment.');
       return;
     }
     
@@ -848,7 +847,7 @@ const AdOrderForm: FC = () => {
 
         <div className="flex flex-col md:flex-row md:items-stretch gap-4 mb-5 print-header-box">
             <div
-                className="w-full md:w-[250px] h-[250px] md:h-auto p-1.5 border-2 border-black rounded flex flex-col relative company-logo-container-screen company-logo-container-pdf cursor-pointer items-center justify-start overflow-hidden"
+                className="w-full md:w-[300px] h-[300px] md:h-auto p-1.5 border-2 border-black rounded flex flex-col relative company-logo-container-screen company-logo-container-pdf cursor-pointer items-center justify-start overflow-hidden"
                 onClick={triggerCompanyLogoUpload}
                 title="Click to upload company logo"
             >
@@ -856,8 +855,8 @@ const AdOrderForm: FC = () => {
                     <Image
                         src={companyLogo}
                         alt="Company Logo"
-                        width={200} 
-                        height={230}
+                        width={280} 
+                        height={280}
                         objectFit="contain" 
                         objectPosition="top"
                         className="rounded"
