@@ -300,7 +300,7 @@ const AdOrderForm = (): JSX.Element => {
   const generatePdf = useCallback(async () => {
     if (typeof window === 'undefined') return;
     
-    const html2pdf = window.html2pdf; // Access html2pdf from window object
+    const html2pdf = (window as any).html2pdf; 
 
     const elementToPrint = printableAreaRef.current;
     if (!elementToPrint || !html2pdf) {
@@ -321,12 +321,12 @@ const AdOrderForm = (): JSX.Element => {
 
 
     clonedElement.style.width = '210mm';
-    clonedElement.style.height = '297mm'; // Fit to A4
+    clonedElement.style.height = '297mm'; 
     clonedElement.style.minHeight = '297mm';
     clonedElement.style.maxHeight = '297mm';
-    clonedElement.style.overflow = 'hidden'; // Clip content that overflows A4
-    clonedElement.style.padding = '5mm'; // Standard A4 padding
-    clonedElement.style.borderWidth = '2px'; // Match screen border
+    clonedElement.style.overflow = 'hidden'; 
+    clonedElement.style.padding = '5mm'; 
+    clonedElement.style.borderWidth = '2px'; 
     clonedElement.style.boxSizing = 'border-box';
 
     const logoContainer = clonedElement.querySelector('.company-logo-container-pdf') as HTMLElement;
@@ -629,18 +629,18 @@ const AdOrderForm = (): JSX.Element => {
               {/* Content will be cloned here by useEffect */}
             </div>
             <div className="mt-4 flex justify-end gap-2">
-              <Button
+            <Button
                 onClick={() => {
                   if (printPreviewContentRef.current && printPreviewContentRef.current.firstChild) {
                     const clonedFormElement = printPreviewContentRef.current.firstChild as HTMLElement;
                     const iframe = document.createElement('iframe');
-                    iframe.style.position = 'fixed'; 
-                    iframe.style.left = '-9999px'; 
-                    iframe.style.width = '0'; 
+                    iframe.style.position = 'fixed';
+                    iframe.style.left = '-9999px';
+                    iframe.style.width = '0';
                     iframe.style.height = '0';
                     iframe.style.border = '0';
                     document.body.appendChild(iframe);
-            
+
                     const iframeDoc = iframe.contentWindow?.document || iframe.contentDocument;
                     if (iframeDoc) {
                       iframeDoc.open();
@@ -652,16 +652,23 @@ const AdOrderForm = (): JSX.Element => {
                       iframeDoc.write(clonedFormElement.outerHTML);
                       iframeDoc.write('</body></html>');
                       iframeDoc.close();
-            
+
                       const textareasInIframe = iframeDoc.querySelectorAll('textarea');
                       textareasInIframe.forEach(ta => adjustTextareaHeight(ta as HTMLTextAreaElement, iframeDoc));
-            
-                      iframe.contentWindow?.focus();
-                      iframe.contentWindow?.print();
-            
+                      
+                      // Delay to ensure styles are applied before printing
                       setTimeout(() => {
-                        document.body.removeChild(iframe);
-                      }, 1000); 
+                        if (iframe.contentWindow) {
+                          iframe.contentWindow.focus();
+                          iframe.contentWindow.print();
+                        }
+                        // Clean up iframe after a delay
+                        setTimeout(() => {
+                          if (document.body.contains(iframe)) {
+                            document.body.removeChild(iframe);
+                          }
+                        }, 1000); 
+                      }, 100); // 100ms delay before print
                     }
                   }
                 }}
@@ -873,4 +880,3 @@ const AdOrderForm = (): JSX.Element => {
 };
 
 export default AdOrderForm;
-
