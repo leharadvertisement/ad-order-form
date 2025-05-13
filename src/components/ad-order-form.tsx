@@ -227,11 +227,12 @@ const AdOrderForm: FC = () => {
 
 
   const generatePdf = useCallback(async () => {
-    if (typeof window === 'undefined' || !window.html2pdf) {
+    if (typeof window === 'undefined' || typeof window.html2pdf === 'undefined') {
       console.error('html2pdf.js not loaded or window object not available.');
       alert('PDF generation library not loaded. Please try again later.');
       return;
     }
+    
     const html2pdf = window.html2pdf;
 
     const elementToPrint = printableAreaRef.current;
@@ -847,16 +848,18 @@ const AdOrderForm: FC = () => {
 
         <div className="flex flex-col md:flex-row md:items-stretch gap-4 mb-5 print-header-box">
             <div
-                className="w-full md:w-[250px] p-1.5 border-2 border-black rounded flex flex-col relative company-logo-container-screen company-logo-container-pdf cursor-pointer items-center justify-center overflow-hidden min-h-[200px] md:min-h-[250px]"
+                className="w-full md:w-[250px] h-[250px] md:h-auto p-1.5 border-2 border-black rounded flex flex-col relative company-logo-container-screen company-logo-container-pdf cursor-pointer items-center justify-start overflow-hidden"
                 onClick={triggerCompanyLogoUpload}
                 title="Click to upload company logo"
             >
-                 <div className="relative w-full h-full flex items-center justify-center">
+                 <div className="relative w-full h-full flex items-start justify-center">
                     <Image
                         src={companyLogo}
                         alt="Company Logo"
-                        layout="fill"
-                        objectFit="contain"
+                        width={200} 
+                        height={230}
+                        objectFit="contain" 
+                        objectPosition="top"
                         className="rounded"
                         data-ai-hint="company logo"
                     />
@@ -1049,3 +1052,4 @@ const AdOrderForm: FC = () => {
 };
 
 export default AdOrderForm;
+
