@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Image from 'next/image';
-import { Printer, PlusSquare, MinusSquare, Eye, Expand, Download, XCircle } from 'lucide-react';
+import { Printer, PlusSquare, MinusSquare, Eye, Expand, Download, XCircle, Calendar as CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 
 const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://picsum.photos/seed/stamp/178/98';
@@ -46,11 +46,11 @@ const AdOrderForm: FC = () => {
       textarea.style.height = 'auto';
       const computedStyle = typeof window !== 'undefined' ? getComputedStyle(textarea) : null;
 
-      let minHeightScreen = 120; 
+      let minHeightScreen = 120;
       if (textarea.id === 'matterTextarea') {
-        minHeightScreen = 100; 
-      } else if (textarea.classList.contains('print-textarea')) { 
-         minHeightScreen = 150; 
+        minHeightScreen = 100;
+      } else if (textarea.classList.contains('print-textarea')) {
+         minHeightScreen = 150;
       }
 
 
@@ -58,10 +58,10 @@ const AdOrderForm: FC = () => {
 
       const isPrintingOrPdfContext = typeof window !== 'undefined' &&
                                      (document.body.classList.contains('pdf-export-active') ||
-                                      document.body.classList.contains('print-preview-active') || 
-                                      document.body.classList.contains('fullscreen-body-active') || 
-                                      document.body.classList.contains('printing-from-preview') || 
-                                      document.body.classList.contains('direct-print-active') || 
+                                      document.body.classList.contains('print-preview-active') ||
+                                      document.body.classList.contains('fullscreen-body-active') ||
+                                      document.body.classList.contains('printing-from-preview') ||
+                                      document.body.classList.contains('direct-print-active') ||
                                       window.matchMedia('print').matches);
 
       if (isPrintingOrPdfContext) {
@@ -74,29 +74,31 @@ const AdOrderForm: FC = () => {
             let newHeight = textarea.scrollHeight;
             if (newHeight < pdfMinHeight) newHeight = pdfMinHeight;
             textarea.style.height = `${Math.min(newHeight, pdfMaxHeight)}px`;
-            textarea.style.overflowY = newHeight > pdfMaxHeight ? 'hidden' : 'hidden'; 
-        } else { 
+            textarea.style.overflowY = newHeight > pdfMaxHeight ? 'hidden' : 'hidden';
+        } else {
             let newHeight = textarea.scrollHeight;
-            if (textarea.classList.contains('print-textarea') && computedStyle) { 
+            if (textarea.classList.contains('print-textarea') && computedStyle) {
                 const printTableMinHeight = parseFloat(computedStyle.getPropertyValue('--print-table-textarea-min-height') || 'auto');
                 if (!isNaN(printTableMinHeight) && newHeight < printTableMinHeight) newHeight = printTableMinHeight;
             }
             textarea.style.height = `${newHeight}px`;
-            textarea.style.overflowY = 'visible'; 
+            textarea.style.overflowY = 'visible';
         }
-      } else { 
+      } else {
         textarea.style.height = `${Math.max(textarea.scrollHeight, minHeightScreen)}px`;
-        textarea.style.overflowY = 'auto'; 
+        textarea.style.overflowY = 'auto';
       }
     }
   }, []);
+
 
   useEffect(() => {
     setIsClient(true);
     if (orderDate === undefined) {
       setOrderDate(new Date());
     }
-  }, []); 
+  }, [orderDate]);
+
 
   useEffect(() => {
     if (isClient) {
@@ -118,9 +120,11 @@ const AdOrderForm: FC = () => {
 
 
   useEffect(() => {
-    const allTextareas = document.querySelectorAll('#printable-area-pdf textarea, #printPreviewContent textarea');
-    allTextareas.forEach(ta => adjustTextareaHeight(ta as HTMLTextAreaElement));
-  }, [rowsData, matterText, adjustTextareaHeight, headingCaption, packageName, advManagerInput1, advManagerInput2, clientName, ron, isPreviewing, isFullScreenPreview]);
+    if (isClient) {
+      const allTextareas = document.querySelectorAll('#printable-area-pdf textarea, #printPreviewContent textarea');
+      allTextareas.forEach(ta => adjustTextareaHeight(ta as HTMLTextAreaElement));
+    }
+  }, [isClient, rowsData, matterText, adjustTextareaHeight, headingCaption, packageName, advManagerInput1, advManagerInput2, clientName, ron, isPreviewing, isFullScreenPreview]);
 
 
   const handleDateChange = (date: Date | undefined) => {
@@ -157,7 +161,7 @@ const AdOrderForm: FC = () => {
   }, []);
 
   const deleteRow = useCallback((index: number) => {
-     if (rowsData.length > 1) { 
+     if (rowsData.length > 1) {
         setRowsData(prevRows => prevRows.filter((_, i) => i !== index));
      } else {
         setRowsData([{ keyNo: '', publication: '', edition: '', size: '', scheduledDate: null, position: '' }]);
@@ -494,32 +498,32 @@ const AdOrderForm: FC = () => {
             }
         } catch (e) {
             console.warn("Could not copy stylesheet for printing:", styleSheet.href, e);
-             if (styleSheet.href) { 
+             if (styleSheet.href) {
                 iframeDoc.write(`<link rel="stylesheet" type="${styleSheet.type || 'text/css'}" href="${styleSheet.href}">`);
             }
         }
     });
-    iframeDoc.write('</head><body class="printing-from-preview direct-print-active">'); 
+    iframeDoc.write('</head><body class="printing-from-preview direct-print-active">');
 
     const clonedContent = contentSourceElement.cloneNode(true) as HTMLElement;
-    clonedContent.id = "printable-area-pdf"; 
+    clonedContent.id = "printable-area-pdf";
 
     iframeDoc.body.appendChild(clonedContent);
     iframeDoc.write('</body></html>');
     iframeDoc.close();
 
 
-    setTimeout(() => { 
+    setTimeout(() => {
         iframe.contentWindow?.focus();
         iframe.contentWindow?.print();
-        setTimeout(() => { 
-          if(document.body.contains(iframe)) { 
+        setTimeout(() => {
+          if(document.body.contains(iframe)) {
              document.body.removeChild(iframe);
           }
           document.body.classList.remove('printing-from-preview');
           if (!isFromPreviewModal) document.body.classList.remove('direct-print-active');
-        }, 1000); 
-    }, 500); 
+        }, 1000);
+    }, 500);
 }, [adjustTextareaHeight]);
 
 
@@ -539,20 +543,20 @@ const AdOrderForm: FC = () => {
                 window.print();
 
                 setTimeout(() => document.body.classList.remove('direct-print-active'), 1000);
-            }, 100); 
+            }, 100);
         };
 
         if (wasFullScreen && document.fullscreenElement) {
             document.exitFullscreen().then(exitFullscreenAndPrint).catch(err => {
                 console.error("Error exiting fullscreen:", err);
-                exitFullscreenAndPrint(); 
+                exitFullscreenAndPrint();
             });
-        } else if (isPreviewing) { 
+        } else if (isPreviewing) {
             handleClosePrintPreview();
-            setTimeout(exitFullscreenAndPrint, 50); 
+            setTimeout(exitFullscreenAndPrint, 50);
         }
          else {
-            exitFullscreenAndPrint(); 
+            exitFullscreenAndPrint();
         }
     }
   }, [isPreviewing, isFullScreenPreview, handleClosePrintPreview, printInternal, adjustTextareaHeight]);
@@ -634,7 +638,7 @@ const AdOrderForm: FC = () => {
             const imgElement = companyLogoContainer.querySelector('img');
              if (companyLogo && companyLogo !== COMPANY_LOGO_PLACEHOLDER && imgElement) {
                  imgElement.src = companyLogo;
-             } else if (imgElement) { 
+             } else if (imgElement) {
                  imgElement.src = COMPANY_LOGO_PLACEHOLDER;
              }
         }
@@ -645,7 +649,7 @@ const AdOrderForm: FC = () => {
             const imgElement = stampContainer.querySelector('img');
             if (stampImage && stampImage !== DEFAULT_STAMP_IMAGE_PLACEHOLDER && imgElement) {
                  imgElement.src = stampImage;
-             } else if (imgElement) { 
+             } else if (imgElement) {
                  imgElement.src = DEFAULT_STAMP_IMAGE_PLACEHOLDER;
              }
         }
@@ -655,25 +659,25 @@ const AdOrderForm: FC = () => {
             const p = document.createElement('span');
             const input = inputEl as HTMLInputElement;
             let value = input.value || '';
-            if (input.id === 'orderDate' && orderDate) { 
+            if (input.id === 'orderDate' && orderDate) {
                  value = format(orderDate, 'dd.MM.yyyy');
             } else if (!input.value && input.placeholder && input.type !== 'date') {
-                value = '\u00A0'; 
-            } else if (input.type === 'date' && !input.value) { 
+                value = '\u00A0';
+            } else if (input.type === 'date' && !input.value) {
                  value = '\u00A0';
-            } else if (input.type === 'date' && input.value){ 
+            } else if (input.type === 'date' && input.value){
                 try {
                     value = format(new Date(input.value), 'dd.MM.yyyy');
-                } catch (e) { 
+                } catch (e) {
                     value = input.value || '\u00A0';
                 }
             } else {
-                value = input.value || '\u00A0'; 
+                value = input.value || '\u00A0';
             }
             p.textContent = value;
-            p.className = 'static-print-text no-underline-print'; 
-            p.style.width = getComputedStyle(input).width; 
-            p.style.minHeight = '1em'; 
+            p.className = 'static-print-text no-underline-print';
+            p.style.width = getComputedStyle(input).width;
+            p.style.minHeight = '1em';
             input.parentNode?.replaceChild(p, input);
         });
 
@@ -689,7 +693,7 @@ const AdOrderForm: FC = () => {
             } else if (typeof dateValue === 'string' && dateValue.trim() !== '') {
                 try {
                     displayValue = format(new Date(dateValue), 'dd.MM.yyyy');
-                } catch { displayValue = dateValue; } 
+                } catch { displayValue = dateValue; }
             }
             p.textContent = displayValue;
             p.className = 'static-print-text no-underline-print';
@@ -707,29 +711,29 @@ const AdOrderForm: FC = () => {
             const textarea = textareaEl as HTMLTextAreaElement;
             let value = textarea.value.replace(/\n/g, '<br>') || '';
             if (!textarea.value && textarea.placeholder) {
-                value = '\u00A0'; 
+                value = '\u00A0';
             } else if(!textarea.value) {
-                value = '\u00A0'; 
+                value = '\u00A0';
             }
-            div.innerHTML = value; 
+            div.innerHTML = value;
             div.className = 'static-print-text textarea-static-print no-underline-print';
             if (textarea.id === 'matterTextarea') {
-                 div.classList.add('matter-container-print'); 
-                 div.style.textAlign = getComputedStyle(textarea).textAlign as CanvasTextAlign; 
+                 div.classList.add('matter-container-print');
+                 div.style.textAlign = getComputedStyle(textarea).textAlign as CanvasTextAlign;
             }
-            
+
             const textareaStyle = getComputedStyle(textarea);
             div.style.fontFamily = textareaStyle.fontFamily;
             div.style.fontSize = textareaStyle.fontSize;
             div.style.fontWeight = textareaStyle.fontWeight;
             div.style.lineHeight = textareaStyle.lineHeight;
-            div.style.color = 'black'; 
-            div.style.backgroundColor = 'transparent'; 
-            div.style.height = 'auto'; 
-            div.style.minHeight = textareaStyle.minHeight || (textarea.id === 'matterTextarea' ? '100px' :'120px'); 
-            div.style.overflow = 'visible'; 
-            div.style.whiteSpace = 'pre-wrap'; 
-            div.style.wordWrap = 'break-word'; 
+            div.style.color = 'black';
+            div.style.backgroundColor = 'transparent';
+            div.style.height = 'auto';
+            div.style.minHeight = textareaStyle.minHeight || (textarea.id === 'matterTextarea' ? '100px' :'120px');
+            div.style.overflow = 'visible';
+            div.style.whiteSpace = 'pre-wrap';
+            div.style.wordWrap = 'break-word';
 
             textarea.parentNode?.replaceChild(div, textarea);
         });
@@ -737,23 +741,23 @@ const AdOrderForm: FC = () => {
         const tableInPreview = previewNode.querySelector('.main-table-bordered');
         if (tableInPreview) {
             tableInPreview.classList.remove('main-table-bordered');
-            tableInPreview.classList.add('print-table'); 
+            tableInPreview.classList.add('print-table');
             const tableHeaders = tableInPreview.querySelectorAll('th');
-            tableHeaders.forEach(th => th.classList.add('print-table-header')); 
+            tableHeaders.forEach(th => th.classList.add('print-table-header'));
         }
 
 
-        previewContentDiv.innerHTML = ''; 
+        previewContentDiv.innerHTML = '';
         previewContentDiv.appendChild(previewNode);
 
-        const textareasInPreview = previewContentDiv.querySelectorAll('.textarea-static-print, .static-print-text'); 
+        const textareasInPreview = previewContentDiv.querySelectorAll('.textarea-static-print, .static-print-text');
         textareasInPreview.forEach(ta => {
             const htmlTa = ta as HTMLElement;
-            htmlTa.style.height = 'auto'; 
-            htmlTa.style.height = `${htmlTa.scrollHeight}px`; 
+            htmlTa.style.height = 'auto';
+            htmlTa.style.height = `${htmlTa.scrollHeight}px`;
         });
       }
-    } else if (!isPreviewing && !isFullScreenPreview) { 
+    } else if (!isPreviewing && !isFullScreenPreview) {
         const previewContentDiv = document.getElementById('printPreviewContent');
         if (previewContentDiv) previewContentDiv.innerHTML = '';
     }
@@ -770,7 +774,7 @@ const AdOrderForm: FC = () => {
         <Button onClick={handlePrintPreview} variant="outline" size="sm"><Eye className="mr-2 h-4 w-4"/>Preview</Button>
         <Button onClick={() => handleActualPrint(false)} variant="outline" size="sm"><Printer className="mr-2 h-4 w-4"/>Print</Button>
         <Button onClick={handleFullScreenPreviewToggle} variant="outline" size="sm"><Expand className="mr-2 h-4 w-4"/>Fullscreen</Button>
-        <Button onClick={generatePdf} variant="outline" size="sm"><Download className="mr-2 h-4 w-4"/>Download PDF</Button>
+        {/* <Button onClick={generatePdf} variant="outline" size="sm"><Download className="mr-2 h-4 w-4"/>Download PDF</Button> */}
       </div>
 
       <div id="printable-area-pdf" ref={printableAreaRef} className={`w-full print-target bg-card text-card-foreground shadow-sm p-2 md:p-4 border-4 border-black ${isFullScreenPreview ? 'fullscreen-preview-active' : ''}`}>
@@ -783,7 +787,6 @@ const AdOrderForm: FC = () => {
                 className="w-full md:w-[30%] p-3 border-2 border-black rounded box-decoration-clone company-logo-container-screen company-logo-container-pdf cursor-pointer flex items-center justify-center"
                 onClick={triggerCompanyLogoUpload}
                 title="Click to upload company logo"
-                style={{height: '150px'}} 
             >
                 <Image src={companyLogo} alt="Company Logo" width={200} height={100} data-ai-hint="company logo" className="object-contain max-w-full max-h-full"/>
                 <Input type="file" ref={companyLogoInputRef} onChange={handleCompanyLogoUpload} accept="image/*" className="hidden" />
@@ -797,7 +800,7 @@ const AdOrderForm: FC = () => {
                     </div>
                     <div className="flex-1 flex items-center">
                          <Label htmlFor="orderDate" className="text-sm font-bold mr-2 whitespace-nowrap">Date:</Label>
-                        <DatePicker selected={orderDate} onChange={handleDateChange} dateFormat="dd.MM.yyyy" className="text-sm py-1 px-2 h-auto w-full border-2 border-black text-center justify-center" id="orderDate" placeholderText=""/>
+                        <DatePicker selected={orderDate} onChange={handleDateChange} dateFormat="dd.MM.yyyy" className="text-sm py-1 px-2 h-auto w-full border-2 border-black" id="orderDate" placeholderText=""/>
                     </div>
                 </div>
                 <div className="flex items-center">
@@ -858,7 +861,7 @@ const AdOrderForm: FC = () => {
                         selected={row.scheduledDate instanceof Date ? row.scheduledDate : undefined}
                         onChange={(date) => handleCellDateChange(date, index)}
                         dateFormat="dd.MM.yyyy"
-                        className="text-xs py-0.5 px-1 h-auto w-full border-0 rounded-none no-shadow-outline print-textarea text-center justify-center"
+                        className="text-xs py-0.5 px-1 h-auto w-full border-0 rounded-none no-shadow-outline print-textarea"
                         placeholderText=""
                     />
                  </TableCell>
@@ -897,7 +900,7 @@ const AdOrderForm: FC = () => {
           <hr className="border-black border-b-2 my-2 w-full" />
 
           <div className="flex justify-between items-start mt-0 pt-0">
-            <div className="w-[62%]"> 
+            <div className="w-[62%]">
                 <p className="text-sm font-bold underline decoration-black decoration-2 underline-offset-2 mb-1">Note:</p>
                 <ol className="list-decimal list-inside text-xs space-y-0.5">
                   <li>Space reserved vide our letter No.</li>
@@ -908,7 +911,7 @@ const AdOrderForm: FC = () => {
             </div>
 
              <div
-                className="w-[35%] flex flex-col items-center justify-end stamp-parent-container mt-2 md:mt-0 self-end" 
+                className="w-[35%] flex flex-col items-center justify-end stamp-parent-container mt-2 md:mt-0 self-end"
             >
                 <div
                   className="stamp-container-screen w-[178px] h-[98px] flex items-center justify-center text-xs text-gray-500 bg-transparent rounded cursor-pointer hover:opacity-80"
@@ -933,8 +936,8 @@ const AdOrderForm: FC = () => {
         <div
           id="printPreviewOverlay"
           className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[1000] p-4 no-print"
-          onClick={(e) => { 
-             if (e.target === e.currentTarget) { 
+          onClick={(e) => {
+             if (e.target === e.currentTarget) {
                 handleClosePrintPreview();
             }
           }}
@@ -942,7 +945,7 @@ const AdOrderForm: FC = () => {
           <div
             id="printPreviewModalContentContainer"
             className="bg-white w-auto max-w-[210mm] min-h-[297mm] h-auto max-h-[95vh] p-0 shadow-2xl overflow-y-auto print-preview-modal-content no-print"
-            onClick={(e) => e.stopPropagation()} 
+            onClick={(e) => e.stopPropagation()}
           >
              <div className="flex justify-end p-2 sticky top-0 bg-white z-10 border-b">
                 <Button onClick={() => handleActualPrint(true)} variant="outline" size="sm" className="mr-2">
