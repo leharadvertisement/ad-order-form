@@ -13,7 +13,7 @@ import Image from 'next/image';
 import { Eye, CalendarIcon, Download, Printer, Trash2, UploadCloud, XCircle, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import type { Options as Html2PdfOptions } from 'html2pdf.js';
+// import type { Options as Html2PdfOptions } from 'html2pdf.js'; // Removed to fix type error
 
 
 const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://picsum.photos/seed/stamp/178/98';
@@ -473,7 +473,7 @@ const AdOrderForm = (): JSX.Element => {
       tableHeaders.forEach(th => th.classList.add('print-table-header'));
     }
 
-    const pdfOptions: Html2PdfOptions = {
+    const pdfOptions: any = { // Using 'any' type for pdfOptions
       margin: [5, 5, 5, 5], //mm
       filename: 'release_order_form.pdf',
       image: { type: 'jpeg', quality: 0.98 },
@@ -879,4 +879,3 @@ const AdOrderForm = (): JSX.Element => {
 };
 
 export default AdOrderForm;
-
