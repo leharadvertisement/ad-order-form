@@ -10,13 +10,10 @@ import { Label } from '@/components/ui/label';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Image from 'next/image';
-import { Printer, PlusSquare, MinusSquare, Eye, Expand, Download, XCircle, Trash2, UploadCloud, CalendarDays } from 'lucide-react';
+import { Printer, PlusSquare, MinusSquare, Eye, Expand, Download, XCircle, Trash2, UploadCloud, CalendarDays as CalendarIconLucide } from 'lucide-react';
 import { format } from 'date-fns';
-<<<<<<< HEAD
-import html2canvas from 'html2canvas';
-import { cn } from '@/lib/utils'; // For conditional rendering of DatePicker placeholder
-=======
->>>>>>> 56a41949c54cb89f100a844e507e44848c922b58
+import { cn } from '@/lib/utils';
+
 
 const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://picsum.photos/seed/stamp/178/98';
 const DEFAULT_COMPANY_LOGO_PLACEHOLDER = "https://picsum.photos/seed/leharlogo/280/280";
@@ -33,15 +30,11 @@ const AdOrderForm: FC = () => {
   const [matterText, setMatterText] = useState<string>('');
 
   const [stampImage, setStampImage] = useState<string>(DEFAULT_STAMP_IMAGE_PLACEHOLDER);
-<<<<<<< HEAD
-  const [companyLogo, setCompanyLogo] = useState<string>(COMPANY_LOGO_PLACEHOLDER);
-=======
   const [companyLogo, setCompanyLogo] = useState<string>(DEFAULT_COMPANY_LOGO_PLACEHOLDER);
   const [companyLogoInputKey, setCompanyLogoInputKey] = useState<number>(Date.now());
   const [stampInputKey, setStampInputKey] = useState<number>(Date.now() + 1);
 
 
->>>>>>> 56a41949c54cb89f100a844e507e44848c922b58
   const [rowsData, setRowsData] = useState<Array<Record<string, string | Date | undefined | null>>>(() => [
     { keyNo: '', publication: '', edition: '', size: '', scheduledDate: null, position: '' },
   ]);
@@ -51,47 +44,7 @@ const AdOrderForm: FC = () => {
   const companyLogoInputRef = useRef<HTMLInputElement>(null);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [isFullScreenPreview, setIsFullScreenPreview] = useState(false);
-<<<<<<< HEAD
-  const [isClient, setIsClient] = useState(false); 
-
-  useEffect(() => {
-    setIsClient(true);
-    setOrderDate(new Date()); // Initialize date on client mount
-
-    // Load images from localStorage on client mount
-    const savedStampImage = localStorage.getItem('uploadedStampImage');
-    if (savedStampImage) {
-      setStampImage(savedStampImage);
-    }
-    // No 'else' for stampImage, it's already initialized to DEFAULT_STAMP_IMAGE_PLACEHOLDER
-
-    const savedCompanyLogo = localStorage.getItem('uploadedCompanyLogo');
-    if (savedCompanyLogo) {
-      setCompanyLogo(savedCompanyLogo);
-    }
-    // No 'else' for companyLogo, it's already initialized to COMPANY_LOGO_PLACEHOLDER
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Empty dependency array, runs once on mount
-
-
-  useEffect(() => {
-    const allTextareas = document.querySelectorAll('#printable-area-pdf textarea, #printPreviewContent textarea');
-    allTextareas.forEach(ta => adjustTextareaHeight(ta as HTMLTextAreaElement));
-  }, [rowsData, matterText, adjustTextareaHeight, headingCaption, packageName, advManagerInput1, advManagerInput2, clientName, ron, isPreviewing, isFullScreenPreview]);
-
-
-  const handleDateChange = (date: Date | undefined) => {
-    setOrderDate(date);
-  };
-
-  const handleCellDateChange = (date: Date | undefined, index: number) => {
-    const newRowsData = [...rowsData];
-    newRowsData[index].scheduledDate = date;
-    setRowsData(newRowsData);
-  };
-=======
   const [isClient, setIsClient] = useState(false);
->>>>>>> 56a41949c54cb89f100a844e507e44848c922b58
 
   
   const adjustTextareaHeight = useCallback((textarea: HTMLTextAreaElement | null) => {
@@ -148,8 +101,6 @@ const AdOrderForm: FC = () => {
     setIsClient(true);
   }, []);
 
-<<<<<<< HEAD
-=======
   useEffect(() => {
     if (isClient) {
       const allTextareas = document.querySelectorAll('#printable-area-pdf textarea, #printPreviewContent textarea, body.fullscreen-body-active #printable-area-pdf textarea');
@@ -173,7 +124,9 @@ const AdOrderForm: FC = () => {
       } else {
         setCompanyLogo(DEFAULT_COMPANY_LOGO_PLACEHOLDER);
       }
+      setOrderDate(new Date()); // Initialize date on client mount
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isClient]);
 
 
@@ -187,7 +140,6 @@ const AdOrderForm: FC = () => {
     setRowsData(newRowsData);
   };
 
->>>>>>> 56a41949c54cb89f100a844e507e44848c922b58
   const handleTextareaInput = (
     e: React.ChangeEvent<HTMLTextAreaElement>,
     index: number,
@@ -277,13 +229,13 @@ const AdOrderForm: FC = () => {
 
 
   const generatePdf = useCallback(async () => {
-    if (typeof window === 'undefined' || !window.html2pdf) {
+    if (typeof window === 'undefined' || !(window as any).html2pdf) {
       console.error('html2pdf.js not loaded or window object not available.');
       alert('PDF generation library not loaded or not in a browser environment.');
       return;
     }
     
-    const html2pdf = window.html2pdf;
+    const html2pdf = (window as any).html2pdf;
 
     const elementToPrint = printableAreaRef.current;
     if (!elementToPrint) {
@@ -320,13 +272,8 @@ const AdOrderForm: FC = () => {
         const imgElement = logoContainer.querySelector('img');
         if (imgElement && companyLogo && companyLogo !== DEFAULT_COMPANY_LOGO_PLACEHOLDER) {
             imgElement.src = companyLogo;
-<<<<<<< HEAD
-        } else if (imgElement && (!companyLogo || companyLogo === COMPANY_LOGO_PLACEHOLDER)) {
-             imgElement.src = COMPANY_LOGO_PLACEHOLDER; 
-=======
         } else if (imgElement && (!companyLogo || companyLogo === DEFAULT_COMPANY_LOGO_PLACEHOLDER)) {
              imgElement.src = DEFAULT_COMPANY_LOGO_PLACEHOLDER; 
->>>>>>> 56a41949c54cb89f100a844e507e44848c922b58
         }
     }
 
@@ -471,12 +418,8 @@ const AdOrderForm: FC = () => {
         tableHeaders.forEach(th => th.classList.add('print-table-header')); 
     }
 
-<<<<<<< HEAD
-    (window as any).html2pdf().from(clonedElement).set({
-=======
     // html2pdf options
-    html2pdf().from(clonedElement).set({
->>>>>>> 56a41949c54cb89f100a844e507e44848c922b58
+    (window as any).html2pdf().from(clonedElement).set({
         margin: [5,5,5,5], 
         filename: 'release_order_form.pdf',
         image: { type: 'jpeg', quality: 0.98 },
@@ -485,24 +428,16 @@ const AdOrderForm: FC = () => {
             useCORS: true, 
             logging: false, 
             onclone: (documentClone: Document) => {
-                
-<<<<<<< HEAD
-                const _ = clonedBody.offsetHeight; // Force repaint/reflow
-=======
                 const clonedBody = documentClone.body;
                 clonedBody.classList.add('pdf-export-active'); 
->>>>>>> 56a41949c54cb89f100a844e507e44848c922b58
-
                 
-                const _ = clonedBody.offsetHeight; 
+                const _ = clonedBody.offsetHeight; // Force repaint/reflow
 
-                
                 const textareasInClone = clonedBody.querySelectorAll('.textarea-static-print');
                 textareasInClone.forEach(ta => {
                     const htmlTa = ta as HTMLElement;
                     htmlTa.style.height = 'auto'; 
 
-                    
                     const computedStyle = getComputedStyle(htmlTa);
                     const maxHeight = parseFloat(computedStyle.maxHeight || '9999'); 
                     const minHeight = parseFloat(computedStyle.minHeight || '0'); 
@@ -890,11 +825,7 @@ const AdOrderForm: FC = () => {
     }
   }, [isClient, isPreviewing, isFullScreenPreview, orderDate, companyLogo, stampImage, rowsData, matterText, clientName, advManagerInput1, advManagerInput2, headingCaption, packageName, ron, adjustTextareaHeight ]);
 
-<<<<<<< HEAD
-  if (!isClient) { 
-=======
   if (!isClient) {
->>>>>>> 56a41949c54cb89f100a844e507e44848c922b58
     return <div className="flex justify-center items-center h-screen"><p>Loading form...</p></div>;
   }
 
@@ -902,20 +833,10 @@ const AdOrderForm: FC = () => {
     <div className="max-w-[210mm] mx-auto p-1 print-root-container bg-background" id="main-application-container">
 
       <div className="flex justify-end items-center gap-2 p-2 mb-2 no-print no-pdf-export action-buttons-container sticky top-0 bg-background z-50">
-<<<<<<< HEAD
-        <Button onClick={generatePdf} variant="outline" size="sm"><FileText className="mr-2"/> Download PDF</Button>
-        <Button onClick={handlePrintPreview} variant="outline" size="sm"><Eye className="mr-2"/> Preview Print</Button>
-        <Button onClick={() => handleActualPrint(false)} variant="default" size="sm"><Printer className="mr-2"/> Print Release Order</Button>
-        <Button onClick={handleFullScreenPreviewToggle} variant="outline" size="sm">
-          {isFullScreenPreview ? <XCircle className="mr-2"/> : <Expand className="mr-2"/>}
-          {isFullScreenPreview ? 'Exit Fullscreen' : 'Fullscreen Preview'}
-        </Button>
-=======
         <Button onClick={handlePrintPreview} variant="outline" size="sm"><Eye className="mr-2 h-4 w-4"/>Preview</Button>
         <Button onClick={() => handleActualPrint(false)} variant="outline" size="sm"><Printer className="mr-2 h-4 w-4"/>Print</Button>
         <Button onClick={handleFullScreenPreviewToggle} variant="outline" size="sm"><Expand className="mr-2 h-4 w-4"/>Fullscreen</Button>
         <Button onClick={generatePdf} variant="outline" size="sm"><Download className="mr-2 h-4 w-4"/>Download PDF</Button>
->>>>>>> 56a41949c54cb89f100a844e507e44848c922b58
       </div>
 
       <div id="printable-area-pdf" ref={printableAreaRef} className={`w-full print-target bg-card text-card-foreground shadow-sm p-2 md:p-4 border-4 border-black ${isFullScreenPreview ? 'fullscreen-preview-active' : ''}`}>
@@ -923,23 +844,13 @@ const AdOrderForm: FC = () => {
              <h2 className="text-2xl font-bold inline-block px-3 py-1 bg-black text-white border-2 border-black rounded">RELEASE ORDER</h2>
         </div>
 
-<<<<<<< HEAD
-        <div className="flex flex-col md:flex-row gap-4 mb-5 print-header-box">
-            <div 
-                className="w-full md:w-[30%] p-3 border-2 border-black rounded box-decoration-clone company-logo-container-screen company-logo-container-pdf cursor-pointer flex items-center justify-center"
-=======
         <div className="flex flex-col md:flex-row md:items-stretch gap-4 mb-5 print-header-box">
             <div
                 className="w-full md:w-[300px] h-[300px] md:h-auto p-1.5 border-2 border-black rounded flex flex-col relative company-logo-container-screen company-logo-container-pdf cursor-pointer items-center justify-start overflow-hidden"
->>>>>>> 56a41949c54cb89f100a844e507e44848c922b58
                 onClick={triggerCompanyLogoUpload}
                 title="Click to upload company logo"
-                style={{ height: 'auto', minHeight: '150px' }} // Ensure a minimum height
+                style={{ height: 'auto', minHeight: '150px' }} 
             >
-<<<<<<< HEAD
-                <Image src={companyLogo} alt="Lehar Advertising" width={200} height={100} data-ai-hint="company logo" className="w-full h-auto object-contain max-h-[140px]"/>
-                <Input type="file" ref={companyLogoInputRef} onChange={handleCompanyLogoUpload} accept="image/*" className="hidden" />
-=======
                  <div className="relative w-full h-full flex items-start justify-center">
                     <Image
                         src={companyLogo}
@@ -958,7 +869,6 @@ const AdOrderForm: FC = () => {
                         <Trash2 className="h-4 w-4 text-red-500" />
                     </Button>
                 )}
->>>>>>> 56a41949c54cb89f100a844e507e44848c922b58
             </div>
 
             <div className="flex-1 flex flex-col gap-3 p-3 border-2 border-black rounded">
@@ -968,8 +878,7 @@ const AdOrderForm: FC = () => {
                         <Input id="roNumber" type="text" value={ron} onChange={(e) => setRon(e.target.value)} className="text-sm py-1 px-2 h-auto border-2 border-black" placeholder=""/>
                     </div>
                     <div className="flex-1 flex items-center">
-<<<<<<< HEAD
-                        <Label htmlFor="orderDate" className="text-sm font-bold mr-2 whitespace-nowrap">Date:</Label>
+                         <Label htmlFor="orderDate" className="text-sm font-bold mr-2 whitespace-nowrap">Date:</Label>
                         {isClient ? (
                             <DatePicker 
                                 selected={orderDate} 
@@ -992,10 +901,6 @@ const AdOrderForm: FC = () => {
                               <span></span>
                             </Button>
                          )}
-=======
-                         <Label htmlFor="orderDate" className="text-sm font-bold mr-2 whitespace-nowrap">Date:</Label>
-                        <DatePicker selected={orderDate} onChange={handleDateChange} dateFormat="dd.MM.yyyy" className="text-sm py-1 px-2 h-auto w-full border-2 border-black" id="orderDate" placeholderText=""/>
->>>>>>> 56a41949c54cb89f100a844e507e44848c922b58
                     </div>
                 </div>
                 <div className="flex items-center">
@@ -1051,29 +956,14 @@ const AdOrderForm: FC = () => {
                  <TableCell className="main-table-bordered p-0 align-top border border-black">
                    <Textarea value={row.size as string} onChange={(e) => handleTextareaInput(e, index, 'size')} className="text-xs p-1 border-0 rounded-none resize-none min-h-[150px] h-auto no-shadow-outline print-textarea textarea-align-top" />
                  </TableCell>
-<<<<<<< HEAD
-                 <TableCell className="main-table-bordered p-0 align-top print-border border border-black table-date-picker-wrapper">
-                    {isClient ? (
-                      <DatePicker
-                          selected={row.scheduledDate instanceof Date ? row.scheduledDate : undefined}
-                          onChange={(date) => handleCellDateChange(date, index)}
-                          dateFormat="dd.MM.yyyy"
-                          className="text-xs py-0.5 px-1 h-auto w-full border-0 rounded-none no-shadow-outline print-textarea text-center justify-center"
-                          placeholderText=""
-                      />
-                    ) : (
-                      <div className="text-xs py-0.5 px-1 h-auto w-full border-0 rounded-none no-shadow-outline print-textarea text-center justify-center bg-muted-foreground opacity-50" style={{minHeight: '150px'}} /> // Placeholder for SSR
-                    )}
-=======
                  <TableCell className="main-table-bordered p-0 align-top border border-black table-date-picker-wrapper">
                     <DatePicker
                         selected={row.scheduledDate instanceof Date ? row.scheduledDate : undefined}
                         onChange={(date) => handleCellDateChange(date, index)}
                         dateFormat="dd.MM.yyyy"
-                        className="text-xs py-0.5 px-1 h-auto w-full border-0 rounded-none no-shadow-outline print-textarea"
+                        className="text-xs py-0.5 px-1 h-auto w-full border-0 rounded-none no-shadow-outline print-textarea text-center justify-center"
                         placeholderText=""
                     />
->>>>>>> 56a41949c54cb89f100a844e507e44848c922b58
                  </TableCell>
                  <TableCell className="main-table-bordered p-0 align-top border border-black">
                    <Textarea value={row.position as string} onChange={(e) => handleTextareaInput(e, index, 'position')}  className="text-xs p-1 border-0 rounded-none resize-none min-h-[150px] h-auto no-shadow-outline print-textarea textarea-align-top" />
@@ -1152,7 +1042,6 @@ const AdOrderForm: FC = () => {
           id="printPreviewOverlay"
           className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[1000] p-4 no-print"
           onClick={(e) => {
-             
              if (e.target === e.currentTarget) {
                 handleClosePrintPreview();
             }
@@ -1172,10 +1061,7 @@ const AdOrderForm: FC = () => {
                 </Button>
             </div>
              <div id="printPreviewContent" className="print-preview-inner-content p-4">
-<<<<<<< HEAD
-=======
                 
->>>>>>> 56a41949c54cb89f100a844e507e44848c922b58
              </div>
           </div>
         </div>
@@ -1185,4 +1071,3 @@ const AdOrderForm: FC = () => {
 };
 
 export default AdOrderForm;
-
