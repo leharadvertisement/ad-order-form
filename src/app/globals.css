@@ -105,7 +105,7 @@
   body.printing-from-preview #printPreviewContent #printable-area-pdf .gap-4,
   body.direct-print-active #printable-area-pdf .gap-4,
   body.clean-view-printing #printable-area-pdf .gap-4 {
-    gap: 0.5rem !important; 
+    gap: 1rem !important; /* Updated to match screen gap-4 */
   }
    #printable-area-pdf .mb-5, 
    body.printing-from-preview #printPreviewContent #printable-area-pdf .mb-5,
@@ -323,7 +323,7 @@
       display: none !important;
   }
 
-  .flex {
+  .flex { /* General flex, ensure it's applied */
     display: flex !important;
   }
   
@@ -343,6 +343,53 @@
   #printable-area-pdf label { font-size: 9pt !important; margin-right: 4px !important; }
   #printable-area-pdf ol.list-decimal li { font-size: 8pt !important; }
 
+  /* Specific alignment for header boxes for print */
+  #printable-area-pdf .print-header-box,
+  body.printing-from-preview #printPreviewContent #printable-area-pdf .print-header-box,
+  body.direct-print-active #printable-area-pdf .print-header-box,
+  body.clean-view-printing #printable-area-pdf .print-header-box {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    gap: 1rem !important; /* Matches screen gap-4 */
+    page-break-inside: avoid !important;
+  }
+
+  /* Left box (company logo/details) for print */
+  #printable-area-pdf .print-header-box > div[class*="company-logo-container"],
+  body.printing-from-preview #printPreviewContent #printable-area-pdf .print-header-box > div[class*="company-logo-container"],
+  body.direct-print-active #printable-area-pdf .print-header-box > div[class*="company-logo-container"],
+  body.clean-view-printing #printable-area-pdf .print-header-box > div[class*="company-logo-container"] {
+    width: 300px !important;
+    height: 280px !important;
+    flex-shrink: 0 !important;
+    padding: 6px !important; /* p-1.5 */
+    border: 2px solid black !important;
+    border-radius: 0.25rem !important; /* rounded */
+    box-sizing: border-box !important;
+    display: flex !important; 
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    position: relative !important;
+    overflow: hidden !important;
+  }
+
+  /* Right box (RO, Date, Client, etc.) for print */
+  #printable-area-pdf .print-header-box > div.flex-1,
+  body.printing-from-preview #printPreviewContent #printable-area-pdf .print-header-box > div.flex-1,
+  body.direct-print-active #printable-area-pdf .print-header-box > div.flex-1,
+  body.clean-view-printing #printable-area-pdf .print-header-box > div.flex-1 {
+    flex: 1 1 0% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important; /* Tailwind gap-3 */
+    padding: 12px !important; /* p-3 */
+    border: 2px solid black !important;
+    border-radius: 0.25rem !important; /* rounded */
+    box-sizing: border-box !important;
+  }
 }
 
 
@@ -643,7 +690,7 @@ body.pdf-export-active #printable-area-pdf .gap-1,
 body.pdf-export-active #printable-area-pdf .gap-2,
 body.pdf-export-active #printable-area-pdf .gap-3,
 body.pdf-export-active #printable-area-pdf .gap-4 {
-    gap: 1px !important;
+    gap: 1rem !important; /* Updated to match screen gap-4 */
 }
 
 
@@ -777,4 +824,41 @@ body.pdf-export-active #printable-area-pdf img {
 body.pdf-export-active #printable-area-pdf .box-decoration-clone {
     box-decoration-break: clone;
     -webkit-box-decoration-break: clone;
+}
+
+/* PDF Export Specific Styles for Header Boxes Alignment */
+body.pdf-export-active #printable-area-pdf .print-header-box {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: stretch !important;
+  width: 100% !important;
+  gap: 1rem !important; /* Tailwind gap-4 */
+  page-break-inside: avoid !important;
+}
+
+body.pdf-export-active #printable-area-pdf .print-header-box > div[class*="company-logo-container"] {
+  width: 300px !important;
+  height: 280px !important; /* Maintain height */
+  flex-shrink: 0 !important;
+  padding: 6px !important; /* p-1.5 */
+  border: 2px solid black !important;
+  border-radius: 0.25rem !important; /* rounded */
+  box-sizing: border-box !important;
+  display: flex !important; 
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+body.pdf-export-active #printable-area-pdf .print-header-box > div.flex-1 {
+  flex: 1 1 0% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.75rem !important; /* Tailwind gap-3 */
+  padding: 12px !important; /* p-3 */
+  border: 2px solid black !important;
+  border-radius: 0.25rem !important; /* rounded */
+  box-sizing: border-box !important;
 }
