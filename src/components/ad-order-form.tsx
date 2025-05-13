@@ -68,7 +68,7 @@ const AdOrderForm = (): JSX.Element => {
       const isPdfExport = doc.body.classList.contains('pdf-export-active');
       const isPrinting = doc.body.classList.contains('printing-from-preview') || 
                          doc.body.classList.contains('direct-print-active') ||
-                         doc.body.classList.contains('clean-view-printing') || // Added for clean view printing
+                         doc.body.classList.contains('clean-view-printing') || 
                          win.matchMedia('print').matches;
 
       if (isPdfExport) {
@@ -91,7 +91,7 @@ const AdOrderForm = (): JSX.Element => {
       } else {
         // Screen context
         textarea.style.height = `${Math.max(textarea.scrollHeight, minHeightScreen)}px`;
-        textarea.style.overflowY = 'auto'; // Changed from 'hidden' to 'auto' to allow scroll if content exceeds max computed height
+        textarea.style.overflowY = 'auto'; 
       }
     }
   }, []);
@@ -99,13 +99,13 @@ const AdOrderForm = (): JSX.Element => {
 
   useEffect(() => {
     setIsClient(true);
-    // setOrderDate(new Date()); // Moved to initial state
   }, []);
 
   useEffect(() => {
     if (isClient) {
       const allTextareas = document.querySelectorAll('#printable-area-pdf textarea');
       allTextareas.forEach(ta => adjustTextareaHeight(ta as HTMLTextAreaElement));
+      
       if (isPreviewing && printPreviewContentRef.current) {
         const previewTextareas = printPreviewContentRef.current.querySelectorAll('textarea');
         previewTextareas.forEach(ta => adjustTextareaHeight(ta as HTMLTextAreaElement, printPreviewContentRef.current?.ownerDocument));
@@ -299,17 +299,14 @@ const AdOrderForm = (): JSX.Element => {
   };
 
   const generatePdf = useCallback(async () => {
-    if (typeof window === 'undefined' || !(window as any).html2pdf) {
-      console.error('html2pdf.js not loaded or not in browser environment.');
-      alert('PDF generation library not available.');
-      return;
-    }
-    const html2pdf = (window as any).html2pdf;
+    if (typeof window === 'undefined' || !window.html2pdf) return;
+    
+    const html2pdf = window.html2pdf;
 
     const elementToPrint = printableAreaRef.current;
-    if (!elementToPrint) {
-        console.error('Element not found for PDF generation.');
-        alert('Element to print not found.');
+    if (!elementToPrint || !html2pdf) {
+        console.error('Element not found for PDF generation or html2pdf.js not loaded.');
+        alert('Element to print not found or PDF library not available.');
         return;
     }
 
@@ -365,10 +362,10 @@ const AdOrderForm = (): JSX.Element => {
       p.textContent = value;
       p.className = 'static-print-text';
       const inputStyle = getComputedStyle(input);
-      p.style.cssText = input.style.cssText; // Copy inline styles
+      p.style.cssText = input.style.cssText; 
       p.style.display = 'inline-block';
       p.style.width = inputStyle.width;
-      p.style.minHeight = '1em'; // Ensure some height for empty fields
+      p.style.minHeight = '1em'; 
       p.style.fontFamily = inputStyle.fontFamily;
       p.style.fontSize = inputStyle.fontSize;
       p.style.fontWeight = inputStyle.fontWeight;
@@ -396,12 +393,11 @@ const AdOrderForm = (): JSX.Element => {
       }
 
       p.textContent = displayValue;
-      p.className = 'static-print-text'; // Reuse class for consistent styling
-      p.style.display = 'block'; // Ensure it takes full cell width if needed
+      p.className = 'static-print-text'; 
+      p.style.display = 'block'; 
       p.style.width = '100%';
-      p.style.textAlign = 'center'; // Center date text in cell
+      p.style.textAlign = 'center'; 
       p.style.minHeight = '1em';
-      // Copy relevant styles from a representative input or define explicitly
       p.style.fontFamily = 'Arial, sans-serif';
       p.style.fontSize = '8pt'; 
       p.style.fontWeight = 'bold';
@@ -417,25 +413,23 @@ const AdOrderForm = (): JSX.Element => {
     textareasToConvert.forEach(textareaEl => {
       const div = document.createElement('div');
       const textarea = textareaEl as HTMLTextAreaElement;
-      div.innerHTML = textarea.value.replace(/\n/g, '<br>') || '\u00A0'; // Convert newlines and add placeholder
-      div.className = 'static-print-text textarea-static-print'; // Reuse and add specific class
+      div.innerHTML = textarea.value.replace(/\n/g, '<br>') || '\u00A0'; 
+      div.className = 'static-print-text textarea-static-print'; 
 
 
       const textareaStyle = getComputedStyle(textarea);
-      div.style.cssText = textarea.style.cssText; // Copy inline styles
+      div.style.cssText = textarea.style.cssText; 
       div.style.fontFamily = textareaStyle.fontFamily;
-      // div.style.fontSize = textareaStyle.fontSize; // Let class handle this if possible
       div.style.fontWeight = textareaStyle.fontWeight;
-      // div.style.lineHeight = textareaStyle.lineHeight; // Let class handle
-      div.style.color = 'black'; // Ensure black text
-      div.style.backgroundColor = 'transparent'; // Ensure transparent background
-      div.style.border = 'none'; // Remove default div border
-      div.style.height = 'auto'; // Let content dictate height initially
+      div.style.color = 'black'; 
+      div.style.backgroundColor = 'transparent'; 
+      div.style.border = 'none'; 
+      div.style.height = 'auto'; 
       div.style.whiteSpace = 'pre-wrap'; 
       div.style.wordWrap = 'break-word';
 
       if (textarea.id === 'matterTextarea') {
-        div.classList.add('matter-container-print'); // Add specific class for matter
+        div.classList.add('matter-container-print'); 
         div.style.textAlign = textareaStyle.textAlign; 
       }
       textarea.parentNode?.replaceChild(div, textarea);
@@ -469,8 +463,8 @@ const AdOrderForm = (): JSX.Element => {
         }
       } else if (placeholderDiv) {
         // Placeholder exists, do nothing to it.
-      } else if (!imgInStamp) { // No image and no placeholder, ensure it's empty or has default text.
-        stampContainerClone.textContent = ''; // Or create a default placeholder visual
+      } else if (!imgInStamp) { 
+        stampContainerClone.textContent = ''; 
       }
     }
     const tableClone = clonedElement.querySelector('.main-table-bordered');
@@ -486,33 +480,28 @@ const AdOrderForm = (): JSX.Element => {
       filename: 'release_order_form.pdf',
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: {
-        scale: 2, // Higher scale for better quality
+        scale: 2, 
         useCORS: true,
-        logging: false, // Set to true for debugging html2canvas issues
+        logging: false, 
         onclone: (documentClone: Document) => {
-          // This onclone is crucial for applying PDF-specific styles or adjustments
-          // AFTER the element is cloned but BEFORE it's rendered to canvas.
           const clonedBody = documentClone.body;
-          clonedBody.classList.add('pdf-export-active'); // Ensure PDF styles are active in clone
-
-          // Force reflow/re-layout - sometimes helps with rendering issues
+          clonedBody.classList.add('pdf-export-active'); 
           const _ = clonedBody.offsetHeight; 
 
-          // Adjust textarea heights within the cloned document specifically for PDF
           const textareasInClone = clonedBody.querySelectorAll('.textarea-static-print');
           textareasInClone.forEach(ta => {
             const htmlTa = ta as HTMLElement;
-            htmlTa.style.height = 'auto'; // Reset height
+            htmlTa.style.height = 'auto'; 
 
-            const computedStyle = getComputedStyle(htmlTa); // Styles from pdf-export-active context
-            const maxHeight = parseFloat(computedStyle.maxHeight || '9999'); // Use CSS var if available
-            const minHeight = parseFloat(computedStyle.minHeight || '0');   // Use CSS var if available
+            const computedStyle = getComputedStyle(htmlTa); 
+            const maxHeight = parseFloat(computedStyle.maxHeight || '9999'); 
+            const minHeight = parseFloat(computedStyle.minHeight || '0');   
             
             let newHeight = htmlTa.scrollHeight;
             if (newHeight < minHeight) newHeight = minHeight;
             
             htmlTa.style.height = `${Math.min(newHeight, maxHeight)}px`;
-            htmlTa.style.overflowY = 'hidden'; // Ensure content is clipped to fit A4
+            htmlTa.style.overflowY = 'hidden'; 
           });
         }
       },
@@ -548,14 +537,13 @@ const AdOrderForm = (): JSX.Element => {
       
       const printSpecificStyles = printWindow.document.createElement('style');
       printSpecificStyles.textContent = `
-        body { /* Styles for the new window's screen view */
+        body { 
           margin: 0; padding: 20px; display: flex; justify-content: center; 
           align-items: flex-start; background-color: #e0e0e0; min-height: 100vh;
         }
-        #printable-area-pdf { /* Screen styles for the form in the new window */
+        #printable-area-pdf { 
           margin: 0 auto !important; 
           box-shadow: 0 0 15px rgba(0,0,0,0.3) !important; 
-          /* Keep other #printable-area-pdf screen styles from globals.css */
         }
         .print-button-new-window { 
           position: fixed !important; top: 15px !important; right: 15px !important; 
@@ -564,10 +552,9 @@ const AdOrderForm = (): JSX.Element => {
           font-size: 16px;
         }
         .print-button-new-window:hover { background-color: #0056b3; }
-        @media print { /* Styles for when printing from the new window */
+        @media print { 
           body { margin: 0 !important; padding: 0 !important; background-color: white !important; }
-          body.clean-view-printing #printable-area-pdf { /* Use already defined print styles */
-             /* Ensure @media print styles from globals.css apply */
+          body.clean-view-printing #printable-area-pdf { 
           }
           .print-button-new-window { display: none !important; }
         }
@@ -586,9 +573,9 @@ const AdOrderForm = (): JSX.Element => {
       printButtonInNewWindow.className = 'print-button-new-window';
       printButtonInNewWindow.onclick = () => {
         printButtonInNewWindow.style.display = 'none'; 
-        printWindow.document.body.classList.add('clean-view-printing'); // Add class for print context
+        printWindow.document.body.classList.add('clean-view-printing'); 
         printWindow.print();
-        printWindow.document.body.classList.remove('clean-view-printing'); // Remove after print
+        printWindow.document.body.classList.remove('clean-view-printing'); 
         printButtonInNewWindow.style.display = 'block'; 
       };
       printWindow.document.body.appendChild(printButtonInNewWindow);
@@ -636,9 +623,9 @@ const AdOrderForm = (): JSX.Element => {
                   if (printPreviewContentRef.current && printPreviewContentRef.current.firstChild) {
                     const clonedFormElement = printPreviewContentRef.current.firstChild as HTMLElement;
                     const iframe = document.createElement('iframe');
-                    iframe.style.position = 'fixed'; // Use fixed to overlay correctly
-                    iframe.style.left = '-9999px'; // Move off-screen
-                    iframe.style.width = '0'; // No visual dimension
+                    iframe.style.position = 'fixed'; 
+                    iframe.style.left = '-9999px'; 
+                    iframe.style.width = '0'; 
                     iframe.style.height = '0';
                     iframe.style.border = '0';
                     document.body.appendChild(iframe);
@@ -650,7 +637,7 @@ const AdOrderForm = (): JSX.Element => {
                       Array.from(document.head.querySelectorAll('style, link[rel="stylesheet"]')).forEach(styleEl => {
                         iframeDoc.head.appendChild(styleEl.cloneNode(true));
                       });
-                      iframeDoc.write('</head><body class="printing-from-preview">'); // Add print context class
+                      iframeDoc.write('</head><body class="printing-from-preview">'); 
                       iframeDoc.write(clonedFormElement.outerHTML);
                       iframeDoc.write('</body></html>');
                       iframeDoc.close();
@@ -663,8 +650,7 @@ const AdOrderForm = (): JSX.Element => {
             
                       setTimeout(() => {
                         document.body.removeChild(iframe);
-                        // setIsPreviewing(false); // Optionally close preview after print
-                      }, 1000); // Increased delay
+                      }, 1000); 
                     }
                   }
                 }}
@@ -718,7 +704,7 @@ const AdOrderForm = (): JSX.Element => {
               </div>
               <div className="flex-1 flex items-center">
                 <Label htmlFor="orderDate" className="text-sm font-bold mr-2 whitespace-nowrap">Date:</Label>
-                {isClient ? ( // Removed orderDate !== undefined check as it's initialized
+                {isClient ? ( 
                   <DatePicker
                     selected={orderDate}
                     onChange={handleDateChange}
@@ -762,7 +748,7 @@ const AdOrderForm = (): JSX.Element => {
             <Label htmlFor="headingCaption" className="text-sm font-bold block mb-1">Heading/Caption:</Label>
             <Input id="headingCaption" value={headingCaption} onChange={(e) => setHeadingCaption(e.target.value)} className="text-sm py-1 px-2 h-auto border-2 border-black" placeholder="" />
           </div>
-          <div className="w-full md:w-[35%] p-3 border-2 border-black rounded">
+          <div className="w-full md:flex-1 p-3 border-2 border-black rounded">
             <Label htmlFor="packageName" className="text-sm font-bold block mb-1">Package:</Label>
             <Input id="packageName" value={packageName} onChange={(e) => setPackageName(e.target.value)} className="text-sm py-1 px-2 h-auto border-2 border-black" placeholder="" />
           </div>
@@ -876,3 +862,4 @@ const AdOrderForm = (): JSX.Element => {
 };
 
 export default AdOrderForm;
+
