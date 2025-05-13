@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Image from 'next/image';
-import { Printer, PlusSquare, MinusSquare, Eye, Expand, Download, XCircle, Trash2, UploadCloud, CalendarDays as CalendarIconLucide } from 'lucide-react';
+import { Printer, Download, XCircle, Trash2, Eye, Expand, CalendarDays as CalendarIconLucide } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -124,7 +124,8 @@ const AdOrderForm: FC = () => {
       } else {
         setCompanyLogo(DEFAULT_COMPANY_LOGO_PLACEHOLDER);
       }
-      setOrderDate(new Date()); // Initialize date on client mount
+      const currentDate = new Date();
+      setOrderDate(currentDate);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isClient]);
@@ -167,7 +168,6 @@ const AdOrderForm: FC = () => {
      if (rowsData.length > 1) {
         setRowsData(prevRows => prevRows.filter((_, i) => i !== index));
      } else {
-        // If it's the last row, clear its content instead of deleting
         setRowsData([{ keyNo: '', publication: '', edition: '', size: '', scheduledDate: null, position: '' }]);
      }
   }, [rowsData.length]);
@@ -229,13 +229,13 @@ const AdOrderForm: FC = () => {
 
 
   const generatePdf = useCallback(async () => {
-    if (typeof window === 'undefined' || !(window as any).html2pdf) {
+    if (typeof window === 'undefined' || !window.html2pdf) {
       console.error('html2pdf.js not loaded or window object not available.');
       alert('PDF generation library not loaded or not in a browser environment.');
       return;
     }
     
-    const html2pdf = (window as any).html2pdf;
+    const html2pdfLibrary = window.html2pdf;
 
     const elementToPrint = printableAreaRef.current;
     if (!elementToPrint) {
@@ -256,17 +256,15 @@ const AdOrderForm: FC = () => {
     clonedElement.querySelectorAll('.table-row-actions').forEach(el => el.remove());
 
 
-    // A4 dimensions and styling for PDF
     clonedElement.style.width = '210mm';
-    clonedElement.style.height = '297mm'; // Fixed height for A4
+    clonedElement.style.height = '297mm'; 
     clonedElement.style.minHeight = '297mm';
     clonedElement.style.maxHeight = '297mm';
-    clonedElement.style.overflow = 'hidden'; // Important: clip content outside A4
+    clonedElement.style.overflow = 'hidden'; 
     clonedElement.style.padding = '5mm'; 
     clonedElement.style.borderWidth = '2px'; 
     clonedElement.style.boxSizing = 'border-box';
 
-    // Ensure company logo is correctly set for PDF
     const logoContainer = clonedElement.querySelector('.company-logo-container-pdf') as HTMLElement;
     if (logoContainer) {
         const imgElement = logoContainer.querySelector('img');
@@ -278,7 +276,6 @@ const AdOrderForm: FC = () => {
     }
 
 
-    // Convert inputs to static text for PDF
     const inputsToConvert = clonedElement.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], input.custom-input-pdf');
     inputsToConvert.forEach(inputEl => {
         const p = document.createElement('span');
@@ -314,7 +311,6 @@ const AdOrderForm: FC = () => {
         input.parentNode?.replaceChild(p, input);
     });
 
-    // Convert date pickers in table to static text for PDF
     const datePickersInTable = clonedElement.querySelectorAll('.table-date-picker-wrapper');
     datePickersInTable.forEach((wrapper, index) => {
         const p = document.createElement('span');
@@ -347,7 +343,6 @@ const AdOrderForm: FC = () => {
     });
 
 
-    // Convert textareas to static divs for PDF
     const textareasToConvert = clonedElement.querySelectorAll('textarea');
     textareasToConvert.forEach(textareaEl => {
         const div = document.createElement('div');
@@ -375,7 +370,6 @@ const AdOrderForm: FC = () => {
         textarea.parentNode?.replaceChild(div, textarea);
     });
 
-    // Apply specific PDF classes or styles
     const releaseOrderTitleClone = clonedElement.querySelector('.release-order-title-screen') as HTMLElement;
     if (releaseOrderTitleClone) releaseOrderTitleClone.className = 'release-order-titlebar-print-preview';
 
@@ -409,7 +403,6 @@ const AdOrderForm: FC = () => {
             stampContainerClone.textContent = ''; 
         }
     }
-    // Update table classes for PDF styling
     const tableClone = clonedElement.querySelector('.main-table-bordered');
     if (tableClone) {
         tableClone.classList.remove('main-table-bordered');
@@ -418,8 +411,7 @@ const AdOrderForm: FC = () => {
         tableHeaders.forEach(th => th.classList.add('print-table-header')); 
     }
 
-    // html2pdf options
-    (window as any).html2pdf().from(clonedElement).set({
+    html2pdfLibrary().from(clonedElement).set({
         margin: [5,5,5,5], 
         filename: 'release_order_form.pdf',
         image: { type: 'jpeg', quality: 0.98 },
@@ -431,7 +423,7 @@ const AdOrderForm: FC = () => {
                 const clonedBody = documentClone.body;
                 clonedBody.classList.add('pdf-export-active'); 
                 
-                const _ = clonedBody.offsetHeight; // Force repaint/reflow
+                const _ = clonedBody.offsetHeight; 
 
                 const textareasInClone = clonedBody.querySelectorAll('.textarea-static-print');
                 textareasInClone.forEach(ta => {
@@ -570,15 +562,10 @@ const AdOrderForm: FC = () => {
     if (typeof window === 'undefined') return;
 
     if (isFromPreview && document.getElementById('printPreviewContent')) {
-        
         printInternal(true);
     } else {
-        
         const wasFullScreen = isFullScreenPreview;
         const exitFullscreenAndPrint = () => {
-            
-            
-            
             setTimeout(() => {
                 document.body.classList.add('direct-print-active'); 
                 
@@ -586,8 +573,6 @@ const AdOrderForm: FC = () => {
                 textareasOnPage?.forEach(ta => adjustTextareaHeight(ta));
 
                 window.print(); 
-
-                
                 setTimeout(() => document.body.classList.remove('direct-print-active'), 1000);
             }, 100); 
         };
@@ -598,12 +583,10 @@ const AdOrderForm: FC = () => {
                 exitFullscreenAndPrint(); 
             });
         } else if (isPreviewing) {
-            
             handleClosePrintPreview();
             setTimeout(exitFullscreenAndPrint, 50); 
         }
          else {
-            
             exitFullscreenAndPrint();
         }
     }
@@ -658,9 +641,8 @@ const AdOrderForm: FC = () => {
   }, [adjustTextareaHeight]);
 
 
-  // Effect for handling Print Preview Modal content
   useEffect(() => {
-    if (typeof window === 'undefined' || !isClient) return; // Ensure this effect only runs client-side
+    if (typeof window === 'undefined' || !isClient) return; 
 
     if (isPreviewing && !isFullScreenPreview && printableAreaRef.current) {
       const previewNode = printableAreaRef.current.cloneNode(true) as HTMLElement | null;
@@ -832,11 +814,11 @@ const AdOrderForm: FC = () => {
   return (
     <div className="max-w-[210mm] mx-auto p-1 print-root-container bg-background" id="main-application-container">
 
-      <div className="flex justify-end items-center gap-2 p-2 mb-2 no-print no-pdf-export action-buttons-container sticky top-0 bg-background z-50">
-        <Button onClick={handlePrintPreview} variant="outline" size="sm"><Eye className="mr-2 h-4 w-4"/>Preview</Button>
-        <Button onClick={() => handleActualPrint(false)} variant="outline" size="sm"><Printer className="mr-2 h-4 w-4"/>Print</Button>
-        <Button onClick={handleFullScreenPreviewToggle} variant="outline" size="sm"><Expand className="mr-2 h-4 w-4"/>Fullscreen</Button>
-        <Button onClick={generatePdf} variant="outline" size="sm"><Download className="mr-2 h-4 w-4"/>Download PDF</Button>
+      <div className="flex justify-end items-center gap-2 p-2 mb-2 action-buttons-container sticky top-0 bg-background z-50">
+          <Button onClick={handlePrintPreview} variant="outline" size="sm"><Eye className="mr-2 h-4 w-4" />Preview</Button>
+          <Button onClick={handleFullScreenPreviewToggle} variant="outline" size="sm"><Expand className="mr-2 h-4 w-4" />Fullscreen</Button>
+          <Button onClick={generatePdf} variant="outline" size="sm"><Download className="mr-2 h-4 w-4" />Download PDF</Button>
+          <Button onClick={() => handleActualPrint(false)} variant="outline" size="sm"><Printer className="mr-2 h-4 w-4"/>Print</Button>
       </div>
 
       <div id="printable-area-pdf" ref={printableAreaRef} className={`w-full print-target bg-card text-card-foreground shadow-sm p-2 md:p-4 border-4 border-black ${isFullScreenPreview ? 'fullscreen-preview-active' : ''}`}>
@@ -846,10 +828,10 @@ const AdOrderForm: FC = () => {
 
         <div className="flex flex-col md:flex-row md:items-stretch gap-4 mb-5 print-header-box">
             <div
-                className="w-full md:w-[300px] h-[300px] md:h-auto p-1.5 border-2 border-black rounded flex flex-col relative company-logo-container-screen company-logo-container-pdf cursor-pointer items-center justify-start overflow-hidden"
+                className="w-full md:w-[300px] h-auto p-1.5 border-2 border-black rounded flex flex-col relative company-logo-container-screen company-logo-container-pdf cursor-pointer items-center justify-start overflow-hidden"
                 onClick={triggerCompanyLogoUpload}
                 title="Click to upload company logo"
-                style={{ height: 'auto', minHeight: '150px' }} 
+                style={{ minHeight: '280px' }} 
             >
                  <div className="relative w-full h-full flex items-start justify-center">
                     <Image
@@ -857,8 +839,7 @@ const AdOrderForm: FC = () => {
                         alt="Company Logo"
                         width={280} 
                         height={280}
-                        objectFit="contain" 
-                        objectPosition="top"
+                        style={{ objectFit: "contain", objectPosition: "top" }}
                         className="rounded"
                         data-ai-hint="company logo"
                     />
@@ -972,10 +953,6 @@ const AdOrderForm: FC = () => {
              ))}
            </TableBody>
          </Table>
-          <div className="flex justify-start gap-2 mt-2 no-print no-pdf-export no-print-preview table-row-actions">
-            <Button onClick={addRow} size="sm" variant="outline"><PlusSquare className="mr-2 h-4 w-4"/>Add Row</Button>
-            {rowsData.length > 1 && <Button onClick={() => deleteRow(rowsData.length -1)} size="sm" variant="destructive"><MinusSquare className="mr-2 h-4 w-4"/>Delete Last Row</Button>}
-          </div>
         </div>
 
         <div className="flex mb-3 min-h-[100px] items-stretch matter-container-print-parent p-0 border-2 border-black rounded">
