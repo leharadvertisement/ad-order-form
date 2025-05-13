@@ -226,19 +226,18 @@ const AdOrderForm: FC = () => {
 
 
   const generatePdf = useCallback(async () => {
-    if (typeof window === 'undefined') {
-      console.error('Window object not available for PDF generation.');
-      alert('PDF generation is not available in this environment.');
+    if (typeof window === 'undefined' || !window.html2pdf) {
+      console.error('html2pdf.js not loaded or window object not available.');
+      alert('PDF generation library is not available. Please try again in a moment.');
       return;
     }
     
-    // Access html2pdf from the window object
-    const html2pdf = (window as any).html2pdf;
+    const html2pdf = window.html2pdf;
 
     const elementToPrint = printableAreaRef.current;
-    if (!elementToPrint || !html2pdf) {
-        console.error('Element not found for PDF generation or html2pdf.js not loaded.');
-        alert('Element to print not found or PDF library not loaded.');
+    if (!elementToPrint) {
+        console.error('Element not found for PDF generation.');
+        alert('Element to print not found.');
         return;
     }
 
@@ -849,7 +848,7 @@ const AdOrderForm: FC = () => {
 
         <div className="flex flex-col md:flex-row md:items-stretch gap-4 mb-5 print-header-box">
             <div
-                className="w-full md:w-[30%] p-1.5 border-2 border-black rounded flex flex-col relative company-logo-container-screen company-logo-container-pdf cursor-pointer items-center justify-center overflow-hidden min-h-[200px] md:min-h-[250px]"
+                className="w-full md:w-[250px] p-1.5 border-2 border-black rounded flex flex-col relative company-logo-container-screen company-logo-container-pdf cursor-pointer items-center justify-center overflow-hidden min-h-[200px] md:min-h-[250px]"
                 onClick={triggerCompanyLogoUpload}
                 title="Click to upload company logo"
                 style={{ height: 'auto' }} 
@@ -858,11 +857,9 @@ const AdOrderForm: FC = () => {
                      <Image
                         src={companyLogo}
                         alt="Company Logo"
-                        layout="intrinsic" // Changed to intrinsic
-                        width={200} // Provide a base width
-                        height={200} // Provide a base height, adjust as needed to fit the 'box' proportionally
-                        objectFit="contain"
-                        className="rounded max-w-full max-h-full" // max-w-full and max-h-full to ensure it fits
+                        width={200} 
+                        height={230} 
+                        className="object-contain rounded max-w-full max-h-full"
                         data-ai-hint="company logo"
                     />
                 </div>
@@ -915,12 +912,12 @@ const AdOrderForm: FC = () => {
          <Table className="main-table-bordered print-table border border-black">
            <TableHeader className="bg-secondary print-table-header">
              <TableRow>
-               <TableHead className="w-[10%] border border-black p-1.5 text-sm font-bold">Key No.</TableHead>
-               <TableHead className="w-[25%] border border-black p-1.5 text-sm font-bold">Publication(s)</TableHead>
-               <TableHead className="w-[20%] border border-black p-1.5 text-sm font-bold">Edition(s)</TableHead>
-               <TableHead className="w-[15%] border border-black p-1.5 text-sm font-bold">Size</TableHead>
-               <TableHead className="w-[15%] border border-black p-1.5 text-sm font-bold">Scheduled Date(s)</TableHead>
-               <TableHead className="w-[15%] border border-black p-1.5 text-sm font-bold">Position</TableHead>
+               <TableHead className="w-[9%] border border-black p-1.5 text-sm font-bold text-center">Key No.</TableHead>
+               <TableHead className="w-[30%] border border-black p-1.5 text-sm font-bold text-center">Publication(s)</TableHead>
+               <TableHead className="w-[19%] border border-black p-1.5 text-sm font-bold text-center">Edition(s)</TableHead>
+               <TableHead className="w-[14%] border border-black p-1.5 text-sm font-bold text-center">Size</TableHead>
+               <TableHead className="w-[14%] border border-black p-1.5 text-sm font-bold text-center">Scheduled Date(s)</TableHead>
+               <TableHead className="w-[14%] border border-black p-1.5 text-sm font-bold text-center">Position</TableHead>
              </TableRow>
            </TableHeader>
            <TableBody>
@@ -1001,10 +998,10 @@ const AdOrderForm: FC = () => {
                   title="Click to upload stamp image"
                 >
                 {stampImage && stampImage !== DEFAULT_STAMP_IMAGE_PLACEHOLDER ? (
-                     <Image src={stampImage} alt="Stamp" layout="intrinsic" width={178} height={98} objectFit="contain" data-ai-hint="signature company stamp" />
+                     <Image src={stampImage} alt="Stamp" layout="intrinsic" width={178} height={98} className="object-contain" data-ai-hint="signature company stamp" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gray-50 placeholder-div">
-                    <Image src={DEFAULT_STAMP_IMAGE_PLACEHOLDER} alt="Upload Stamp Placeholder" layout="intrinsic" width={178} height={98} objectFit="contain" data-ai-hint="upload placeholder"/>
+                    <Image src={DEFAULT_STAMP_IMAGE_PLACEHOLDER} alt="Upload Stamp Placeholder" layout="intrinsic" width={178} height={98} className="object-contain" data-ai-hint="upload placeholder"/>
                   </div>
                 )}
                 <Input key={stampInputKey} type="file" ref={stampInputRef} onChange={handleStampUpload} accept="image/*" className="hidden" />
