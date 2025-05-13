@@ -14,12 +14,12 @@ import { Printer, PlusSquare, MinusSquare, Eye, Expand, Download, XCircle, Trash
 import { format } from 'date-fns';
 
 const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://picsum.photos/seed/stamp/178/98';
-const COMPANY_LOGO_PLACEHOLDER = "https://picsum.photos/seed/leharlogo/200/100";
+const COMPANY_LOGO_PLACEHOLDER = "https://picsum.photos/seed/leharlogo/400/200";
 
 
 const AdOrderForm: FC = () => {
   const [ron, setRon] = useState<string>('');
-  const [orderDate, setOrderDate] = useState<Date | undefined>(new Date()); // Initialize with current date
+  const [orderDate, setOrderDate] = useState<Date | undefined>(new Date());
   const [clientName, setClientName] = useState<string>('');
   const [advManagerInput1, setAdvManagerInput1] = useState<string>('');
   const [advManagerInput2, setAdvManagerInput2] = useState<string>('');
@@ -44,6 +44,10 @@ const AdOrderForm: FC = () => {
   const [isFullScreenPreview, setIsFullScreenPreview] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const adjustTextareaHeight = useCallback((textarea: HTMLTextAreaElement | null) => {
     if (textarea) {
       textarea.style.height = 'auto';
@@ -53,7 +57,7 @@ const AdOrderForm: FC = () => {
       if (textarea.id === 'matterTextarea') {
         minHeightScreen = 100;
       } else if (textarea.classList.contains('print-textarea')) {
-         minHeightScreen = 150;
+         minHeightScreen = 150; // Default min-height for table textareas on screen
       }
 
 
@@ -61,11 +65,11 @@ const AdOrderForm: FC = () => {
 
       const isPrintingOrPdfContext = typeof window !== 'undefined' &&
                                      (document.body.classList.contains('pdf-export-active') ||
-                                      document.body.classList.contains('print-preview-active') || // For modal preview
-                                      document.body.classList.contains('fullscreen-body-active') || // For fullscreen preview
-                                      document.body.classList.contains('printing-from-preview') || // For actual print from modal
-                                      document.body.classList.contains('direct-print-active') || // For direct print
-                                      window.matchMedia('print').matches); // General print context
+                                      document.body.classList.contains('print-preview-active') || 
+                                      document.body.classList.contains('fullscreen-body-active') || 
+                                      document.body.classList.contains('printing-from-preview') || 
+                                      document.body.classList.contains('direct-print-active') ||
+                                      window.matchMedia('print').matches); 
 
       if (isPrintingOrPdfContext) {
         // PDF specific adjustments (takes precedence if pdf-export-active is set)
@@ -94,11 +98,6 @@ const AdOrderForm: FC = () => {
         textarea.style.overflowY = 'auto'; // Allow scroll on screen if content exceeds
       }
     }
-  }, []);
-
-
-  useEffect(() => {
-    setIsClient(true);
   }, []);
 
 
@@ -183,7 +182,7 @@ const AdOrderForm: FC = () => {
       };
       reader.readAsDataURL(event.target.files[0]);
     }
-     setStampInputKey(Date.now()); // Reset file input
+     setStampInputKey(Date.now()); 
   };
 
   const triggerStampUpload = () => {
@@ -195,7 +194,7 @@ const AdOrderForm: FC = () => {
       if (typeof window !== 'undefined') {
           localStorage.removeItem('uploadedStampImage');
       }
-      setStampInputKey(Date.now()); // Reset file input
+      setStampInputKey(Date.now()); 
   };
 
   const handleCompanyLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -210,7 +209,7 @@ const AdOrderForm: FC = () => {
       };
       reader.readAsDataURL(event.target.files[0]);
     }
-    setCompanyLogoInputKey(Date.now()); // Reset file input
+    setCompanyLogoInputKey(Date.now()); 
   };
 
   const triggerCompanyLogoUpload = () => {
@@ -222,7 +221,7 @@ const AdOrderForm: FC = () => {
       if (typeof window !== 'undefined') {
           localStorage.removeItem('uploadedCompanyLogo');
       }
-      setCompanyLogoInputKey(Date.now()); // Reset file input
+      setCompanyLogoInputKey(Date.now()); 
   };
 
 
@@ -242,106 +241,97 @@ const AdOrderForm: FC = () => {
     }
 
     document.body.classList.add('pdf-export-active');
-    // Ensure all textareas are adjusted before cloning for PDF
     const textareasOnPage = elementToPrint.querySelectorAll('textarea');
     textareasOnPage.forEach(ta => adjustTextareaHeight(ta));
 
 
-    // Clone the printable area to modify for PDF without affecting the screen
     const clonedElement = elementToPrint.cloneNode(true) as HTMLElement;
 
-    // Remove elements not needed for PDF
     clonedElement.querySelectorAll('.no-pdf-export').forEach(el => el.remove());
     clonedElement.querySelectorAll('.action-buttons-container').forEach(el => el.remove());
     clonedElement.querySelectorAll('.table-row-actions').forEach(el => el.remove());
 
 
-    // Apply A4 dimensions and PDF specific styling to the cloned element
     clonedElement.style.width = '210mm';
-    clonedElement.style.height = '297mm'; // Fixed height for single page PDF
+    clonedElement.style.height = '297mm'; 
     clonedElement.style.minHeight = '297mm';
     clonedElement.style.maxHeight = '297mm';
-    clonedElement.style.overflow = 'hidden'; // Critical to prevent overflow issues
-    clonedElement.style.padding = '5mm'; // Consistent padding for PDF
-    clonedElement.style.borderWidth = '2px'; // Thinner border for PDF
+    clonedElement.style.overflow = 'hidden'; 
+    clonedElement.style.padding = '5mm'; 
+    clonedElement.style.borderWidth = '2px'; 
     clonedElement.style.boxSizing = 'border-box';
 
-    // Ensure company logo is correctly set in the clone
     const logoContainer = clonedElement.querySelector('.company-logo-container-pdf') as HTMLElement;
     if (logoContainer) {
         const imgElement = logoContainer.querySelector('img');
         if (imgElement && companyLogo && companyLogo !== COMPANY_LOGO_PLACEHOLDER) {
-            imgElement.src = companyLogo; // Use the current logo
+            imgElement.src = companyLogo; 
         } else if (imgElement && (!companyLogo || companyLogo === COMPANY_LOGO_PLACEHOLDER)) {
-             imgElement.src = COMPANY_LOGO_PLACEHOLDER; // Fallback to placeholder if needed
+             imgElement.src = COMPANY_LOGO_PLACEHOLDER; 
         }
     }
 
 
-    // Convert inputs to static text for PDF
     const inputsToConvert = clonedElement.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], input.custom-input-pdf');
     inputsToConvert.forEach(inputEl => {
         const p = document.createElement('span');
         const input = inputEl as HTMLInputElement;
         let value = input.value;
-        if (input.id === 'orderDate' && orderDate) { // Ensure orderDate is correctly formatted
+        if (input.id === 'orderDate' && orderDate) { 
              value = format(orderDate, 'dd.MM.yyyy');
         } else if (input.type === 'date' && !input.value && input.placeholder) {
-            value = '\u00A0'; // Non-breaking space for empty placeholders
+            value = '\u00A0'; 
         } else if (input.type === 'date' && input.value){
             try {
                 value = format(new Date(input.value), 'dd.MM.yyyy');
             } catch (e) {
-                 value = input.value || '\u00A0'; // Fallback for invalid date strings
+                 value = input.value || '\u00A0'; 
             }
         } else {
-            value = input.value || '\u00A0'; // Non-breaking space for empty inputs
+            value = input.value || '\u00A0'; 
         }
         p.textContent = value;
-        p.className = 'static-print-text'; // Use class for PDF styling
-        // Copy relevant styles from input to ensure visual consistency
+        p.className = 'static-print-text'; 
         const inputStyle = getComputedStyle(input);
-        p.style.display = 'inline-block'; // Or 'block' if it should take full width
-        p.style.width = inputStyle.width; // Or 'auto' or a fixed PDF width
-        p.style.minHeight = '1em'; // Ensure some height for empty fields
+        p.style.display = 'inline-block'; 
+        p.style.width = inputStyle.width; 
+        p.style.minHeight = '1em'; 
         p.style.fontFamily = inputStyle.fontFamily;
-        p.style.fontSize = inputStyle.fontSize; // This will be overridden by .pdf-export-active .static-print-text
+        p.style.fontSize = inputStyle.fontSize; 
         p.style.fontWeight = inputStyle.fontWeight;
-        p.style.lineHeight = inputStyle.lineHeight; // This will be overridden
-        p.style.color = 'black'; // Ensure text is black for PDF
-        p.style.borderBottom = inputStyle.borderBottomWidth + ' ' + inputStyle.borderBottomStyle + ' ' + inputStyle.borderBottomColor; // Keep underline
-        p.style.padding = inputStyle.padding; // May need PDF-specific reduction
-        p.style.backgroundColor = 'transparent'; // No background for static text
+        p.style.lineHeight = inputStyle.lineHeight; 
+        p.style.color = 'black'; 
+        p.style.borderBottom = inputStyle.borderBottomWidth + ' ' + inputStyle.borderBottomStyle + ' ' + inputStyle.borderBottomColor; 
+        p.style.padding = inputStyle.padding; 
+        p.style.backgroundColor = 'transparent'; 
         input.parentNode?.replaceChild(p, input);
     });
 
-    // Convert date pickers in table to static text
     const datePickersInTable = clonedElement.querySelectorAll('.table-date-picker-wrapper');
     datePickersInTable.forEach((wrapper, index) => {
         const p = document.createElement('span');
-        const originalRowData = rowsData[index]; // Get data from state
+        const originalRowData = rowsData[index]; 
         const dateValue = originalRowData?.scheduledDate;
-        let displayValue = '\u00A0'; // Default to non-breaking space
+        let displayValue = '\u00A0'; 
 
         if (dateValue instanceof Date) {
             displayValue = format(dateValue, 'dd.MM.yyyy');
         } else if (typeof dateValue === 'string' && dateValue.trim() !== '') {
             try {
-                displayValue = format(new Date(dateValue), 'dd.MM.yyyy'); // Attempt to parse string
-            } catch { displayValue = dateValue; } // Fallback to original string if parsing fails
+                displayValue = format(new Date(dateValue), 'dd.MM.yyyy'); 
+            } catch { displayValue = dateValue; } 
         }
 
         p.textContent = displayValue;
-        p.className = 'static-print-text'; // Use class for PDF styling
-        // Apply specific styles for table date text in PDF
+        p.className = 'static-print-text'; 
         p.style.display = 'block';
         p.style.width = '100%';
         p.style.textAlign = 'center';
         p.style.minHeight = '1em';
-        p.style.fontFamily = 'Arial, sans-serif'; // Consistent font
-        p.style.fontSize = '8pt'; // PDF specific font size
+        p.style.fontFamily = 'Arial, sans-serif'; 
+        p.style.fontSize = '8pt'; 
         p.style.fontWeight = 'bold';
-        p.style.lineHeight = '1.0'; // PDF specific line height
+        p.style.lineHeight = '1.0'; 
         p.style.color = 'black';
         p.style.padding = '1px';
         p.style.backgroundColor = 'transparent';
@@ -349,34 +339,30 @@ const AdOrderForm: FC = () => {
     });
 
 
-    // Convert textareas to static divs for PDF
     const textareasToConvert = clonedElement.querySelectorAll('textarea');
     textareasToConvert.forEach(textareaEl => {
         const div = document.createElement('div');
         const textarea = textareaEl as HTMLTextAreaElement;
-        div.innerHTML = textarea.value.replace(/\n/g, '<br>') || '\u00A0'; // Preserve line breaks, use nbsp for empty
-        div.className = 'static-print-text textarea-static-print'; // Apply base and textarea-specific PDF classes
+        div.innerHTML = textarea.value.replace(/\n/g, '<br>') || '\u00A0'; 
+        div.className = 'static-print-text textarea-static-print'; 
 
-        // Copy essential styles, specific PDF styles will be applied via CSS
         const textareaStyle = getComputedStyle(textarea);
         div.style.fontFamily = textareaStyle.fontFamily;
-        // Font size, line height, etc., will be controlled by .pdf-export-active .textarea-static-print
         div.style.fontWeight = textareaStyle.fontWeight;
         div.style.color = 'black';
         div.style.backgroundColor = 'transparent';
-        div.style.border = 'none'; // Remove textarea border; container might have one
-        div.style.height = 'auto'; // Let content determine height initially
-        div.style.whiteSpace = 'pre-wrap'; // Preserve whitespace and line breaks
-        div.style.wordWrap = 'break-word'; // Prevent overflow
+        div.style.border = 'none'; 
+        div.style.height = 'auto'; 
+        div.style.whiteSpace = 'pre-wrap'; 
+        div.style.wordWrap = 'break-word'; 
 
         if (textarea.id === 'matterTextarea') {
-             div.classList.add('matter-container-print'); // Specific class for matter container styling in PDF
+             div.classList.add('matter-container-print'); 
              div.style.textAlign = textareaStyle.textAlign;
         }
         textarea.parentNode?.replaceChild(div, textarea);
     });
 
-    // Standardize titles and labels for PDF
     const releaseOrderTitleClone = clonedElement.querySelector('.release-order-title-screen') as HTMLElement;
     if (releaseOrderTitleClone) releaseOrderTitleClone.className = 'release-order-titlebar-print-preview';
 
@@ -386,7 +372,6 @@ const AdOrderForm: FC = () => {
         if (matterLabelClone) matterLabelClone.className = 'matter-label-print-preview';
     }
 
-    // Standardize stamp container for PDF
     const stampContainerClone = clonedElement.querySelector('.stamp-container-screen') as HTMLElement;
     if(stampContainerClone) {
         stampContainerClone.className = 'stamp-container-print-preview';
@@ -397,20 +382,18 @@ const AdOrderForm: FC = () => {
             if (imgInStamp) {
                 imgInStamp.src = stampImage;
                 imgInStamp.alt = "Stamp";
-            } else { // If no img tag, create one
+            } else { 
                 const newImg = document.createElement('img');
                 newImg.src = stampImage;
                 newImg.alt = "Stamp";
-                stampContainerClone.innerHTML = ''; // Clear current content
+                stampContainerClone.innerHTML = ''; 
                 stampContainerClone.appendChild(newImg);
             }
         } else if (placeholderDiv) {
-            // Placeholder div exists, do nothing or ensure it's styled for PDF
-        } else if (!imgInStamp) { // No image and no placeholder, ensure content is cleared or set to placeholder text
-            stampContainerClone.textContent = ''; // Or appropriate placeholder text for PDF
+        } else if (!imgInStamp) { 
+            stampContainerClone.textContent = ''; 
         }
     }
-    // Standardize table for PDF
     const tableClone = clonedElement.querySelector('.main-table-bordered');
     if (tableClone) {
         tableClone.classList.remove('main-table-bordered');
@@ -419,48 +402,43 @@ const AdOrderForm: FC = () => {
         tableHeaders.forEach(th => th.classList.add('print-table-header'));
     }
 
-    // html2pdf options
     html2pdfLib().from(clonedElement).set({
-        margin: [5,5,5,5], // Margins in mm [top, left, bottom, right]
+        margin: [5,5,5,5], 
         filename: 'release_order_form.pdf',
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: {
-            scale: 2, // Higher scale for better quality
-            useCORS: true, // For external images
-            logging: false, // Disable extensive logging
-            onclone: (documentClone: Document) => { // Callback after cloning, before rendering to canvas
+            scale: 2, 
+            useCORS: true, 
+            logging: false, 
+            onclone: (documentClone: Document) => { 
                 const clonedBody = documentClone.body;
-                // Ensure the body also has the pdf-export-active class for styles to apply
                 clonedBody.classList.add('pdf-export-active');
 
-                // Trigger reflow to ensure styles are applied before rendering
-                // This is a common trick to force the browser to recalculate layout
                 const _ = clonedBody.offsetHeight; 
 
-                // Adjust height of converted textareas within the cloned document
                 const textareasInClone = clonedBody.querySelectorAll('.textarea-static-print');
                 textareasInClone.forEach(ta => {
                     const htmlTa = ta as HTMLElement;
-                    htmlTa.style.height = 'auto'; // Reset height to allow scrollHeight calculation
+                    htmlTa.style.height = 'auto'; 
 
                     const computedStyle = getComputedStyle(htmlTa);
-                    const maxHeight = parseFloat(computedStyle.maxHeight || '9999'); // Use a specific PDF max height from CSS or fallback
-                    const minHeight = parseFloat(computedStyle.minHeight || '0');  // Use a specific PDF min height from CSS or fallback
+                    const maxHeight = parseFloat(computedStyle.maxHeight || '9999'); 
+                    const minHeight = parseFloat(computedStyle.minHeight || '0');  
 
                     let newHeight = htmlTa.scrollHeight;
                     if (newHeight < minHeight) newHeight = minHeight;
                     
-                    htmlTa.style.height = `${Math.min(newHeight, maxHeight)}px`; // Set height, capped by max-height
-                    htmlTa.style.overflowY = 'hidden'; // Important for PDF to clip content
+                    htmlTa.style.height = `${Math.min(newHeight, maxHeight)}px`; 
+                    htmlTa.style.overflowY = 'hidden'; 
                 });
             }
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     }).save().then(() => {
-      document.body.classList.remove('pdf-export-active'); // Clean up class from live body
+      document.body.classList.remove('pdf-export-active'); 
     }).catch((error: Error) => {
         console.error("Error generating PDF:", error);
-        document.body.classList.remove('pdf-export-active'); // Clean up on error
+        document.body.classList.remove('pdf-export-active'); 
     });
 
   }, [orderDate, stampImage, companyLogo, rowsData, matterText, advManagerInput1, advManagerInput2, clientName, headingCaption, packageName, ron, adjustTextareaHeight]);
@@ -476,48 +454,43 @@ const AdOrderForm: FC = () => {
     if (typeof window !== 'undefined') document.body.classList.remove('print-preview-active');
     const previewContentDiv = typeof window !== 'undefined' ? document.getElementById('printPreviewContent') : null;
     if (previewContentDiv) {
-        previewContentDiv.innerHTML = ''; // Clear previous preview content
+        previewContentDiv.innerHTML = ''; 
     }
   }, []);
 
 
-  // Simplified print function to handle both direct and modal printing
  const printInternal = useCallback((isFromPreviewModal = false) => {
     if (typeof window === 'undefined') return;
 
     const contentSourceElement = isFromPreviewModal 
-        ? document.getElementById('printPreviewContent') // Use content from modal
-        : printableAreaRef.current; // Use content from main page
+        ? document.getElementById('printPreviewContent') 
+        : printableAreaRef.current; 
 
     if (!contentSourceElement) {
         console.error("Content source for printing not found.");
         return;
     }
     
-    // Add classes to body to indicate print context
-    document.body.classList.add('printing-from-preview'); // General class for styles during print iframe creation
+    document.body.classList.add('printing-from-preview'); 
     if (!isFromPreviewModal) {
-        document.body.classList.add('direct-print-active'); // Specific class if printing directly from main page
+        document.body.classList.add('direct-print-active'); 
     }
 
-    // Adjust textareas in the source element before cloning
-    const allTextareas = contentSourceElement.querySelectorAll('textarea, .textarea-static-print'); // Include already converted static divs
+    const allTextareas = contentSourceElement.querySelectorAll('textarea, .textarea-static-print'); 
     allTextareas.forEach(ta => adjustTextareaHeight(ta as HTMLTextAreaElement));
 
-    // Create an iframe for isolated printing
     const iframe = document.createElement('iframe');
     iframe.style.position = 'fixed';
     iframe.style.width = '0';
     iframe.style.height = '0';
     iframe.style.border = '0';
-    iframe.style.left = '-9999px'; // Hide iframe off-screen
+    iframe.style.left = '-9999px'; 
     document.body.appendChild(iframe);
 
     const iframeDoc = iframe.contentWindow?.document;
     if (!iframeDoc) {
         console.error("Could not access iframe document.");
-        if(document.body.contains(iframe)) document.body.removeChild(iframe); // Clean up iframe
-        // Clean up body classes
+        if(document.body.contains(iframe)) document.body.removeChild(iframe); 
         document.body.classList.remove('printing-from-preview');
         if (!isFromPreviewModal) document.body.classList.remove('direct-print-active');
         return;
@@ -525,12 +498,11 @@ const AdOrderForm: FC = () => {
 
     iframeDoc.open();
     iframeDoc.write('<html><head><title>Print</title>');
-    // Copy stylesheets
     Array.from(document.styleSheets).forEach(styleSheet => {
         try {
-            if (styleSheet.href && (styleSheet.href.startsWith('http') || styleSheet.href.startsWith('blob:'))) { // External stylesheets
+            if (styleSheet.href && (styleSheet.href.startsWith('http') || styleSheet.href.startsWith('blob:'))) { 
                  iframeDoc.write(`<link rel="stylesheet" type="${styleSheet.type || 'text/css'}" href="${styleSheet.href}">`);
-            } else { // Inline stylesheets
+            } else { 
                 const cssRules = Array.from(styleSheet.cssRules || [])
                     .map(rule => rule.cssText)
                     .join('\n');
@@ -540,74 +512,63 @@ const AdOrderForm: FC = () => {
             }
         } catch (e) {
             console.warn("Could not copy stylesheet for printing:", styleSheet.href, e);
-             // Fallback to linking if reading rules fails (e.g., CORS)
-             if (styleSheet.href) { // Check href again to be sure
+             if (styleSheet.href) { 
                 iframeDoc.write(`<link rel="stylesheet" type="${styleSheet.type || 'text/css'}" href="${styleSheet.href}">`);
             }
         }
     });
-    iframeDoc.write('</head><body class="printing-from-preview direct-print-active">'); // Add classes to iframe body for styling
+    iframeDoc.write('</head><body class="printing-from-preview direct-print-active">'); 
 
-    // Clone the content (either from modal or main page)
     const clonedContent = contentSourceElement.cloneNode(true) as HTMLElement;
-    clonedContent.id = "printable-area-pdf"; // Ensure the cloned content has the correct ID for print styles
+    clonedContent.id = "printable-area-pdf"; 
 
-    iframeDoc.body.appendChild(clonedContent); // Append cloned content to iframe
+    iframeDoc.body.appendChild(clonedContent); 
     iframeDoc.write('</body></html>');
     iframeDoc.close();
 
-    // Trigger print and cleanup
     setTimeout(() => {
         iframe.contentWindow?.focus();
         iframe.contentWindow?.print();
-        setTimeout(() => { // Delay removal to allow print dialog to fully process
-          if(document.body.contains(iframe)) { // Check if iframe still exists
+        setTimeout(() => { 
+          if(document.body.contains(iframe)) { 
              document.body.removeChild(iframe);
           }
-          // Clean up body classes
           document.body.classList.remove('printing-from-preview');
           if (!isFromPreviewModal) document.body.classList.remove('direct-print-active');
-        }, 1000); // Increased delay for safety
-    }, 500); // Delay to ensure iframe content is loaded
+        }, 1000); 
+    }, 500); 
 }, [adjustTextareaHeight]);
 
 
-  // Unified print handler
   const handleActualPrint = useCallback((isFromPreview = false) => {
     if (typeof window === 'undefined') return;
 
     if (isFromPreview && document.getElementById('printPreviewContent')) {
-        // If printing from the modal preview, use the content within the modal
         printInternal(true);
     } else {
-        // If printing directly (not from modal, or modal content not found), handle fullscreen and print main page
         const wasFullScreen = isFullScreenPreview;
         const exitFullscreenAndPrint = () => {
-            // Small delay to allow UI to settle after potential fullscreen exit
             setTimeout(() => {
-                document.body.classList.add('direct-print-active'); // Class for direct print styling
-                // Adjust textareas on the main printable area before printing
+                document.body.classList.add('direct-print-active'); 
                 const textareasOnPage = printableAreaRef.current?.querySelectorAll('textarea');
                 textareasOnPage?.forEach(ta => adjustTextareaHeight(ta));
 
-                window.print(); // Trigger browser's print dialog
+                window.print(); 
 
-                // Cleanup class after print dialog is likely closed
                 setTimeout(() => document.body.classList.remove('direct-print-active'), 1000);
             }, 100); 
         };
 
         if (wasFullScreen && document.fullscreenElement) {
-            // If in fullscreen, exit fullscreen first, then print
             document.exitFullscreen().then(exitFullscreenAndPrint).catch(err => {
                 console.error("Error exiting fullscreen:", err);
-                exitFullscreenAndPrint(); // Proceed with printing even if exit fails
+                exitFullscreenAndPrint(); 
             });
-        } else if (isPreviewing) { // If in modal preview mode but not printing from modal (e.g., "Print" button on main page clicked)
-            handleClosePrintPreview(); // Close modal first
-            setTimeout(exitFullscreenAndPrint, 50); // Short delay before printing
+        } else if (isPreviewing) { 
+            handleClosePrintPreview(); 
+            setTimeout(exitFullscreenAndPrint, 50); 
         }
-         else { // Directly print the main page content
+         else { 
             exitFullscreenAndPrint();
         }
     }
@@ -620,7 +581,6 @@ const AdOrderForm: FC = () => {
 
     if (!document.fullscreenElement) {
         element.requestFullscreen().catch(err => {
-          // Inform user if fullscreen request fails
           alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
         });
     } else {
@@ -637,22 +597,19 @@ const AdOrderForm: FC = () => {
       const element = printableAreaRef.current;
       if (element) {
           if (isCurrentlyFullScreen) {
-            document.body.classList.add('fullscreen-body-active'); // For global styles if needed
-            element.classList.add('fullscreen-preview-active'); // For specific element styling
+            document.body.classList.add('fullscreen-body-active'); 
+            element.classList.add('fullscreen-preview-active'); 
           } else {
             document.body.classList.remove('fullscreen-body-active');
             element.classList.remove('fullscreen-preview-active');
           }
-          // Re-adjust textareas when fullscreen state changes
           const allTextareas = document.querySelectorAll('#printable-area-pdf textarea, #printPreviewContent textarea');
           allTextareas.forEach(ta => adjustTextareaHeight(ta as HTMLTextAreaElement));
       }
     };
     document.addEventListener('fullscreenchange', fullscreenChangeHandler);
-    // Cleanup function
     return () => {
       document.removeEventListener('fullscreenchange', fullscreenChangeHandler);
-      // Ensure classes are removed if component unmounts while in fullscreen
       if (document.body.classList.contains('fullscreen-body-active')) {
         document.body.classList.remove('fullscreen-body-active');
       }
@@ -664,7 +621,6 @@ const AdOrderForm: FC = () => {
   }, [adjustTextareaHeight]);
 
 
-  // Effect for handling print preview modal content generation
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -673,95 +629,87 @@ const AdOrderForm: FC = () => {
       const previewContentDiv = document.getElementById('printPreviewContent');
 
       if (previewContentDiv && previewNode) {
-        // Remove elements not intended for preview (e.g., action buttons from the original form)
         previewNode.querySelectorAll('.no-print-preview').forEach(el => el.remove());
         previewNode.querySelectorAll('.action-buttons-container').forEach(el => el.remove());
         previewNode.querySelectorAll('.table-row-actions').forEach(el => el.remove());
 
-        // Transform elements for preview (e.g., change classes for specific styling)
         const releaseOrderTitle = previewNode.querySelector('.release-order-title-screen');
         if (releaseOrderTitle) {
-            releaseOrderTitle.className = 'release-order-titlebar-print-preview'; // Use print/PDF class
+            releaseOrderTitle.className = 'release-order-titlebar-print-preview'; 
         }
 
         const matterContainerParent = previewNode.querySelector('.matter-container-print-parent');
         if(matterContainerParent) {
             const matterLabel = matterContainerParent.querySelector('.matter-label-screen');
             if (matterLabel) {
-                matterLabel.className = 'matter-label-print-preview'; // Use print/PDF class
+                matterLabel.className = 'matter-label-print-preview'; 
             }
         }
 
-        // Handle company logo in preview
         const companyLogoContainer = previewNode.querySelector('.company-logo-container-screen');
         if (companyLogoContainer) {
             const imgElement = companyLogoContainer.querySelector('img');
              if (companyLogo && companyLogo !== COMPANY_LOGO_PLACEHOLDER && imgElement) {
-                 imgElement.src = companyLogo; // Use current logo
+                 imgElement.src = companyLogo; 
              } else if (imgElement) {
-                 imgElement.src = COMPANY_LOGO_PLACEHOLDER; // Fallback to placeholder
+                 imgElement.src = COMPANY_LOGO_PLACEHOLDER; 
              }
         }
 
-        // Handle stamp image in preview
         const stampContainer = previewNode.querySelector('.stamp-container-screen');
         if(stampContainer) {
-            stampContainer.className = 'stamp-container-print-preview'; // Use print/PDF class
+            stampContainer.className = 'stamp-container-print-preview'; 
             const imgElement = stampContainer.querySelector('img');
             if (stampImage && stampImage !== DEFAULT_STAMP_IMAGE_PLACEHOLDER && imgElement) {
-                 imgElement.src = stampImage; // Use current stamp
+                 imgElement.src = stampImage; 
              } else if (imgElement) {
-                 imgElement.src = DEFAULT_STAMP_IMAGE_PLACEHOLDER; // Fallback to placeholder
+                 imgElement.src = DEFAULT_STAMP_IMAGE_PLACEHOLDER; 
              }
         }
 
-        // Convert inputs to static text for preview
         const inputs = previewNode.querySelectorAll('input[type="text"], input[type="number"], input[type="date"]');
         inputs.forEach(inputEl => {
             const p = document.createElement('span');
             const input = inputEl as HTMLInputElement;
-            let value = input.value || ''; // Default to empty string
-            if (input.id === 'orderDate' && orderDate) { // Special handling for main orderDate
+            let value = input.value || ''; 
+            if (input.id === 'orderDate' && orderDate) { 
                  value = format(orderDate, 'dd.MM.yyyy');
-            } else if (!input.value && input.placeholder && input.type !== 'date') { // Use placeholder if value is empty
-                value = '\u00A0'; // Non-breaking space for empty placeholders
-            } else if (input.type === 'date' && !input.value) { // Empty date input
-                 value = '\u00A0'; // Non-breaking space
-            } else if (input.type === 'date' && input.value){ // Format date if value exists
+            } else if (!input.value && input.placeholder && input.type !== 'date') { 
+                value = '\u00A0'; 
+            } else if (input.type === 'date' && !input.value) { 
+                 value = '\u00A0'; 
+            } else if (input.type === 'date' && input.value){ 
                 try {
                     value = format(new Date(input.value), 'dd.MM.yyyy');
-                } catch (e) { // Fallback if date parsing fails
+                } catch (e) { 
                     value = input.value || '\u00A0';
                 }
             } else {
-                value = input.value || '\u00A0'; // General case for other inputs
+                value = input.value || '\u00A0'; 
             }
             p.textContent = value;
-            p.className = 'static-print-text no-underline-print'; // Apply styling class
-            // Copy basic width style for layout consistency
+            p.className = 'static-print-text no-underline-print'; 
             p.style.width = getComputedStyle(input).width;
-            p.style.minHeight = '1em'; // Ensure some height
+            p.style.minHeight = '1em'; 
             input.parentNode?.replaceChild(p, input);
         });
 
-        // Convert table date pickers to static text for preview
         const tableDatePickers = previewNode.querySelectorAll('.table-date-picker-wrapper');
         tableDatePickers.forEach((wrapper, index) => {
             const p = document.createElement('span');
-            const originalRowData = rowsData[index]; // Get current data from state
+            const originalRowData = rowsData[index]; 
             const dateValue = originalRowData?.scheduledDate;
-            let displayValue = '\u00A0'; // Default to non-breaking space
+            let displayValue = '\u00A0'; 
 
             if (dateValue instanceof Date) {
                 displayValue = format(dateValue, 'dd.MM.yyyy');
             } else if (typeof dateValue === 'string' && dateValue.trim() !== '') {
                 try {
-                    displayValue = format(new Date(dateValue), 'dd.MM.yyyy'); // Attempt to parse string
-                } catch { displayValue = dateValue; } // Fallback if parsing fails
+                    displayValue = format(new Date(dateValue), 'dd.MM.yyyy'); 
+                } catch { displayValue = dateValue; } 
             }
             p.textContent = displayValue;
-            p.className = 'static-print-text no-underline-print'; // Apply styling class
-            // Basic styling for consistency in preview
+            p.className = 'static-print-text no-underline-print'; 
             p.style.display = 'block';
             p.style.width = '100%';
             p.style.textAlign = 'center';
@@ -770,70 +718,64 @@ const AdOrderForm: FC = () => {
         });
 
 
-        // Convert textareas to static divs for preview
         const textareas = previewNode.querySelectorAll('textarea');
         textareas.forEach(textareaEl => {
             const div = document.createElement('div');
             const textarea = textareaEl as HTMLTextAreaElement;
-            let value = textarea.value.replace(/\n/g, '<br>') || ''; // Preserve line breaks
-            if (!textarea.value && textarea.placeholder) { // Use placeholder if value is empty
-                value = '\u00A0'; // Non-breaking space for empty placeholders
+            let value = textarea.value.replace(/\n/g, '<br>') || ''; 
+            if (!textarea.value && textarea.placeholder) { 
+                value = '\u00A0'; 
             } else if(!textarea.value) {
-                value = '\u00A0'; // Non-breaking space for empty textareas
+                value = '\u00A0'; 
             }
             div.innerHTML = value;
-            div.className = 'static-print-text textarea-static-print no-underline-print'; // Apply styling class
-            // Apply specific class for matter textarea for styling (e.g., text alignment)
+            div.className = 'static-print-text textarea-static-print no-underline-print'; 
             if (textarea.id === 'matterTextarea') {
                  div.classList.add('matter-container-print');
                  div.style.textAlign = getComputedStyle(textarea).textAlign as CanvasTextAlign;
             }
 
-            // Copy essential styles from textarea to the div for visual consistency
             const textareaStyle = getComputedStyle(textarea);
             div.style.fontFamily = textareaStyle.fontFamily;
             div.style.fontSize = textareaStyle.fontSize;
             div.style.fontWeight = textareaStyle.fontWeight;
             div.style.lineHeight = textareaStyle.lineHeight;
-            div.style.color = 'black'; // Ensure text is black in preview
-            div.style.backgroundColor = 'transparent'; // No background for static text
-            div.style.height = 'auto'; // Let content determine height
-            div.style.minHeight = textareaStyle.minHeight || (textarea.id === 'matterTextarea' ? '100px' :'120px'); // Respect original min-height
-            div.style.overflow = 'visible'; // Show all content in preview
-            div.style.whiteSpace = 'pre-wrap'; // Preserve whitespace and line breaks
-            div.style.wordWrap = 'break-word'; // Prevent overflow
+            div.style.color = 'black'; 
+            div.style.backgroundColor = 'transparent'; 
+            div.style.height = 'auto'; 
+            div.style.minHeight = textareaStyle.minHeight || (textarea.id === 'matterTextarea' ? '100px' :'120px'); 
+            div.style.overflow = 'visible'; 
+            div.style.whiteSpace = 'pre-wrap'; 
+            div.style.wordWrap = 'break-word'; 
 
             textarea.parentNode?.replaceChild(div, textarea);
         });
 
-        // Standardize table class for preview
         const tableInPreview = previewNode.querySelector('.main-table-bordered');
         if (tableInPreview) {
             tableInPreview.classList.remove('main-table-bordered');
-            tableInPreview.classList.add('print-table'); // Use print/PDF table class
+            tableInPreview.classList.add('print-table'); 
             const tableHeaders = tableInPreview.querySelectorAll('th');
-            tableHeaders.forEach(th => th.classList.add('print-table-header')); // Style headers
+            tableHeaders.forEach(th => th.classList.add('print-table-header')); 
         }
 
 
-        previewContentDiv.innerHTML = ''; // Clear previous content
-        previewContentDiv.appendChild(previewNode); // Add newly cloned and modified node
+        previewContentDiv.innerHTML = ''; 
+        previewContentDiv.appendChild(previewNode); 
 
-        // Re-adjust heights of converted textareas within the preview modal itself
         const textareasInPreview = previewContentDiv.querySelectorAll('.textarea-static-print, .static-print-text');
         textareasInPreview.forEach(ta => {
             const htmlTa = ta as HTMLElement;
-            htmlTa.style.height = 'auto'; // Reset height for accurate scrollHeight calculation
-            htmlTa.style.height = `${htmlTa.scrollHeight}px`; // Set to scrollHeight
+            htmlTa.style.height = 'auto'; 
+            htmlTa.style.height = `${htmlTa.scrollHeight}px`; 
         });
       }
-    } else if (!isPreviewing && !isFullScreenPreview) { // If exiting preview or fullscreen
+    } else if (!isPreviewing && !isFullScreenPreview) { 
         const previewContentDiv = document.getElementById('printPreviewContent');
-        if (previewContentDiv) previewContentDiv.innerHTML = ''; // Clear modal content
+        if (previewContentDiv) previewContentDiv.innerHTML = ''; 
     }
   }, [isPreviewing, isFullScreenPreview, orderDate, companyLogo, stampImage, rowsData, matterText, clientName, advManagerInput1, advManagerInput2, headingCaption, packageName, ron, adjustTextareaHeight ]);
 
-  // Loading state until client-side hydration is complete and orderDate is initialized
   if (!isClient) {
     return <div className="flex justify-center items-center h-screen"><p>Loading form...</p></div>;
   }
@@ -841,7 +783,6 @@ const AdOrderForm: FC = () => {
   return (
     <div className="max-w-[210mm] mx-auto p-1 print-root-container bg-background" id="main-application-container">
 
-      {/* Action buttons container - hidden in print/PDF */}
       <div className="flex justify-end items-center gap-2 p-2 mb-2 no-print no-pdf-export action-buttons-container sticky top-0 bg-background z-50">
         <Button onClick={handlePrintPreview} variant="outline" size="sm"><Eye className="mr-2 h-4 w-4"/>Preview</Button>
         <Button onClick={() => handleActualPrint(false)} variant="outline" size="sm"><Printer className="mr-2 h-4 w-4"/>Print</Button>
@@ -849,28 +790,25 @@ const AdOrderForm: FC = () => {
         <Button onClick={generatePdf} variant="outline" size="sm"><Download className="mr-2 h-4 w-4"/>Download PDF</Button>
       </div>
 
-      {/* Main printable area of the form */}
       <div id="printable-area-pdf" ref={printableAreaRef} className={`w-full print-target bg-card text-card-foreground shadow-sm p-2 md:p-4 border-4 border-black ${isFullScreenPreview ? 'fullscreen-preview-active' : ''}`}>
-        {/* Release Order Title */}
         <div className="text-center mt-2 mb-4 release-order-title-screen">
              <h2 className="text-2xl font-bold inline-block px-3 py-1 bg-black text-white border-2 border-black rounded">RELEASE ORDER</h2>
         </div>
 
-        {/* Header Section: Company Info and RO Details */}
         <div className="flex flex-col md:flex-row gap-4 mb-5 print-header-box">
-            {/* Left Box: Company Logo and Details */}
             <div
-                className="w-full md:w-[30%] min-h-[150px] p-3 border-2 border-black rounded box-decoration-clone company-logo-container-screen company-logo-container-pdf cursor-pointer flex flex-col items-center justify-center relative"
+                className="w-full md:w-[30%] p-3 border-2 border-black rounded box-decoration-clone company-logo-container-screen company-logo-container-pdf cursor-pointer flex flex-col items-center justify-center relative"
                 onClick={triggerCompanyLogoUpload}
                 title="Click to upload company logo"
             >
                 <div className="w-full h-full flex items-center justify-center">
-                    <Image 
+                     <Image 
                         src={companyLogo} 
                         alt="Company Logo" 
                         layout="fill"
                         objectFit="contain"
-                        data-ai-hint="company logo" 
+                        data-ai-hint="company logo"
+                        className="max-h-full"
                     />
                 </div>
                 <Input key={companyLogoInputKey} type="file" ref={companyLogoInputRef} onChange={handleCompanyLogoUpload} accept="image/*" className="hidden" />
@@ -881,7 +819,6 @@ const AdOrderForm: FC = () => {
                 )}
             </div>
 
-            {/* Right Box: RO Number, Date, Client, Ad Manager */}
             <div className="flex-1 flex flex-col gap-3 p-3 border-2 border-black rounded">
                 <div className="flex gap-3 items-center">
                     <div className="flex-1 flex items-center">
@@ -908,7 +845,6 @@ const AdOrderForm: FC = () => {
             </div>
         </div>
 
-        {/* Heading/Caption and Package Section */}
         <div className="flex flex-col md:flex-row gap-4 mb-5 print-header-box">
             <div className="flex-1 p-3 border-2 border-black rounded">
                 <Label htmlFor="headingCaption" className="text-sm font-bold block mb-1">Heading/Caption:</Label>
@@ -920,7 +856,6 @@ const AdOrderForm: FC = () => {
             </div>
         </div>
 
-        {/* Main Table for Ad Details */}
         <div className="mb-5 table-container-print">
          <Table className="main-table-bordered print-table border border-black">
            <TableHeader className="bg-secondary print-table-header">
@@ -964,20 +899,16 @@ const AdOrderForm: FC = () => {
              ))}
            </TableBody>
          </Table>
-          {/* Add/Delete Row Buttons - hidden in print/PDF */}
           <div className="flex justify-start gap-2 mt-2 no-print no-pdf-export no-print-preview table-row-actions">
             <Button onClick={addRow} size="sm" variant="outline"><PlusSquare className="mr-2 h-4 w-4"/>Add Row</Button>
             {rowsData.length > 1 && <Button onClick={() => deleteRow(rowsData.length -1)} size="sm" variant="destructive"><MinusSquare className="mr-2 h-4 w-4"/>Delete Last Row</Button>}
           </div>
         </div>
 
-        {/* Matter Section */}
         <div className="flex mb-3 min-h-[100px] items-stretch matter-container-print-parent p-0 border-2 border-black rounded">
-            {/* Vertical "MATTER" Label */}
             <div className="matter-label-screen flex items-center justify-center p-1 w-[38px] self-stretch">
                 <span className="text-sm font-bold">MATTER</span>
             </div>
-            {/* Matter Textarea */}
             <Textarea
               id="matterTextarea"
               value={matterText}
@@ -987,20 +918,15 @@ const AdOrderForm: FC = () => {
             />
         </div>
 
-        {/* Footer Section: Billing Info, Notes, Stamp */}
         <div className="p-3 border-2 border-black rounded flex flex-col print-footer-box relative">
-          {/* Billing Info */}
           <div className="w-full mb-2">
             <p className="text-xs font-bold mb-1">Forward all bills with relevant VTS copy to :-</p>
             <p className="text-xs leading-snug">D-9 &amp; D-10, 1st Floor, Pushpa Bhawan, <br /> Alaknanda Commercial complex, <br />New Delhi-110019 <br />Tel.: 49573333, 34, 35, 36 <br />Fax: 26028101</p>
           </div>
 
-          {/* Separator Line */}
           <hr className="border-black border-b-2 my-2 w-full" />
 
-          {/* Notes and Stamp Area */}
           <div className="flex justify-between items-start mt-0 pt-0">
-            {/* Left Side: Notes */}
             <div className="w-[62%]">
                 <p className="text-sm font-bold underline decoration-black decoration-2 underline-offset-2 mb-1">Note:</p>
                 <ol className="list-decimal list-inside text-xs space-y-0.5">
@@ -1011,7 +937,6 @@ const AdOrderForm: FC = () => {
                 </ol>
             </div>
 
-            {/* Right Side: Stamp Area */}
              <div
                 className="w-[35%] flex flex-col items-center justify-end stamp-parent-container mt-2 md:mt-0 self-end"
             >
@@ -1039,12 +964,11 @@ const AdOrderForm: FC = () => {
         </div>
       </div>
 
-      {/* Print Preview Modal */}
       {isPreviewing && !isFullScreenPreview && (
         <div
           id="printPreviewOverlay"
           className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[1000] p-4 no-print"
-          onClick={(e) => { // Close modal if backdrop is clicked
+          onClick={(e) => { 
              if (e.target === e.currentTarget) {
                 handleClosePrintPreview();
             }
@@ -1052,11 +976,10 @@ const AdOrderForm: FC = () => {
         >
           <div
             id="printPreviewModalContentContainer"
-            className="bg-white w-auto max-w-[210mm] min-h-[297mm] h-auto max-h-[95vh] p-0 shadow-2xl overflow-y-auto print-preview-modal-content no-print" // Ensure modal itself is not printed
-            onClick={(e) => e.stopPropagation()} // Prevent click inside modal from closing it
+            className="bg-white w-auto max-w-[210mm] min-h-[297mm] h-auto max-h-[95vh] p-0 shadow-2xl overflow-y-auto print-preview-modal-content no-print" 
+            onClick={(e) => e.stopPropagation()} 
           >
-             {/* Modal Header with Print and Close Buttons */}
-             <div className="flex justify-end p-2 sticky top-0 bg-white z-10 border-b"> {/* Sticky header for modal */}
+             <div className="flex justify-end p-2 sticky top-0 bg-white z-10 border-b"> 
                 <Button onClick={() => handleActualPrint(true)} variant="outline" size="sm" className="mr-2">
                     <Printer className="mr-2 h-4 w-4"/> Print
                 </Button>
@@ -1064,9 +987,7 @@ const AdOrderForm: FC = () => {
                     <XCircle className="mr-2 h-4 w-4" /> Close
                 </Button>
             </div>
-             {/* Content to be previewed */}
              <div id="printPreviewContent" className="print-preview-inner-content p-4">
-                {/* Cloned content will be injected here by useEffect */}
              </div>
           </div>
         </div>
