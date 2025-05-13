@@ -13,8 +13,8 @@ import Image from 'next/image';
 import { Printer, PlusSquare, MinusSquare, Eye, Expand, Download, XCircle, Trash2, UploadCloud } from 'lucide-react';
 import { format } from 'date-fns';
 
-const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://picsum.photos/seed/stamp/178/98';
-const DEFAULT_COMPANY_LOGO_PLACEHOLDER = "https://picsum.photos/seed/leharlogo/200/100";
+const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://picsum.photos/seed/stamp/178/98'; 
+const DEFAULT_COMPANY_LOGO_PLACEHOLDER = "https://picsum.photos/seed/leharlogo/200/230";
 
 
 const AdOrderForm: FC = () => {
@@ -57,7 +57,7 @@ const AdOrderForm: FC = () => {
       if (textarea.id === 'matterTextarea') {
         minHeightScreen = 100;
       } else if (textarea.classList.contains('print-textarea')) {
-         minHeightScreen = 150; // Default min-height for table textareas on screen
+         minHeightScreen = 150; 
       }
 
 
@@ -72,7 +72,6 @@ const AdOrderForm: FC = () => {
                                       window.matchMedia('print').matches); 
 
       if (isPrintingOrPdfContext) {
-        // PDF specific adjustments (takes precedence if pdf-export-active is set)
         if (document.body.classList.contains('pdf-export-active')) {
             const pdfMinHeightVar = textarea.classList.contains('print-textarea') ? '--pdf-table-textarea-min-height' : '--pdf-matter-textarea-min-height';
             const pdfMaxHeightVar = textarea.classList.contains('print-textarea') ? '--pdf-table-textarea-max-height' : '--pdf-matter-textarea-max-height';
@@ -82,20 +81,19 @@ const AdOrderForm: FC = () => {
             let newHeight = textarea.scrollHeight;
             if (newHeight < pdfMinHeight) newHeight = pdfMinHeight;
             textarea.style.height = `${Math.min(newHeight, pdfMaxHeight)}px`;
-            textarea.style.overflowY = newHeight > pdfMaxHeight ? 'hidden' : 'hidden'; // Clip content
-        } else { // General print / preview adjustments (non-PDF)
+            textarea.style.overflowY = newHeight > pdfMaxHeight ? 'hidden' : 'hidden';
+        } else { 
             let newHeight = textarea.scrollHeight;
-            // Apply min-height from CSS variable for print-table if it exists
             if (textarea.classList.contains('print-textarea') && computedStyle) {
                 const printTableMinHeight = parseFloat(computedStyle.getPropertyValue('--print-table-textarea-min-height') || 'auto');
                 if (!isNaN(printTableMinHeight) && newHeight < printTableMinHeight) newHeight = printTableMinHeight;
             }
             textarea.style.height = `${newHeight}px`;
-            textarea.style.overflowY = 'visible'; // Allow content to flow in print/preview
+            textarea.style.overflowY = 'visible'; 
         }
-      } else { // Screen adjustments
+      } else { 
         textarea.style.height = `${Math.max(textarea.scrollHeight, minHeightScreen)}px`;
-        textarea.style.overflowY = 'auto'; // Allow scroll on screen if content exceeds
+        textarea.style.overflowY = 'auto'; 
       }
     }
   }, []);
@@ -226,17 +224,19 @@ const AdOrderForm: FC = () => {
 
 
   const generatePdf = useCallback(async () => {
-    if (typeof window === 'undefined' || typeof window.html2pdf === 'undefined') {
-        console.error('html2pdf.js is not loaded yet or not available on window.');
-        alert('PDF generation library not loaded. Please try again in a moment.');
-        return;
+    if (typeof window === 'undefined') {
+      console.error('Window object not available for PDF generation.');
+      alert('PDF generation is not available in this environment.');
+      return;
     }
-    const html2pdfLib = window.html2pdf;
+    
+    // Access html2pdf from the window object
+    const html2pdf = window.html2pdf;
 
     const elementToPrint = printableAreaRef.current;
-    if (!elementToPrint) {
-        console.error('Element not found for PDF generation.');
-        alert('Element to print not found.');
+    if (!elementToPrint || !html2pdf) {
+        console.error('Element not found for PDF generation or html2pdf.js not loaded.');
+        alert('Element to print not found or PDF library not loaded.');
         return;
     }
 
@@ -402,7 +402,7 @@ const AdOrderForm: FC = () => {
         tableHeaders.forEach(th => th.classList.add('print-table-header'));
     }
 
-    html2pdfLib().from(clonedElement).set({
+    html2pdf().from(clonedElement).set({
         margin: [5,5,5,5], 
         filename: 'release_order_form.pdf',
         image: { type: 'jpeg', quality: 0.98 },
@@ -797,16 +797,18 @@ const AdOrderForm: FC = () => {
 
         <div className="flex flex-col md:flex-row md:items-stretch gap-4 mb-5 print-header-box">
             <div
-                className="w-full md:w-[30%] p-3 border-2 border-black rounded flex flex-col relative company-logo-container-screen company-logo-container-pdf cursor-pointer"
+                className="w-full md:w-[30%] p-1.5 border-2 border-black rounded flex flex-col relative company-logo-container-screen company-logo-container-pdf cursor-pointer items-center justify-center overflow-hidden"
                 onClick={triggerCompanyLogoUpload}
                 title="Click to upload company logo"
+                style={{ height: '230px' }} 
             >
-                <div className="relative flex-grow w-full">
+                <div className="relative w-full h-full">
                      <Image
                         src={companyLogo}
                         alt="Company Logo"
-                        layout="fill"
-                        objectFit="cover"
+                        layout="fill" 
+                        objectFit="contain"
+                        className="rounded" 
                         data-ai-hint="company logo"
                     />
                 </div>
@@ -996,3 +998,4 @@ const AdOrderForm: FC = () => {
 };
 
 export default AdOrderForm;
+
