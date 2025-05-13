@@ -94,7 +94,6 @@
   }
 
   /* Fallback for generic #printable-area-pdf if printed directly (not from preview/clean view) */
-  /* This context is less likely with current UI but good to have a base */
   #printable-area-pdf:not(body.pdf-export-active #printable-area-pdf):not(body.printing-from-preview #printable-area-pdf):not(body.clean-view-printing #printable-area-pdf) {
     width: 210mm !important;
     min-height: 297mm !important;
@@ -114,8 +113,6 @@
 
 
   /* Ensure specific element selectors work in all print contexts */
-  /* These apply to #printable-area-pdf when printed, regardless of pdf-export-active class, */
-  /* unless overridden by more specific pdf-export-active rules. */
   #printable-area-pdf .p-3,
   body.printing-from-preview #printPreviewContent #printable-area-pdf .p-3,
   body.clean-view-printing #printable-area-pdf .p-3 {
@@ -361,28 +358,28 @@
   #printable-area-pdf label { font-size: 9pt !important; margin-right: 4px !important; }
   #printable-area-pdf ol.list-decimal li { font-size: 8pt !important; }
 
-  /* Specific alignment for header boxes for print */
+  /* Specific alignment for header boxes for print (generic print, print preview, clean view) */
   #printable-area-pdf .print-header-box,
   body.printing-from-preview #printPreviewContent #printable-area-pdf .print-header-box,
   body.clean-view-printing #printable-area-pdf .print-header-box {
     display: flex !important;
     flex-direction: row !important;
-    align-items: stretch !important;
+    align-items: stretch !important; /* Ensures children stretch to the same height */
     width: 100% !important;
     gap: 1rem !important; /* Matches screen gap-4 */
     page-break-inside: avoid !important;
   }
 
   /* Left box (company logo/details) for print */
-  #printable-area-pdf .print-header-box > div[class*="company-logo-container"],
-  body.printing-from-preview #printPreviewContent #printable-area-pdf .print-header-box > div[class*="company-logo-container"],
-  body.clean-view-printing #printable-area-pdf .print-header-box > div[class*="company-logo-container"] {
-    width: 300px !important;
-    height: 280px !important;
-    flex-shrink: 0 !important;
-    padding: 6px !important; /* p-1.5 */
-    border: 2px solid black !important;
-    border-radius: 0.25rem !important; /* rounded */
+  #printable-area-pdf .print-header-box > .company-logo-container-pdf, /* Use the specific class from JSX for logo */
+  body.printing-from-preview #printPreviewContent #printable-area-pdf .print-header-box > .company-logo-container-pdf,
+  body.clean-view-printing #printable-area-pdf .print-header-box > .company-logo-container-pdf {
+    width: 300px !important; /* Match screen md:w-[300px] */
+    height: 280px !important; /* Match screen h-[280px] */
+    flex-shrink: 0 !important; /* Prevent shrinking */
+    padding: 6px !important; /* Match screen p-1.5 */
+    border: 2px solid black !important; /* Match screen border */
+    border-radius: 0.25rem !important; /* Match screen rounded */
     box-sizing: border-box !important;
     display: flex !important;
     flex-direction: column !important;
@@ -392,18 +389,30 @@
     overflow: hidden !important;
   }
 
-  /* Right box (RO, Date, Client, etc.) for print */
-  #printable-area-pdf .print-header-box > div.flex-1,
-  body.printing-from-preview #printPreviewContent #printable-area-pdf .print-header-box > div.flex-1,
-  body.clean-view-printing #printable-area-pdf .print-header-box > div.flex-1 {
-    flex: 1 1 0% !important;
+  /* Right box (RO, Date, Client, etc.) using .print-info-column */
+  #printable-area-pdf .print-header-box > .print-info-column,
+  body.printing-from-preview #printPreviewContent #printable-area-pdf .print-header-box > .print-info-column,
+  body.clean-view-printing #printable-area-pdf .print-header-box > .print-info-column {
+    flex: 1 1 0% !important; /* Takes remaining space */
     display: flex !important;
-    flex-direction: column !important;
-    gap: 0.75rem !important; /* Tailwind gap-3 */
-    padding: 12px !important; /* p-3 */
-    border: 2px solid black !important;
-    border-radius: 0.25rem !important; /* rounded */
+    flex-direction: column !important; /* Internal layout */
+    gap: 0.75rem !important; /* Match screen gap-3 */
+    padding: 12px !important; /* Match screen p-3 */
+    border: 2px solid black !important; /* Match screen border */
+    border-radius: 0.25rem !important; /* Match screen rounded */
     box-sizing: border-box !important;
+  }
+  
+  /* For Heading/Caption and Package boxes, using .print-content-block */
+  #printable-area-pdf .print-header-box > .print-content-block,
+  body.printing-from-preview #printPreviewContent #printable-area-pdf .print-header-box > .print-content-block,
+  body.clean-view-printing #printable-area-pdf .print-header-box > .print-content-block {
+    flex: 1 1 0% !important; /* Ensures they share space equally if in a row */
+    padding: 12px !important; /* Match screen p-3 */
+    border: 2px solid black !important; /* Match screen border */
+    border-radius: 0.25rem !important; /* Match screen rounded */
+    box-sizing: border-box !important;
+    /* They don't need to be flex containers themselves unless their content requires it */
   }
 }
 
@@ -426,7 +435,7 @@
   background-color: white;
   box-sizing: border-box;
   position: relative;
-  overflow: hidden; /* Changed from visible to hidden */
+  overflow: hidden; 
 }
 
 #printable-area-pdf input[type="text"],
@@ -580,36 +589,26 @@ body.print-preview-active > #main-application-container > *:not(#printPreviewOve
     overflow: visible !important; /* Let content overflow naturally for A4 simulation */
 }
 
-/*
-  Ensure elements WITHIN the cloned #printable-area-pdf (inside #printPreviewContent)
-  retain their screen appearance. Since they are direct clones with screen classes,
-  they should largely do so. Only add specific overrides if the preview container
-  or general modal styles interfere.
-*/
 #printPreviewContent #printable-area-pdf input,
 #printPreviewContent #printable-area-pdf textarea,
 #printPreviewContent #printable-area-pdf select {
-    /* Re-assert screen styles if necessary. Example: */
-    border-bottom: 1px solid black; /* As per screen style */
-    /* Any other critical screen appearance for form elements */
+    border-bottom: 1px solid black; 
 }
 #printPreviewContent #printable-area-pdf .main-table-bordered {
-    border: 2px solid black; /* As per screen */
+    border: 2px solid black; 
 }
 #printPreviewContent #printable-area-pdf .main-table-bordered th,
 #printPreviewContent #printable-area-pdf .main-table-bordered td {
-    border: 1px solid black; /* As per screen */
-    padding: 6px; /* As per screen */
+    border: 1px solid black; 
+    padding: 6px; 
 }
 #printPreviewContent #printable-area-pdf .release-order-title-screen h2 {
-    background-color: black; /* As per screen */
-    color: white; /* As per screen */
-    /* ... other screen h2 styles ... */
+    background-color: black; 
+    color: white; 
 }
 #printPreviewContent #printable-area-pdf .matter-label-screen {
-    background-color: black; /* As per screen */
-    color: white; /* As per screen */
-    /* ... other screen matter label styles ... */
+    background-color: black; 
+    color: white; 
 }
 
 
@@ -705,7 +704,7 @@ body.pdf-export-active #printable-area-pdf .gap-1,
 body.pdf-export-active #printable-area-pdf .gap-2,
 body.pdf-export-active #printable-area-pdf .gap-3,
 body.pdf-export-active #printable-area-pdf .gap-4 {
-    gap: 1rem !important; /* Updated to match screen gap-4 */
+    gap: 1rem !important; 
 }
 
 
@@ -847,17 +846,17 @@ body.pdf-export-active #printable-area-pdf .print-header-box {
   flex-direction: row !important;
   align-items: stretch !important;
   width: 100% !important;
-  gap: 1rem !important; /* Tailwind gap-4 */
+  gap: 1rem !important; 
   page-break-inside: avoid !important;
 }
 
-body.pdf-export-active #printable-area-pdf .print-header-box > div[class*="company-logo-container"] {
+body.pdf-export-active #printable-area-pdf .print-header-box > .company-logo-container-pdf {
   width: 300px !important;
-  height: 280px !important; /* Maintain height */
+  height: 280px !important; 
   flex-shrink: 0 !important;
-  padding: 6px !important; /* p-1.5 */
+  padding: 6px !important; 
   border: 2px solid black !important;
-  border-radius: 0.25rem !important; /* rounded */
+  border-radius: 0.25rem !important; 
   box-sizing: border-box !important;
   display: flex !important;
   flex-direction: column !important;
@@ -867,13 +866,21 @@ body.pdf-export-active #printable-area-pdf .print-header-box > div[class*="compa
   overflow: hidden !important;
 }
 
-body.pdf-export-active #printable-area-pdf .print-header-box > div.flex-1 {
+body.pdf-export-active #printable-area-pdf .print-header-box > .print-info-column {
   flex: 1 1 0% !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 0.75rem !important; /* Tailwind gap-3 */
-  padding: 12px !important; /* p-3 */
+  gap: 0.75rem !important; 
+  padding: 12px !important; 
   border: 2px solid black !important;
-  border-radius: 0.25rem !important; /* rounded */
+  border-radius: 0.25rem !important; 
+  box-sizing: border-box !important;
+}
+
+body.pdf-export-active #printable-area-pdf .print-header-box > .print-content-block {
+  flex: 1 1 0% !important;
+  padding: 12px !important;
+  border: 2px solid black !important;
+  border-radius: 0.25rem !important;
   box-sizing: border-box !important;
 }

@@ -1,3 +1,4 @@
+
 // src/components/ad-order-form.tsx
 'use client';
 
@@ -56,23 +57,23 @@ const AdOrderForm = (): JSX.Element => {
       textarea.style.height = 'auto';
       const computedStyle = win.getComputedStyle(textarea);
 
-      let minHeightScreen = 120; // Default for generic textareas on screen
+      let minHeightScreen = 120; 
       if (textarea.id === 'matterTextarea') {
         minHeightScreen = 100;
-      } else if (textarea.classList.contains('print-textarea')) { // Table textareas
+      } else if (textarea.classList.contains('print-textarea')) { 
         minHeightScreen = 150;
       }
-      // Use computed min-height if larger than default
+      
       minHeightScreen = Math.max(parseFloat(computedStyle.minHeight) || 0, minHeightScreen);
       
       const isPdfExport = doc.body.classList.contains('pdf-export-active');
       const isPrinting = doc.body.classList.contains('printing-from-preview') || 
                          doc.body.classList.contains('direct-print-active') ||
                          doc.body.classList.contains('clean-view-printing') || 
-                         win.matchMedia('print').matches;
+                         (win.matchMedia && win.matchMedia('print').matches);
+
 
       if (isPdfExport) {
-        // PDF export: use CSS variables for min/max height
         const pdfMinHeightVar = textarea.classList.contains('print-textarea') ? '--pdf-table-textarea-min-height' : '--pdf-matter-textarea-min-height';
         const pdfMaxHeightVar = textarea.classList.contains('print-textarea') ? '--pdf-table-textarea-max-height' : '--pdf-matter-textarea-max-height';
         const pdfMinHeight = parseFloat(computedStyle.getPropertyValue(pdfMinHeightVar) || '20');
@@ -84,14 +85,12 @@ const AdOrderForm = (): JSX.Element => {
         textarea.style.overflowY = newHeight > pdfMaxHeight ? 'hidden' : 'hidden';
 
       } else if (isPrinting) {
-        // General print context (not PDF export)
-        // Let content dictate height, ensure it's visible
         textarea.style.height = `${textarea.scrollHeight}px`;
         textarea.style.overflowY = 'visible';
       } else {
         // Screen context
         textarea.style.height = `${Math.max(textarea.scrollHeight, minHeightScreen)}px`;
-        textarea.style.overflowY = 'auto'; 
+        textarea.style.overflowY = textarea.scrollHeight > minHeightScreen ? 'auto' : 'hidden';
       }
     }
   }, []);
@@ -144,7 +143,7 @@ const AdOrderForm = (): JSX.Element => {
       printPreviewContentRef.current.appendChild(clonedContent);
       
       const textareasInPreview = printPreviewContentRef.current.querySelectorAll('textarea');
-      textareasInPreview.forEach(ta => adjustTextareaHeight(ta, printPreviewContentRef.current?.ownerDocument));
+      textareasInPreview.forEach(ta => adjustTextareaHeight(ta as HTMLTextAreaElement, printPreviewContentRef.current?.ownerDocument));
 
     } else {
       document.body.classList.remove('print-preview-active');
@@ -299,9 +298,9 @@ const AdOrderForm = (): JSX.Element => {
   };
 
   const generatePdf = useCallback(async () => {
-    if (typeof window === 'undefined' || !window.html2pdf) return;
+    if (typeof window === 'undefined') return;
     
-    const html2pdf = window.html2pdf;
+    const html2pdf = window.html2pdf; // Access html2pdf from window object
 
     const elementToPrint = printableAreaRef.current;
     if (!elementToPrint || !html2pdf) {
@@ -322,12 +321,12 @@ const AdOrderForm = (): JSX.Element => {
 
 
     clonedElement.style.width = '210mm';
-    clonedElement.style.height = '297mm';
+    clonedElement.style.height = '297mm'; // Fit to A4
     clonedElement.style.minHeight = '297mm';
     clonedElement.style.maxHeight = '297mm';
-    clonedElement.style.overflow = 'hidden';
-    clonedElement.style.padding = '5mm';
-    clonedElement.style.borderWidth = '2px';
+    clonedElement.style.overflow = 'hidden'; // Clip content that overflows A4
+    clonedElement.style.padding = '5mm'; // Standard A4 padding
+    clonedElement.style.borderWidth = '2px'; // Match screen border
     clonedElement.style.boxSizing = 'border-box';
 
     const logoContainer = clonedElement.querySelector('.company-logo-container-pdf') as HTMLElement;
@@ -349,7 +348,7 @@ const AdOrderForm = (): JSX.Element => {
       if (input.id === 'orderDate' && orderDate) {
         value = format(orderDate, 'dd.MM.yyyy');
       } else if (input.type === 'date' && !input.value && input.placeholder) {
-        value = '\u00A0'; // Non-breaking space for empty placeholders
+        value = '\u00A0'; 
       } else if (input.type === 'date' && input.value) {
         try {
           value = format(new Date(input.value), 'dd.MM.yyyy');
@@ -555,6 +554,18 @@ const AdOrderForm = (): JSX.Element => {
         @media print { 
           body { margin: 0 !important; padding: 0 !important; background-color: white !important; }
           body.clean-view-printing #printable-area-pdf { 
+            /* Styles for A4 direct print from clean view */
+             margin: 0 auto !important;
+             padding: 10px !important; /* Original form padding */
+             border: 4px solid black !important; /* Original form border */
+             box-shadow: none !important;
+             page-break-inside: avoid !important;
+             background-color: white !important;
+             color: black !important;
+             overflow: visible !important; /* Ensure all content is visible */
+             position: static !important; /* Reset any fixed/absolute positioning */
+             font-size: 9pt !important; /* Standard print font size */
+             line-height: 1.1 !important; /* Standard print line height */
           }
           .print-button-new-window { display: none !important; }
         }
@@ -643,7 +654,7 @@ const AdOrderForm = (): JSX.Element => {
                       iframeDoc.close();
             
                       const textareasInIframe = iframeDoc.querySelectorAll('textarea');
-                      textareasInIframe.forEach(ta => adjustTextareaHeight(ta, iframeDoc));
+                      textareasInIframe.forEach(ta => adjustTextareaHeight(ta as HTMLTextAreaElement, iframeDoc));
             
                       iframe.contentWindow?.focus();
                       iframe.contentWindow?.print();
@@ -696,7 +707,7 @@ const AdOrderForm = (): JSX.Element => {
             )}
           </div>
 
-          <div className="flex-1 flex flex-col gap-3 p-3 border-2 border-black rounded">
+          <div className="flex-1 flex flex-col gap-3 p-3 border-2 border-black rounded print-info-column">
             <div className="flex gap-3 items-center">
               <div className="flex-1 flex items-center">
                 <Label htmlFor="roNumber" className="text-sm font-bold mr-2 whitespace-nowrap">R.O. No. LN:</Label>
@@ -744,11 +755,11 @@ const AdOrderForm = (): JSX.Element => {
         </div>
 
         <div className="flex flex-col md:flex-row gap-4 mb-5 print-header-box">
-          <div className="flex-1 p-3 border-2 border-black rounded">
+          <div className="flex-1 p-3 border-2 border-black rounded print-content-block">
             <Label htmlFor="headingCaption" className="text-sm font-bold block mb-1">Heading/Caption:</Label>
             <Input id="headingCaption" value={headingCaption} onChange={(e) => setHeadingCaption(e.target.value)} className="text-sm py-1 px-2 h-auto border-2 border-black" placeholder="" />
           </div>
-          <div className="w-full md:flex-1 p-3 border-2 border-black rounded">
+          <div className="w-full md:flex-1 p-3 border-2 border-black rounded print-content-block">
             <Label htmlFor="packageName" className="text-sm font-bold block mb-1">Package:</Label>
             <Input id="packageName" value={packageName} onChange={(e) => setPackageName(e.target.value)} className="text-sm py-1 px-2 h-auto border-2 border-black" placeholder="" />
           </div>
