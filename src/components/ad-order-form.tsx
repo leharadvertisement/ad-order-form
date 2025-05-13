@@ -1,4 +1,3 @@
-
 // src/components/ad-order-form.tsx
 'use client';
 
@@ -638,7 +637,9 @@ const AdOrderForm = (): JSX.Element => {
                     iframe.style.left = '-9999px';
                     iframe.style.width = '0';
                     iframe.style.height = '0';
-                    iframe.style.border = '0';
+                    iframe.style.border = 'none';
+                    iframe.setAttribute('aria-hidden', 'true');
+                    iframe.setAttribute('title', 'Print Frame');
                     document.body.appendChild(iframe);
 
                     const iframeDoc = iframe.contentWindow?.document || iframe.contentDocument;
@@ -656,19 +657,17 @@ const AdOrderForm = (): JSX.Element => {
                       const textareasInIframe = iframeDoc.querySelectorAll('textarea');
                       textareasInIframe.forEach(ta => adjustTextareaHeight(ta as HTMLTextAreaElement, iframeDoc));
                       
-                      // Delay to ensure styles are applied before printing
                       setTimeout(() => {
                         if (iframe.contentWindow) {
                           iframe.contentWindow.focus();
                           iframe.contentWindow.print();
                         }
-                        // Clean up iframe after a delay
                         setTimeout(() => {
                           if (document.body.contains(iframe)) {
                             document.body.removeChild(iframe);
                           }
                         }, 1000); 
-                      }, 100); // 100ms delay before print
+                      }, 300); 
                     }
                   }
                 }}
@@ -880,3 +879,4 @@ const AdOrderForm = (): JSX.Element => {
 };
 
 export default AdOrderForm;
+
