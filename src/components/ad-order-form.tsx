@@ -13,7 +13,7 @@ import Image from 'next/image';
 import { Printer, PlusSquare, MinusSquare, Eye, Expand, Save, FileText, Trash2, Copy, Briefcase, UserSquare, FileInput, Rows, Calendar as CalendarIconLucide, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import html2canvas from 'html2canvas';
-// import jsPDF from 'jspdf'; // Commented out as per previous instructions related to PDF generation issues
+import { cn } from '@/lib/utils'; // For conditional rendering of DatePicker placeholder
 
 const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://picsum.photos/seed/stamp/178/98';
 const COMPANY_LOGO_PLACEHOLDER = "https://picsum.photos/seed/leharlogo/200/100";
@@ -29,7 +29,7 @@ const AdOrderForm: FC = () => {
   const [packageName, setPackageName] = useState<string>('');
   const [matterText, setMatterText] = useState<string>('');
 
-  const [stampImage, setStampImage] = useState<string | null>(null);
+  const [stampImage, setStampImage] = useState<string>(DEFAULT_STAMP_IMAGE_PLACEHOLDER);
   const [companyLogo, setCompanyLogo] = useState<string>(COMPANY_LOGO_PLACEHOLDER);
   const [rowsData, setRowsData] = useState<Array<Record<string, string | Date | undefined | null>>>(() => [
     { keyNo: '', publication: '', edition: '', size: '', scheduledDate: null, position: '' },
@@ -44,32 +44,28 @@ const AdOrderForm: FC = () => {
 
   useEffect(() => {
     setIsClient(true);
-    if (!orderDate) { 
-        setOrderDate(new Date());
+    setOrderDate(new Date()); // Initialize date on client mount
+
+    // Load images from localStorage on client mount
+    const savedStampImage = localStorage.getItem('uploadedStampImage');
+    if (savedStampImage) {
+      setStampImage(savedStampImage);
     }
+    // No 'else' for stampImage, it's already initialized to DEFAULT_STAMP_IMAGE_PLACEHOLDER
+
+    const savedCompanyLogo = localStorage.getItem('uploadedCompanyLogo');
+    if (savedCompanyLogo) {
+      setCompanyLogo(savedCompanyLogo);
+    }
+    // No 'else' for companyLogo, it's already initialized to COMPANY_LOGO_PLACEHOLDER
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); 
+  }, []); // Empty dependency array, runs once on mount
+
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedImage = localStorage.getItem('uploadedStampImage');
-      if (savedImage) {
-        setStampImage(savedImage);
-      } else {
-        setStampImage(DEFAULT_STAMP_IMAGE_PLACEHOLDER);
-      }
-
-      const savedLogo = localStorage.getItem('uploadedCompanyLogo');
-      if (savedLogo) {
-        setCompanyLogo(savedLogo);
-      } else {
-        setCompanyLogo(COMPANY_LOGO_PLACEHOLDER);
-      }
-    } else {
-        setStampImage(DEFAULT_STAMP_IMAGE_PLACEHOLDER);
-        setCompanyLogo(COMPANY_LOGO_PLACEHOLDER);
-    }
-  }, []);
+    const allTextareas = document.querySelectorAll('#printable-area-pdf textarea, #printPreviewContent textarea');
+    allTextareas.forEach(ta => adjustTextareaHeight(ta as HTMLTextAreaElement));
+  }, [rowsData, matterText, adjustTextareaHeight, headingCaption, packageName, advManagerInput1, advManagerInput2, clientName, ron, isPreviewing, isFullScreenPreview]);
 
 
   const handleDateChange = (date: Date | undefined) => {
@@ -93,7 +89,6 @@ const AdOrderForm: FC = () => {
       } else if (textarea.classList.contains('print-textarea')) { 
         minHeightScreen = 150; 
       }
-
 
       minHeightScreen = computedStyle ? Math.max(parseFloat(computedStyle.minHeight) || 0, minHeightScreen) : minHeightScreen;
 
@@ -131,12 +126,6 @@ const AdOrderForm: FC = () => {
       }
     }
   }, []);
-
-
-  useEffect(() => {
-    const allTextareas = document.querySelectorAll('#printable-area-pdf textarea, #printPreviewContent textarea');
-    allTextareas.forEach(ta => adjustTextareaHeight(ta as HTMLTextAreaElement));
-  }, [rowsData, matterText, adjustTextareaHeight, headingCaption, packageName, advManagerInput1, advManagerInput2, clientName, ron, isPreviewing, isFullScreenPreview]);
 
 
   const handleTextareaInput = (
@@ -243,8 +232,7 @@ const AdOrderForm: FC = () => {
         if (imgElement && companyLogo && companyLogo !== COMPANY_LOGO_PLACEHOLDER) {
             imgElement.src = companyLogo;
         } else if (imgElement && (!companyLogo || companyLogo === COMPANY_LOGO_PLACEHOLDER)) {
-             // Keep placeholder or remove if not desired in PDF
-             imgElement.src = COMPANY_LOGO_PLACEHOLDER; // Or some default
+             imgElement.src = COMPANY_LOGO_PLACEHOLDER; 
         }
     }
 
@@ -383,7 +371,7 @@ const AdOrderForm: FC = () => {
     }
 
     (window as any).html2pdf().from(clonedElement).set({
-        margin: [5,5,5,5], // [top, right, bottom, left]
+        margin: [5,5,5,5], 
         filename: 'release_order_form.pdf',
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: {
@@ -394,7 +382,7 @@ const AdOrderForm: FC = () => {
                 const clonedBody = documentClone.body;
                 clonedBody.classList.add('pdf-export-active');
                 
-                const _ = clonedBody.offsetHeight;
+                const _ = clonedBody.offsetHeight; // Force repaint/reflow
 
                 const textareasInClone = clonedBody.querySelectorAll('.textarea-static-print');
                 textareasInClone.forEach(ta => {
@@ -597,7 +585,7 @@ const AdOrderForm: FC = () => {
 
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || !isClient) return; // Ensure this effect only runs client-side
 
     if (isPreviewing && !isFullScreenPreview && printableAreaRef.current) {
       const previewNode = printableAreaRef.current.cloneNode(true) as HTMLElement | null;
@@ -749,9 +737,9 @@ const AdOrderForm: FC = () => {
         const previewContentDiv = document.getElementById('printPreviewContent');
         if (previewContentDiv) previewContentDiv.innerHTML = '';
     }
-  }, [isPreviewing, isFullScreenPreview, orderDate, companyLogo, stampImage, rowsData, matterText, clientName, advManagerInput1, advManagerInput2, headingCaption, packageName, ron, adjustTextareaHeight ]);
+  }, [isClient, isPreviewing, isFullScreenPreview, orderDate, companyLogo, stampImage, rowsData, matterText, clientName, advManagerInput1, advManagerInput2, headingCaption, packageName, ron, adjustTextareaHeight ]);
 
-  if (!isClient && !orderDate) { 
+  if (!isClient) { 
     return <div className="flex justify-center items-center h-screen"><p>Loading form...</p></div>;
   }
 
@@ -759,7 +747,13 @@ const AdOrderForm: FC = () => {
     <div className="max-w-[210mm] mx-auto p-1 print-root-container bg-background" id="main-application-container">
 
       <div className="flex justify-end items-center gap-2 p-2 mb-2 no-print no-pdf-export action-buttons-container sticky top-0 bg-background z-50">
-        {/* Removed PDF Download, Print, Preview, and Fullscreen buttons */}
+        <Button onClick={generatePdf} variant="outline" size="sm"><FileText className="mr-2"/> Download PDF</Button>
+        <Button onClick={handlePrintPreview} variant="outline" size="sm"><Eye className="mr-2"/> Preview Print</Button>
+        <Button onClick={() => handleActualPrint(false)} variant="default" size="sm"><Printer className="mr-2"/> Print Release Order</Button>
+        <Button onClick={handleFullScreenPreviewToggle} variant="outline" size="sm">
+          {isFullScreenPreview ? <XCircle className="mr-2"/> : <Expand className="mr-2"/>}
+          {isFullScreenPreview ? 'Exit Fullscreen' : 'Fullscreen Preview'}
+        </Button>
       </div>
 
       <div id="printable-area-pdf" ref={printableAreaRef} className={`w-full print-target bg-card text-card-foreground shadow-sm p-2 md:p-4 border-4 border-black ${isFullScreenPreview ? 'fullscreen-preview-active' : ''}`}>
@@ -769,11 +763,12 @@ const AdOrderForm: FC = () => {
 
         <div className="flex flex-col md:flex-row gap-4 mb-5 print-header-box">
             <div 
-                className="w-full md:w-[30%] p-3 border-2 border-black rounded box-decoration-clone company-logo-container-screen company-logo-container-pdf cursor-pointer"
+                className="w-full md:w-[30%] p-3 border-2 border-black rounded box-decoration-clone company-logo-container-screen company-logo-container-pdf cursor-pointer flex items-center justify-center"
                 onClick={triggerCompanyLogoUpload}
                 title="Click to upload company logo"
+                style={{ height: 'auto', minHeight: '150px' }} // Ensure a minimum height
             >
-                <Image src={companyLogo} alt="Lehar Advertising" width={200} height={100} data-ai-hint="company logo" className="w-full h-auto object-contain"/>
+                <Image src={companyLogo} alt="Lehar Advertising" width={200} height={100} data-ai-hint="company logo" className="w-full h-auto object-contain max-h-[140px]"/>
                 <Input type="file" ref={companyLogoInputRef} onChange={handleCompanyLogoUpload} accept="image/*" className="hidden" />
             </div>
             <div className="flex-1 flex flex-col gap-3 p-3 border-2 border-black rounded">
@@ -783,8 +778,29 @@ const AdOrderForm: FC = () => {
                         <Input id="roNumber" type="text" value={ron} onChange={(e) => setRon(e.target.value)} className="text-sm py-1 px-2 h-auto border-2 border-black" placeholder=""/>
                     </div>
                     <div className="flex-1 flex items-center">
-                         <Label htmlFor="orderDate" className="text-sm font-bold mr-2 whitespace-nowrap">Date:</Label>
-                        <DatePicker selected={orderDate} onChange={handleDateChange} dateFormat="dd.MM.yyyy" className="text-sm py-1 px-2 h-auto w-full border-2 border-black text-center justify-center" id="orderDate" placeholderText=""/>
+                        <Label htmlFor="orderDate" className="text-sm font-bold mr-2 whitespace-nowrap">Date:</Label>
+                        {isClient ? (
+                            <DatePicker 
+                                selected={orderDate} 
+                                onChange={handleDateChange} 
+                                dateFormat="dd.MM.yyyy" 
+                                className="text-sm py-1 px-2 h-auto w-full border-2 border-black text-center justify-center" 
+                                id="orderDate" 
+                                placeholderText=""/>
+                         ) : (
+                            <Button
+                              variant={"outline"}
+                              id="orderDate"
+                              className={cn(
+                                "text-sm py-1 px-2 h-auto w-full border-2 border-black text-center justify-center",
+                                "date-picker-trigger-button text-muted-foreground"
+                              )}
+                              disabled
+                            >
+                              <CalendarIconLucide className="mr-2 h-4 w-4" />
+                              <span></span>
+                            </Button>
+                         )}
                     </div>
                 </div>
                 <div className="flex items-center">
@@ -841,13 +857,17 @@ const AdOrderForm: FC = () => {
                    <Textarea value={row.size as string} onChange={(e) => handleTextareaInput(e, index, 'size')} className="text-xs p-1 border-0 rounded-none resize-none min-h-[150px] h-auto no-shadow-outline print-textarea textarea-align-top" />
                  </TableCell>
                  <TableCell className="main-table-bordered p-0 align-top print-border border border-black table-date-picker-wrapper">
-                    <DatePicker
-                        selected={row.scheduledDate instanceof Date ? row.scheduledDate : undefined}
-                        onChange={(date) => handleCellDateChange(date, index)}
-                        dateFormat="dd.MM.yyyy"
-                        className="text-xs py-0.5 px-1 h-auto w-full border-0 rounded-none no-shadow-outline print-textarea text-center justify-center"
-                        placeholderText=""
-                    />
+                    {isClient ? (
+                      <DatePicker
+                          selected={row.scheduledDate instanceof Date ? row.scheduledDate : undefined}
+                          onChange={(date) => handleCellDateChange(date, index)}
+                          dateFormat="dd.MM.yyyy"
+                          className="text-xs py-0.5 px-1 h-auto w-full border-0 rounded-none no-shadow-outline print-textarea text-center justify-center"
+                          placeholderText=""
+                      />
+                    ) : (
+                      <div className="text-xs py-0.5 px-1 h-auto w-full border-0 rounded-none no-shadow-outline print-textarea text-center justify-center bg-muted-foreground opacity-50" style={{minHeight: '150px'}} /> // Placeholder for SSR
+                    )}
                  </TableCell>
                  <TableCell className="main-table-bordered p-0 align-top print-border border border-black">
                    <Textarea value={row.position as string} onChange={(e) => handleTextareaInput(e, index, 'position')}  className="text-xs p-1 border-0 rounded-none resize-none min-h-[150px] h-auto no-shadow-outline print-textarea textarea-align-top" />
@@ -916,7 +936,6 @@ const AdOrderForm: FC = () => {
         </div>
       </div>
 
-      {/* Print Preview Modal */}
       {isPreviewing && !isFullScreenPreview && (
         <div
           id="printPreviewOverlay"
@@ -941,7 +960,6 @@ const AdOrderForm: FC = () => {
                 </Button>
             </div>
              <div id="printPreviewContent" className="print-preview-inner-content p-4">
-                {/* Content will be cloned here by useEffect */}
              </div>
           </div>
         </div>
