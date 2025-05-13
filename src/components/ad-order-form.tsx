@@ -10,11 +10,11 @@ import { Label } from '@/components/ui/label';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Image from 'next/image';
-import { Printer, PlusSquare, MinusSquare, Eye, Expand, Download, XCircle, Trash2 } from 'lucide-react';
+import { Printer, PlusSquare, MinusSquare, Eye, Expand, Download, XCircle, Trash2, UploadCloud } from 'lucide-react';
 import { format } from 'date-fns';
 
 const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://picsum.photos/seed/stamp/178/98';
-const COMPANY_LOGO_PLACEHOLDER = "https://picsum.photos/seed/leharlogo/200/300";
+const DEFAULT_COMPANY_LOGO_PLACEHOLDER = "https://picsum.photos/seed/leharlogo/200/100";
 
 
 const AdOrderForm: FC = () => {
@@ -28,7 +28,7 @@ const AdOrderForm: FC = () => {
   const [matterText, setMatterText] = useState<string>('');
 
   const [stampImage, setStampImage] = useState<string>(DEFAULT_STAMP_IMAGE_PLACEHOLDER);
-  const [companyLogo, setCompanyLogo] = useState<string>(COMPANY_LOGO_PLACEHOLDER);
+  const [companyLogo, setCompanyLogo] = useState<string>(DEFAULT_COMPANY_LOGO_PLACEHOLDER);
   const [companyLogoInputKey, setCompanyLogoInputKey] = useState<number>(Date.now());
   const [stampInputKey, setStampInputKey] = useState<number>(Date.now() + 1);
 
@@ -114,7 +114,7 @@ const AdOrderForm: FC = () => {
       if (savedLogo) {
         setCompanyLogo(savedLogo);
       } else {
-        setCompanyLogo(COMPANY_LOGO_PLACEHOLDER);
+        setCompanyLogo(DEFAULT_COMPANY_LOGO_PLACEHOLDER);
       }
     }
   }, [isClient]);
@@ -217,7 +217,7 @@ const AdOrderForm: FC = () => {
   };
   
   const removeCompanyLogo = () => {
-      setCompanyLogo(COMPANY_LOGO_PLACEHOLDER);
+      setCompanyLogo(DEFAULT_COMPANY_LOGO_PLACEHOLDER);
       if (typeof window !== 'undefined') {
           localStorage.removeItem('uploadedCompanyLogo');
       }
@@ -264,10 +264,10 @@ const AdOrderForm: FC = () => {
     const logoContainer = clonedElement.querySelector('.company-logo-container-pdf') as HTMLElement;
     if (logoContainer) {
         const imgElement = logoContainer.querySelector('img');
-        if (imgElement && companyLogo && companyLogo !== COMPANY_LOGO_PLACEHOLDER) {
+        if (imgElement && companyLogo && companyLogo !== DEFAULT_COMPANY_LOGO_PLACEHOLDER) {
             imgElement.src = companyLogo; 
-        } else if (imgElement && (!companyLogo || companyLogo === COMPANY_LOGO_PLACEHOLDER)) {
-             imgElement.src = COMPANY_LOGO_PLACEHOLDER; 
+        } else if (imgElement && (!companyLogo || companyLogo === DEFAULT_COMPANY_LOGO_PLACEHOLDER)) {
+             imgElement.src = DEFAULT_COMPANY_LOGO_PLACEHOLDER; 
         }
     }
 
@@ -649,10 +649,10 @@ const AdOrderForm: FC = () => {
         const companyLogoContainer = previewNode.querySelector('.company-logo-container-screen');
         if (companyLogoContainer) {
             const imgElement = companyLogoContainer.querySelector('img');
-             if (companyLogo && companyLogo !== COMPANY_LOGO_PLACEHOLDER && imgElement) {
+             if (companyLogo && companyLogo !== DEFAULT_COMPANY_LOGO_PLACEHOLDER && imgElement) {
                  imgElement.src = companyLogo; 
              } else if (imgElement) {
-                 imgElement.src = COMPANY_LOGO_PLACEHOLDER; 
+                 imgElement.src = DEFAULT_COMPANY_LOGO_PLACEHOLDER; 
              }
         }
 
@@ -806,12 +806,12 @@ const AdOrderForm: FC = () => {
                         src={companyLogo}
                         alt="Company Logo"
                         layout="fill"
-                        objectFit="contain"
+                        objectFit="cover"
                         data-ai-hint="company logo"
                     />
                 </div>
                 <Input key={companyLogoInputKey} type="file" ref={companyLogoInputRef} onChange={handleCompanyLogoUpload} accept="image/*" className="hidden" />
-                {companyLogo !== COMPANY_LOGO_PLACEHOLDER && companyLogo !== '' && (
+                {companyLogo !== DEFAULT_COMPANY_LOGO_PLACEHOLDER && companyLogo !== '' && (
                     <Button onClick={(e) => { e.stopPropagation(); removeCompanyLogo(); }} variant="ghost" size="icon" className="absolute top-1 right-1 no-print no-pdf-export">
                         <Trash2 className="h-4 w-4 text-red-500" />
                     </Button>
