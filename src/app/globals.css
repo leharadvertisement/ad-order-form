@@ -82,7 +82,7 @@
     min-height: 297mm !important;
     height: 297mm !important;
     margin: 0 auto !important;
-    padding: 4px 24px 48px 24px !important; /* Reduced top padding, increased bottom padding maintained */
+    padding: 4px 24px 48px 24px !important; /* Further reduced top padding, increased bottom padding maintained */
     border: 4px solid black !important;
     box-shadow: none !important;
     page-break-inside: avoid !important;
@@ -275,7 +275,7 @@
   .release-order-title-screen,
   .release-order-titlebar-print-preview {
     text-align: center !important;
-    margin-top: 2px !important; /* Reduced top margin to bring content up */
+    margin-top: 2px !important; /* Further reduced top margin to bring content up */
     margin-bottom: 15px !important; /* Slightly reduced bottom margin */
     width: fit-content !important;
     margin-left: auto !important;
@@ -452,7 +452,7 @@
   min-height: 297mm;
   height: auto;
   margin: 0 auto;
-  padding: 16px 24px 48px 24px !important; /* Screen padding, maintaining more bottom padding */
+  padding: 4px 24px 48px 24px !important; /* Screen padding, maintaining more bottom padding */
   border: 4px solid black;
   background-color: white;
   box-sizing: border-box;
@@ -523,7 +523,7 @@
 
 .release-order-title-screen {
   text-align: center;
-  margin-top: 10px;
+  margin-top: 2px; /* Further reduced */
   margin-bottom: 20px;
 }
 .release-order-title-screen h2 {
@@ -719,7 +719,7 @@ body.print-preview-active > #main-application-container > *:not(#printPreviewOve
 
 /* Styles specifically for PDF generation via html2pdf */
 body.pdf-export-active #printable-area-pdf {
-    padding: 2mm 10mm 20mm 10mm !important; /* Reduced top padding, increased bottom */
+    padding: 2mm 10mm 20mm 10mm !important; /* Further reduced top padding, increased bottom */
     border-width: 4px !important;
     border-color: black !important;
     font-size: 9pt !important;
@@ -973,5 +973,3 @@ body.pdf-export-active #printable-area-pdf .print-header-box > .print-content-bl
   border-radius: 0.25rem !important;
   box-sizing: border-box !important;
 }
-
-    
