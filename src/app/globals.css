@@ -147,7 +147,7 @@
   body.clean-view-printing #printable-area-pdf input[type="date"],
   body.clean-view-printing #printable-area-pdf textarea {
     border: none !important;
-    border-bottom: 1px solid black !important;
+    border-bottom: 1px solid black !important; /* Ensure input fields retain their bottom border */
     padding: 1px 0 !important;
     background-color: transparent !important;
     color: black !important;
@@ -163,6 +163,24 @@
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
+  
+  /* Specific style to retain border for R.O. No and Date inputs */
+  #printable-area-pdf #roNumber,
+  #printable-area-pdf #orderDate,
+  body.printing-from-preview #printPreviewContent #printable-area-pdf #roNumber,
+  body.printing-from-preview #printPreviewContent #printable-area-pdf #orderDate,
+  body.clean-view-printing #printable-area-pdf #roNumber,
+  body.clean-view-printing #printable-area-pdf #orderDate {
+    border: 1px solid black !important; /* This targets the input itself */
+    padding: 2px !important;
+  }
+    /* Ensure the container of R.O. No. and Date inputs also retain their border */
+  #printable-area-pdf .print-info-column > div:first-child > div, /* Targets the R.O. No. and Date containers */
+  body.printing-from-preview #printPreviewContent #printable-area-pdf .print-info-column > div:first-child > div,
+  body.clean-view-printing #printable-area-pdf .print-info-column > div:first-child > div {
+     /* This was already handled by .print-info-column border, direct input styling is more specific */
+  }
+
 
   #printable-area-pdf textarea,
   body.printing-from-preview #printPreviewContent #printable-area-pdf textarea,
@@ -223,13 +241,13 @@
   .print-table {
     width: 100% !important;
     border-collapse: collapse !important;
-    border: 1px solid black !important;
+    border: 2px solid black !important; /* Retain table border */
     font-size: 8pt !important;
      -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
   .print-table th, .print-table td {
-    border: 1px solid black !important;
+    border: 1px solid black !important; /* Retain cell borders */
     padding: 2px !important;
     text-align: left !important;
     vertical-align: top !important;
