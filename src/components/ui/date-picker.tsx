@@ -20,21 +20,25 @@ interface DatePickerProps {
   className?: string;
   dateFormat?: string;
   id?: string;
-  placeholderText?: string; 
+  placeholderText?: string;
+  buttonRef?: React.RefObject<HTMLButtonElement>; // New prop for the trigger button's ref
+  onButtonKeyDown?: React.KeyboardEventHandler<HTMLButtonElement>; // New prop for keydown on the button
 }
 
-export function DatePicker({ selected, onChange, className, dateFormat = "dd.MM.yyyy", id, placeholderText = "Pick a date" }: DatePickerProps) {
+export function DatePicker({ selected, onChange, className, dateFormat = "dd.MM.yyyy", id, placeholderText = "Pick a date", buttonRef, onButtonKeyDown }: DatePickerProps) {
   return (
     <Popover>
       <PopoverTrigger asChild>
         <Button
+          ref={buttonRef}
           variant={"outline"}
           id={id}
           className={cn(
-            "w-full justify-center text-center font-normal date-picker-trigger-button", 
+            "w-full justify-center text-center font-normal date-picker-trigger-button",
             !selected && "text-muted-foreground",
-            className 
+            className
           )}
+          onKeyDown={onButtonKeyDown}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
           {selected ? format(selected, dateFormat) : <span>{placeholderText}</span>}
