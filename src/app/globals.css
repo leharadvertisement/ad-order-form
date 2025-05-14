@@ -193,7 +193,7 @@
   body.printing-from-preview #printPreviewContent #printable-area-pdf .main-table-bordered td textarea.print-textarea,
   body.clean-view-printing #printable-area-pdf .main-table-bordered td textarea.print-textarea {
       border: none !important;
-      min-height: 230px !important; /* Increased from 220px */
+      min-height: 250px !important; /* Increased from 230px */
       height: auto !important;
       overflow: hidden !important;
   }
@@ -266,12 +266,12 @@
   }
   .print-table td {
     text-align: left !important;
-    min-height: 230px !important; /* Increased from 220px */
+    min-height: 250px !important; /* Increased from 230px */
     height: auto !important;
     overflow: hidden !important;
   }
    .print-table td .print-textarea, .print-table td .textarea-static-print {
-      min-height: 230px !important; /* Increased from 220px */
+      min-height: 250px !important; /* Increased from 230px */
       height: auto !important;
       overflow: hidden !important;
    }
@@ -502,7 +502,8 @@
 #printable-area-pdf #orderDate,
 #printable-area-pdf #clientName,
 #printable-area-pdf .print-info-column input,
-#printable-area-pdf .print-content-block input {
+#printable-area-pdf .print-content-block input,
+#printable-area-pdf .print-footer-box input {
     border: 2px solid black;
     padding: 4px;
     border-radius: 0.25rem;
@@ -519,7 +520,7 @@
 
 #printable-area-pdf .main-table-bordered td .print-textarea {
     border: none !important;
-    min-height: 230px; /* Increased from 220px */
+    min-height: 250px; /* Increased from 230px */
 }
 
 
@@ -754,10 +755,10 @@ body.pdf-export-active #printable-area-pdf {
     background-color: white !important;
     color: black !important;
     --pdf-textarea-min-height: 20px;
-    --pdf-table-textarea-min-height: 210px; /* Increased from 180px */
+    --pdf-table-textarea-min-height: 230px; /* Increased from 210px */
     --pdf-matter-textarea-min-height: 80px;
     --pdf-matter-textarea-max-height: 100px;
-    --pdf-table-textarea-max-height: 210px; /* Increased from 180px */
+    --pdf-table-textarea-max-height: 230px; /* Increased from 210px */
     display: flex !important;
     flex-direction: column !important;
 }
@@ -855,7 +856,7 @@ body.pdf-export-active .print-table td {
     line-height: 1.1 !important;
     border-width: 1px !important;
     vertical-align: top !important;
-    min-height: var(--pdf-table-textarea-min-height, 210px) !important; /* Increased */
+    min-height: var(--pdf-table-textarea-min-height, 230px) !important; /* Increased */
     height: auto !important;
     overflow: hidden !important;
 }
@@ -940,8 +941,8 @@ body.pdf-export-active #printable-area-pdf .print-footer-box li {
 body.pdf-export-active #printable-area-pdf .main-table-bordered td .print-textarea,
 body.pdf-export-active #printable-area-pdf .print-table td .textarea-static-print {
     height: auto !important;
-    min-height: var(--pdf-table-textarea-min-height, 210px) !important; /* Increased */
-    max-height: var(--pdf-table-textarea-max-height, 210px) !important; /* Increased */
+    min-height: var(--pdf-table-textarea-min-height, 230px) !important; /* Increased */
+    max-height: var(--pdf-table-textarea-max-height, 230px) !important; /* Increased */
     font-size: 8pt !important;
     line-height: 1.1 !important;
     overflow: hidden !important;
@@ -956,7 +957,7 @@ body.pdf-export-active #printable-area-pdf hr {
 
 .main-table-bordered td textarea.print-textarea {
     height: 100%;
-    min-height: 230px; /* Increased */
+    min-height: 250px; /* Increased */
     display: block;
 }
 
@@ -1019,4 +1020,18 @@ body.pdf-export-active #printable-area-pdf .print-header-box > .print-content-bl
   box-sizing: border-box !important;
 }
 
+/* Styles for Rate Input in Footer for Print/PDF */
+body.pdf-export-active #printable-area-pdf .print-footer-box .rate-input-container-pdf,
+#printable-area-pdf .print-footer-box .rate-input-container-print {
+    border: 2px solid black !important;
+    border-radius: 0.25rem !important;
+    padding: 8px !important;
+    margin-bottom: 0.5rem !important; /* Space below the rate box */
+}
+
+body.pdf-export-active #printable-area-pdf .print-footer-box .rate-input-container-pdf .static-print-text,
+#printable-area-pdf .print-footer-box .rate-input-container-print input[type="text"] {
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
     
