@@ -705,25 +705,23 @@ const AdOrderForm = (): JSX.Element => {
 
         <div className="flex flex-col md:flex-row md:items-stretch gap-4 mb-5 print-header-box">
           <div
-            className="w-full md:w-[300px] h-[280px] p-1.5 rounded flex flex-col relative company-logo-container-screen company-logo-container-pdf cursor-pointer items-center justify-center overflow-hidden border-2 border-black"
+            className="w-full md:w-[300px] h-[280px] rounded relative company-logo-container-screen company-logo-container-pdf cursor-pointer overflow-hidden"
             onClick={triggerCompanyLogoUpload}
             title="Click to upload company logo"
           >
-            <div className="relative w-full h-full flex items-center justify-center"> 
-              <Image
+            <Image
                 src={companyLogo}
                 alt="Company Logo"
-                width={300} 
-                height={280} 
-                style={{ objectFit: "cover", width: '100%', height: '100%' }}
-                className="rounded"
+                fill
+                style={{ objectFit: "cover" }}
                 data-ai-hint="company logo"
                 priority
+                width={300} 
+                height={280} 
               />
-            </div>
             <Input key={companyLogoInputKey} type="file" ref={companyLogoInputRef} onChange={handleCompanyLogoUpload} accept="image/*" className="hidden" aria-label="Upload company logo" />
             {companyLogo !== DEFAULT_COMPANY_LOGO_PLACEHOLDER && companyLogo !== '' && (
-              <Button onClick={(e) => { e.stopPropagation(); removeCompanyLogo(); }} variant="ghost" size="icon" className="absolute top-1 right-1 no-print no-pdf-export no-print-preview" aria-label="Remove Logo">
+              <Button onClick={(e) => { e.stopPropagation(); removeCompanyLogo(); }} variant="ghost" size="icon" className="absolute top-1 right-1 z-10 no-print no-pdf-export no-print-preview" aria-label="Remove Logo">
                 <Trash2 className="h-4 w-4 text-destructive" />
               </Button>
             )}
@@ -895,3 +893,4 @@ const AdOrderForm = (): JSX.Element => {
 };
 
 export default AdOrderForm;
+
