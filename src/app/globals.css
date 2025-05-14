@@ -353,12 +353,8 @@
     display: flex !important;
   }
 
-  .print-footer-box, .print-header-box, .print-table-container, .matter-container-print, .matter-container-print-parent {
-    page-break-inside: avoid !important;
-    flex-shrink: 0; /* Prevent these crucial blocks from shrinking if space is tight */
-  }
-  .print-footer-box { /* Specifically for the footer box to push it down */
-    /* margin-top: auto !important; REMOVED to bring box upward */
+  #printable-area-pdf .print-footer-box {
+    border: 2px solid black !important;
     flex-shrink: 0 !important;
   }
 
@@ -451,8 +447,8 @@
   flex-direction: column; /* Added for screen consistency */
 }
 #printable-area-pdf > .print-footer-box { /* Target direct child for screen */
-  /* margin-top: auto; REMOVED to bring box upward */
   flex-shrink: 0;
+  border: 2px solid black !important; /* Ensure border on screen too */
 }
 
 
@@ -605,8 +601,8 @@ body.print-preview-active > #main-application-container > *:not(#printPreviewOve
     flex-direction: column !important; /* Added for flex behavior in preview */
 }
 #printPreviewContent > #printable-area-pdf .print-footer-box {
-    /* margin-top: auto !important; REMOVED to bring box upward */
     flex-shrink: 0 !important;
+    border: 2px solid black !important; /* Ensure border in preview modal */
 }
 
 
@@ -653,8 +649,8 @@ body.print-preview-active > #main-application-container > *:not(#printPreviewOve
   flex-direction: column !important;
 }
 #printable-area-pdf.fullscreen-preview-active > .print-footer-box {
-    /* margin-top: auto !important; REMOVED to bring box upward */
     flex-shrink: 0 !important;
+    border: 2px solid black !important; /* Ensure border in fullscreen */
 }
 
 
@@ -701,8 +697,8 @@ body.pdf-export-active #printable-area-pdf {
     flex-direction: column !important;
 }
 body.pdf-export-active #printable-area-pdf .print-footer-box {
-    /* margin-top: auto !important; REMOVED to bring box upward */
     flex-shrink: 0 !important;
+    border: 2px solid black !important; /* Ensure border for PDF export */
 }
 
 
@@ -839,9 +835,6 @@ body.pdf-export-active #printable-area-pdf .leading-snug { line-height: 1.05 !im
 body.pdf-export-active #printable-area-pdf label { font-size: 7pt !important; margin-right: 1px !important; }
 body.pdf-export-active #printable-area-pdf ol.list-decimal li { font-size: 6pt !important; margin-bottom: 0px !important; }
 
-body.pdf-export-active #printable-area-pdf .print-footer-box {
-    padding: 2px !important;
-}
 body.pdf-export-active #printable-area-pdf .print-footer-box p,
 body.pdf-export-active #printable-area-pdf .print-footer-box span,
 body.pdf-export-active #printable-area-pdf .print-footer-box li {
@@ -930,3 +923,5 @@ body.pdf-export-active #printable-area-pdf .print-header-box > .print-content-bl
   border-radius: 0.25rem !important;
   box-sizing: border-box !important;
 }
+
+    
