@@ -135,9 +135,8 @@
   body.clean-view-printing #printable-area-pdf input[type="number"],
   body.clean-view-printing #printable-area-pdf input[type="date"],
   body.clean-view-printing #printable-area-pdf textarea {
-    border: none !important;
-    border-bottom: 1px solid black !important;
-    padding: 1px 0 !important;
+    border: 1px solid black !important; /* Changed from border-bottom to full border */
+    padding: 2px 4px !important; /* Adjusted padding */
     background-color: transparent !important;
     color: black !important;
     box-shadow: none !important;
@@ -153,14 +152,15 @@
     print-color-adjust: exact !important;
   }
   
+  /* Ensure specific inputs like RO No and Date also get this full border if not already covered */
   #printable-area-pdf #roNumber,
   #printable-area-pdf #orderDate,
   body.printing-from-preview #printPreviewContent #printable-area-pdf #roNumber,
   body.printing-from-preview #printPreviewContent #printable-area-pdf #orderDate,
   body.clean-view-printing #printable-area-pdf #roNumber,
   body.clean-view-printing #printable-area-pdf #orderDate {
-    border: 1px solid black !important;
-    padding: 2px !important;
+    border: 1px solid black !important; /* This rule is good, ensures full border */
+    padding: 2px !important; /* Ensures consistent padding */
   }
 
   #printable-area-pdf textarea,
@@ -168,38 +168,38 @@
   body.clean-view-printing #printable-area-pdf textarea {
     white-space: pre-wrap !important;
     word-wrap: break-word !important;
-    border-top: 1px solid black !important;
+    border-top: 1px solid black !important; /* Textareas typically have top border too */
   }
 
   #printable-area-pdf .main-table-bordered td textarea.print-textarea,
   body.printing-from-preview #printPreviewContent #printable-area-pdf .main-table-bordered td textarea.print-textarea,
   body.clean-view-printing #printable-area-pdf .main-table-bordered td textarea.print-textarea {
       border: none !important;
-      min-height: 250px !important; /* Increased height for Matter box */
+      min-height: 250px !important;
       height: auto !important;
       overflow: visible !important;
   }
 
-  .static-print-text {
+  .static-print-text { /* This class is used for PDF generation when inputs are converted to spans */
     display: inline-block !important;
-    padding: 1px 0 !important;
+    padding: 1px 2px !important; /* Adjusted padding */
     margin: 0 !important;
     font-weight: bold !important;
     font-size: 9pt !important;
     color: black !important;
     background-color: transparent !important;
-    border: none !important;
-    border-bottom: 1px solid black !important;
+    border: 1px solid black !important; /* Changed from border-bottom to full border */
     width: auto !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     white-space: pre-wrap !important;
     word-wrap: break-word !important;
     line-height: 1.1 !important;
+    min-height: 1.2em; /* ensure some height */
   }
 
   .textarea-static-print {
-    border-bottom: 1px solid black !important;
+    border: 1px solid black !important; /* Full border for textareas */
     height: auto !important;
     min-height: initial !important;
     resize: none !important;
@@ -209,7 +209,6 @@
     font-size: 9pt !important;
     line-height: 1.1 !important;
     padding: 1px !important;
-    border-top: 1px solid black !important;
   }
 
   #printable-area-pdf .matter-container-print .textarea-static-print,
@@ -218,7 +217,7 @@
     border-top: 1px solid black !important;
     border-bottom: 1px solid black !important;
     padding: 1px !important;
-    min-height: 100px !important; /* Increased height for Matter box */
+    min-height: 100px !important;
     height: auto !important;
     overflow: visible !important;
   }
@@ -245,7 +244,7 @@
     line-height: 1.1 !important;
   }
    .print-table td, .print-table td .print-textarea, .print-table td .textarea-static-print {
-      min-height: 250px !important; /* Increased from 200px to make rows longer */
+      min-height: 250px !important;
       height: auto !important; 
       overflow: visible !important;
    }
@@ -613,23 +612,24 @@ body.print-preview-active > #main-application-container > *:not(#printPreviewOve
 #printPreviewContent #printable-area-pdf input,
 #printPreviewContent #printable-area-pdf textarea,
 #printPreviewContent #printable-area-pdf select {
-    border-bottom: 1px solid black; 
+    border: 1px solid black !important; /* Ensure inputs in preview have full border */
+    padding: 2px 4px !important; /* Consistent padding */
 }
 #printPreviewContent #printable-area-pdf .main-table-bordered {
-    border: 2px solid black; 
+    border: 2px solid black !important; 
 }
 #printPreviewContent #printable-area-pdf .main-table-bordered th,
 #printPreviewContent #printable-area-pdf .main-table-bordered td {
-    border: 1px solid black; 
-    padding: 6px; 
+    border: 1px solid black !important; 
+    padding: 6px !important; 
 }
 #printPreviewContent #printable-area-pdf .release-order-title-screen h2 {
-    background-color: black; 
-    color: white; 
+    background-color: black !important; 
+    color: white !important; 
 }
 #printPreviewContent #printable-area-pdf .matter-label-screen {
-    background-color: black; 
-    color: white; 
+    background-color: black !important; 
+    color: white !important; 
 }
 
 
@@ -773,7 +773,7 @@ body.pdf-export-active .print-table td {
     line-height: 1.0 !important;
     border-width: 1px !important;
     vertical-align: top !important;
-    min-height: 180px !important; 
+    min-height: var(--pdf-table-textarea-min-height, 180px) !important; 
     height: auto !important;
     overflow: hidden !important; /* Prevent content spill from cells */
 }
@@ -784,12 +784,13 @@ body.pdf-export-active .print-table .print-table-header {
 
 body.pdf-export-active .static-print-text {
     color: black !important;
-    border-bottom-width: 0.5px !important;
+    border: 0.5px solid black !important; /* Changed from border-bottom to full border */
     font-size: 8pt !important;
-    padding: 0.5px 0 !important;
+    padding: 1px 2px !important; /* Adjusted padding */
     line-height: 1.0 !important;
     overflow: hidden !important; /* Prevent spill */
     white-space: nowrap !important; /* Prevent wrapping that might break layout */
+    min-height: 1.1em; /* Ensure some height */
 }
 body.pdf-export-active .textarea-static-print {
     color: black !important;
@@ -928,9 +929,5 @@ body.pdf-export-active #printable-area-pdf .print-header-box > .print-content-bl
   border-radius: 0.25rem !important;
   box-sizing: border-box !important;
 }
-
-  
-
-    
 
     
