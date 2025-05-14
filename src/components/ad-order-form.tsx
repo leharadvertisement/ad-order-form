@@ -797,21 +797,19 @@ const AdOrderForm = (): JSX.Element => {
         {/* Top Section: Company Info & RO/Date/Client */}
         <div className="flex flex-col md:flex-row md:items-stretch gap-4 mb-5 print-header-box">
            {/* Left Box: Company Logo/Info */}
-           <div
-            className="w-full md:w-[300px] h-[280px] border-0 rounded relative company-logo-container-screen company-logo-container-pdf cursor-pointer overflow-hidden"
+          <div
+            className="w-full md:w-[300px] h-[280px] border-2 border-black rounded relative company-logo-container-screen company-logo-container-pdf cursor-pointer overflow-hidden"
             onClick={triggerCompanyLogoUpload}
             title="Click to upload company logo"
           >
-            <div className="relative w-full h-full flex items-center justify-center"> {/* Inner div for centering and object-fit */}
-              <Image
-                  src={companyLogo}
-                  alt="Company Logo"
-                  fill
-                  style={{ objectFit: "cover" }} 
-                  data-ai-hint="company logo"
-                  priority // Ensures LCP optimization if this is a primary image
-                />
-            </div>
+            <Image
+                src={companyLogo}
+                alt="Company Logo"
+                fill
+                style={{ objectFit: "cover" }} 
+                data-ai-hint="company logo"
+                priority // Ensures LCP optimization if this is a primary image
+              />
             <Input key={companyLogoInputKey} type="file" ref={companyLogoInputRef} onChange={handleCompanyLogoUpload} accept="image/*" className="hidden" aria-label="Upload company logo" />
             {companyLogo !== DEFAULT_COMPANY_LOGO_PLACEHOLDER && companyLogo !== '' && (
               <Button onClick={(e) => { e.stopPropagation(); removeCompanyLogo(); }} variant="ghost" size="icon" className="absolute top-1 right-1 z-10 no-print no-pdf-export no-print-preview" aria-label="Remove Logo">
@@ -842,8 +840,8 @@ const AdOrderForm = (): JSX.Element => {
                     variant={"outline"}
                     id="orderDate"
                     className={cn(
-                      "text-sm py-1 px-2 h-auto w-full border-2 border-black",
-                      "date-picker-trigger-button text-muted-foreground justify-center" // Ensures consistent styling
+                      "text-sm py-1 px-2 h-auto w-full border-2 border-black text-center",
+                      "date-picker-trigger-button text-muted-foreground justify-center" 
                     )}
                     disabled
                   >
@@ -869,7 +867,7 @@ const AdOrderForm = (): JSX.Element => {
         </div>
 
         {/* Heading/Caption & Package Section */}
-        <div className="flex flex-col md:flex-row gap-2 mb-3 print-header-box"> {/* Reduced gap and mb */}
+        <div className="flex flex-col md:flex-row gap-2 mb-3 print-header-box">
           <div className="flex-1 p-2 border-2 border-black rounded print-content-block">
             <div className="flex items-center">
               <Label htmlFor="headingCaption" className="text-sm font-bold mr-2 whitespace-nowrap">Heading/Caption:</Label>
