@@ -13,11 +13,10 @@ import Image from 'next/image';
 import { Eye, CalendarIcon, Download, Printer, Trash2, UploadCloud, XCircle, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-// import type { Options as Html2PdfOptions } from 'html2pdf.js'; // Removed to fix type error
 
 
-const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://picsum.photos/seed/stamp/178/98';
-const DEFAULT_COMPANY_LOGO_PLACEHOLDER = "https://picsum.photos/seed/leharlogo/280/280";
+const DEFAULT_STAMP_IMAGE_PLACEHOLDER = 'https://placehold.co/178x98.png';
+const DEFAULT_COMPANY_LOGO_PLACEHOLDER = "https://placehold.co/300x280.png";
 
 
 const AdOrderForm = (): JSX.Element => {
@@ -60,7 +59,7 @@ const AdOrderForm = (): JSX.Element => {
       if (textarea.id === 'matterTextarea') {
         minHeightScreen = 100;
       } else if (textarea.classList.contains('print-textarea')) { 
-        minHeightScreen = 150;
+        minHeightScreen = 250; 
       }
       
       minHeightScreen = Math.max(parseFloat(computedStyle.minHeight) || 0, minHeightScreen);
@@ -84,8 +83,11 @@ const AdOrderForm = (): JSX.Element => {
         textarea.style.overflowY = newHeight > pdfMaxHeight ? 'hidden' : 'hidden';
 
       } else if (isPrinting) {
-        textarea.style.height = `${textarea.scrollHeight}px`;
+        let printMinHeight = textarea.classList.contains('print-textarea') ? 250 : 100;
+        if (textarea.id === 'matterTextarea') printMinHeight = 100; // matter textarea in print
+        textarea.style.height = `${Math.max(textarea.scrollHeight, printMinHeight)}px`;
         textarea.style.overflowY = 'visible';
+
       } else {
         // Screen context
         textarea.style.height = `${Math.max(textarea.scrollHeight, minHeightScreen)}px`;
@@ -297,14 +299,18 @@ const AdOrderForm = (): JSX.Element => {
   };
 
   const generatePdf = useCallback(async () => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || !window.html2pdf) {
+        console.error('html2pdf.js not loaded or not in window scope.');
+        alert('PDF generation library not available.');
+        return;
+    }
     
-    const html2pdf = (window as any).html2pdf; 
+    const html2pdf = window.html2pdf;
 
     const elementToPrint = printableAreaRef.current;
-    if (!elementToPrint || !html2pdf) {
-        console.error('Element not found for PDF generation or html2pdf.js not loaded.');
-        alert('Element to print not found or PDF library not available.');
+    if (!elementToPrint) {
+        console.error('Element not found for PDF generation.');
+        alert('Element to print not found.');
         return;
     }
 
@@ -370,6 +376,11 @@ const AdOrderForm = (): JSX.Element => {
       p.style.lineHeight = inputStyle.lineHeight;
       p.style.color = 'black';
       p.style.borderBottom = inputStyle.borderBottomWidth + ' ' + inputStyle.borderBottomStyle + ' ' + inputStyle.borderBottomColor;
+      if (input.classList.contains('border-2')) { 
+        p.style.border = '1px solid black';
+      } else {
+        p.style.borderBottom = '1px solid black'; 
+      }
       p.style.padding = inputStyle.padding;
       p.style.backgroundColor = 'transparent';
       input.parentNode?.replaceChild(p, input);
@@ -473,8 +484,8 @@ const AdOrderForm = (): JSX.Element => {
       tableHeaders.forEach(th => th.classList.add('print-table-header'));
     }
 
-    const pdfOptions: any = { // Using 'any' type for pdfOptions
-      margin: [5, 5, 5, 5], //mm
+    const pdfOptions: any = { 
+      margin: [5, 5, 5, 5], 
       filename: 'release_order_form.pdf',
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: {
@@ -553,18 +564,17 @@ const AdOrderForm = (): JSX.Element => {
         @media print { 
           body { margin: 0 !important; padding: 0 !important; background-color: white !important; }
           body.clean-view-printing #printable-area-pdf { 
-            /* Styles for A4 direct print from clean view */
              margin: 0 auto !important;
-             padding: 10px !important; /* Original form padding */
-             border: 4px solid black !important; /* Original form border */
+             padding: 10px !important; 
+             border: 4px solid black !important; 
              box-shadow: none !important;
              page-break-inside: avoid !important;
              background-color: white !important;
              color: black !important;
-             overflow: visible !important; /* Ensure all content is visible */
-             position: static !important; /* Reset any fixed/absolute positioning */
-             font-size: 9pt !important; /* Standard print font size */
-             line-height: 1.1 !important; /* Standard print line height */
+             overflow: visible !important; 
+             position: static !important; 
+             font-size: 9pt !important; 
+             line-height: 1.1 !important;
           }
           .print-button-new-window { display: none !important; }
         }
@@ -693,13 +703,13 @@ const AdOrderForm = (): JSX.Element => {
             onClick={triggerCompanyLogoUpload}
             title="Click to upload company logo"
           >
-            <div className="relative w-full h-full flex items-start justify-center">
+            <div className="relative w-full h-full flex items-center justify-center"> 
               <Image
                 src={companyLogo}
                 alt="Company Logo"
-                width={280}
-                height={280}
-                style={{ objectFit: "contain", objectPosition: "top", width: '100%', height: '100%' }}
+                width={300} 
+                height={280} 
+                style={{ objectFit: "cover", width: '100%', height: '100%' }}
                 className="rounded"
                 data-ai-hint="company logo"
                 priority
@@ -765,7 +775,7 @@ const AdOrderForm = (): JSX.Element => {
             <Label htmlFor="headingCaption" className="text-sm font-bold block mb-1">Heading/Caption:</Label>
             <Input id="headingCaption" value={headingCaption} onChange={(e) => setHeadingCaption(e.target.value)} className="text-sm py-1 px-2 h-auto border-2 border-black" placeholder="" />
           </div>
-          <div className="w-full md:flex-1 p-3 border-2 border-black rounded print-content-block">
+          <div className="w-full md:w-[48.5%] p-3 border-2 border-black rounded print-content-block">
             <Label htmlFor="packageName" className="text-sm font-bold block mb-1">Package:</Label>
             <Input id="packageName" value={packageName} onChange={(e) => setPackageName(e.target.value)} className="text-sm py-1 px-2 h-auto border-2 border-black" placeholder="" />
           </div>
@@ -787,16 +797,16 @@ const AdOrderForm = (): JSX.Element => {
               {rowsData.map((row, index) => (
                 <TableRow key={index} className="print-table-row">
                   <TableCell className="main-table-bordered p-0 align-top border border-black">
-                    <Textarea value={row.keyNo as string} onChange={(e) => handleTextareaInput(e, index, 'keyNo')} className="text-xs p-1 border-0 rounded-none resize-none min-h-[150px] h-auto no-shadow-outline print-textarea textarea-align-top" />
+                    <Textarea value={row.keyNo as string} onChange={(e) => handleTextareaInput(e, index, 'keyNo')} className="text-xs p-1 border-0 rounded-none resize-none min-h-[250px] h-auto no-shadow-outline print-textarea textarea-align-top" />
                   </TableCell>
                   <TableCell className="main-table-bordered p-0 align-top border border-black">
-                    <Textarea value={row.publication as string} onChange={(e) => handleTextareaInput(e, index, 'publication')} className="text-xs p-1 border-0 rounded-none resize-none min-h-[150px] h-auto no-shadow-outline print-textarea textarea-align-top" />
+                    <Textarea value={row.publication as string} onChange={(e) => handleTextareaInput(e, index, 'publication')} className="text-xs p-1 border-0 rounded-none resize-none min-h-[250px] h-auto no-shadow-outline print-textarea textarea-align-top" />
                   </TableCell>
                   <TableCell className="main-table-bordered p-0 align-top border border-black">
-                    <Textarea value={row.edition as string} onChange={(e) => handleTextareaInput(e, index, 'edition')} className="text-xs p-1 border-0 rounded-none resize-none min-h-[150px] h-auto no-shadow-outline print-textarea textarea-align-top" />
+                    <Textarea value={row.edition as string} onChange={(e) => handleTextareaInput(e, index, 'edition')} className="text-xs p-1 border-0 rounded-none resize-none min-h-[250px] h-auto no-shadow-outline print-textarea textarea-align-top" />
                   </TableCell>
                   <TableCell className="main-table-bordered p-0 align-top border border-black">
-                    <Textarea value={row.size as string} onChange={(e) => handleTextareaInput(e, index, 'size')} className="text-xs p-1 border-0 rounded-none resize-none min-h-[150px] h-auto no-shadow-outline print-textarea textarea-align-top" />
+                    <Textarea value={row.size as string} onChange={(e) => handleTextareaInput(e, index, 'size')} className="text-xs p-1 border-0 rounded-none resize-none min-h-[250px] h-auto no-shadow-outline print-textarea textarea-align-top" />
                   </TableCell>
                   <TableCell className="main-table-bordered p-0 align-top border border-black table-date-picker-wrapper">
                     <DatePicker
@@ -808,7 +818,7 @@ const AdOrderForm = (): JSX.Element => {
                     />
                   </TableCell>
                   <TableCell className="main-table-bordered p-0 align-top border border-black">
-                    <Textarea value={row.position as string} onChange={(e) => handleTextareaInput(e, index, 'position')} className="text-xs p-1 border-0 rounded-none resize-none min-h-[150px] h-auto no-shadow-outline print-textarea textarea-align-top" />
+                    <Textarea value={row.position as string} onChange={(e) => handleTextareaInput(e, index, 'position')} className="text-xs p-1 border-0 rounded-none resize-none min-h-[250px] h-auto no-shadow-outline print-textarea textarea-align-top" />
                   </TableCell>
                 </TableRow>
               ))}
@@ -864,7 +874,7 @@ const AdOrderForm = (): JSX.Element => {
                   </div>
                 )}
                 <Input key={stampInputKey} type="file" ref={stampInputRef} onChange={handleStampUpload} accept="image/*" className="hidden" aria-label="Upload stamp" />
-                {stampImage !== DEFAULT_STAMP_IMAGE_PLACEHOLDER && (
+                {stampImage !== DEFAULT_STAMP_IMAGE_PLACEHOLDER && stampImage !== '' && (
                   <Button onClick={(e) => { e.stopPropagation(); removeStampImage(); }} variant="ghost" size="icon" className="absolute top-1 right-1 no-print no-pdf-export no-print-preview" aria-label="Remove Stamp">
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
