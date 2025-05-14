@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -174,7 +175,7 @@
   body.printing-from-preview #printPreviewContent #printable-area-pdf .main-table-bordered td textarea.print-textarea,
   body.clean-view-printing #printable-area-pdf .main-table-bordered td textarea.print-textarea {
       border: none !important;
-      min-height: 160px !important; 
+      min-height: 180px !important; /* Increased height for Matter box */
       height: auto !important;
       overflow: visible !important;
   }
@@ -244,7 +245,7 @@
     line-height: 1.1 !important;
   }
    .print-table td, .print-table td .print-textarea, .print-table td .textarea-static-print {
-      min-height: 160px !important; /* Increased from 60px to make rows longer */
+      min-height: 180px !important; /* Increased from 160px to make rows longer */
       height: auto !important; 
       overflow: visible !important;
    }
@@ -420,7 +421,7 @@
   body.clean-view-printing #printable-area-pdf .print-header-box > .print-content-block {
     flex: 1 1 0% !important; 
     padding: 12px !important; 
-    border: 2px solid black !important; 
+    border: 2px solid black !important;
     border-radius: 0.25rem !important; 
     box-sizing: border-box !important;
   }
@@ -476,7 +477,7 @@
 
 #printable-area-pdf .main-table-bordered td .print-textarea {
     border: none !important;
-    min-height: 160px; 
+    min-height: 180px; 
 }
 
 
@@ -691,10 +692,10 @@ body.pdf-export-active #printable-area-pdf {
     background-color: white !important;
     color: black !important;
     --pdf-textarea-min-height: 20px;
-    --pdf-table-textarea-min-height: 100px; /* Increased from 45px */
-    --pdf-matter-textarea-min-height: 80px; /* Increased Matter height */
-    --pdf-matter-textarea-max-height: 100px; /* Increased Matter height */
-    --pdf-table-textarea-max-height: 100px; /* Increased from 60px */
+    --pdf-table-textarea-min-height: 120px; /* Increased from 100px */
+    --pdf-matter-textarea-min-height: 80px; 
+    --pdf-matter-textarea-max-height: 100px; 
+    --pdf-table-textarea-max-height: 120px; /* Increased from 100px */
     display: flex !important; /* PDF export uses flex */
     flex-direction: column !important;
 }
@@ -772,7 +773,7 @@ body.pdf-export-active .print-table td {
     line-height: 1.0 !important;
     border-width: 1px !important;
     vertical-align: top !important;
-    min-height: 100px !important; /* Increased from 30px */
+    min-height: 120px !important; /* Increased from 100px */
     height: auto !important;
     overflow: hidden !important; /* Prevent content spill from cells */
 }
@@ -849,8 +850,8 @@ body.pdf-export-active #printable-area-pdf .print-footer-box li {
 body.pdf-export-active #printable-area-pdf .main-table-bordered td .print-textarea,
 body.pdf-export-active #printable-area-pdf .print-table td .textarea-static-print {
     height: auto !important;
-    min-height: var(--pdf-table-textarea-min-height, 100px) !important; 
-    max-height: var(--pdf-table-textarea-max-height, 100px) !important;
+    min-height: var(--pdf-table-textarea-min-height, 120px) !important; 
+    max-height: var(--pdf-table-textarea-max-height, 120px) !important;
     font-size: 6.5pt !important;
     line-height: 1.0 !important;
     overflow: hidden !important;
@@ -865,7 +866,7 @@ body.pdf-export-active #printable-area-pdf hr {
 
 .main-table-bordered td textarea.print-textarea {
     height: 100%;
-    min-height: 160px; 
+    min-height: 180px; /* Matched to general print style for consistency */
     display: block;
 }
 
@@ -929,3 +930,5 @@ body.pdf-export-active #printable-area-pdf .print-header-box > .print-content-bl
 }
 
   
+
+    
