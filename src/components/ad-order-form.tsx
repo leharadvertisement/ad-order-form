@@ -780,10 +780,11 @@ const AdOrderForm = (): JSX.Element => {
 
         <div className="flex flex-col md:flex-row md:items-stretch gap-4 mb-5 print-header-box">
           <div
-            className="w-full md:w-[300px] h-[280px] border-2 border-black rounded relative company-logo-container-screen company-logo-container-pdf cursor-pointer overflow-hidden p-0"
+            className="w-full md:w-[300px] h-[280px] border-2 border-black rounded relative company-logo-container-screen company-logo-container-pdf cursor-pointer overflow-hidden"
             onClick={triggerCompanyLogoUpload}
             title="Click to upload company logo"
           >
+            <div className="relative w-full h-full flex items-center justify-center"> {/* Inner div for centering */}
               <Image
                   src={companyLogo}
                   alt="Company Logo"
@@ -792,6 +793,7 @@ const AdOrderForm = (): JSX.Element => {
                   data-ai-hint="company logo"
                   priority
                 />
+            </div>
             <Input key={companyLogoInputKey} type="file" ref={companyLogoInputRef} onChange={handleCompanyLogoUpload} accept="image/*" className="hidden" aria-label="Upload company logo" />
             {companyLogo !== DEFAULT_COMPANY_LOGO_PLACEHOLDER && companyLogo !== '' && (
               <Button onClick={(e) => { e.stopPropagation(); removeCompanyLogo(); }} variant="ghost" size="icon" className="absolute top-1 right-1 z-10 no-print no-pdf-export no-print-preview" aria-label="Remove Logo">
@@ -847,12 +849,12 @@ const AdOrderForm = (): JSX.Element => {
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-4 mb-5 print-header-box">
-          <div className="flex-1 p-3 border-2 border-black rounded print-content-block">
+        <div className="flex flex-col md:flex-row gap-2 mb-3 print-header-box"> {/* Reduced gap and margin-bottom */}
+          <div className="flex-1 p-2 border-2 border-black rounded print-content-block"> {/* Reduced padding */}
             <Label htmlFor="headingCaption" className="text-sm font-bold block mb-1">Heading/Caption:</Label>
             <Input id="headingCaption" value={headingCaption} onChange={(e) => setHeadingCaption(e.target.value)} className="text-sm py-1 px-2 h-auto border-2 border-black" placeholder="" />
           </div>
-          <div className="w-full md:w-[48.5%] p-3 border-2 border-black rounded print-content-block">
+          <div className="w-full md:w-[40%] p-2 border-2 border-black rounded print-content-block"> {/* Reduced width and padding */}
             <Label htmlFor="packageName" className="text-sm font-bold block mb-1">Package:</Label>
             <Input id="packageName" value={packageName} onChange={(e) => setPackageName(e.target.value)} className="text-sm py-1 px-2 h-auto border-2 border-black" placeholder="" />
           </div>
