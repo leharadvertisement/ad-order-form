@@ -74,8 +74,8 @@ const AdOrderForm = (): JSX.Element => {
       if (isPdfExport) {
         const pdfMinHeightVar = textarea.classList.contains('print-textarea') ? '--pdf-table-textarea-min-height' : '--pdf-matter-textarea-min-height';
         const pdfMaxHeightVar = textarea.classList.contains('print-textarea') ? '--pdf-table-textarea-max-height' : '--pdf-matter-textarea-max-height';
-        const pdfMinHeight = parseFloat(computedStyle.getPropertyValue(pdfMinHeightVar) || '20');
-        const pdfMaxHeight = parseFloat(computedStyle.getPropertyValue(pdfMaxHeightVar) || 'Infinity');
+        const pdfMinHeight = parseFloat(computedStyle.getPropertyValue(pdfMinHeightVar) || '180'); 
+        const pdfMaxHeight = parseFloat(computedStyle.getPropertyValue(pdfMaxHeightVar) || '180'); 
         
         let newHeight = textarea.scrollHeight;
         if (newHeight < pdfMinHeight) newHeight = pdfMinHeight;
@@ -84,7 +84,7 @@ const AdOrderForm = (): JSX.Element => {
 
       } else if (isPrinting) {
         let printMinHeight = textarea.classList.contains('print-textarea') ? 250 : 100;
-        if (textarea.id === 'matterTextarea') printMinHeight = 100; // matter textarea in print
+        if (textarea.id === 'matterTextarea') printMinHeight = 100; 
         textarea.style.height = `${Math.max(textarea.scrollHeight, printMinHeight)}px`;
         textarea.style.overflowY = 'visible';
 
@@ -375,11 +375,10 @@ const AdOrderForm = (): JSX.Element => {
       p.style.fontWeight = inputStyle.fontWeight;
       p.style.lineHeight = inputStyle.lineHeight;
       p.style.color = 'black';
-      p.style.borderBottom = inputStyle.borderBottomWidth + ' ' + inputStyle.borderBottomStyle + ' ' + inputStyle.borderBottomColor;
       if (input.classList.contains('border-2')) { 
         p.style.border = '1px solid black';
       } else {
-        p.style.borderBottom = '1px solid black'; 
+        p.style.border = '1px solid black'; 
       }
       p.style.padding = inputStyle.padding;
       p.style.backgroundColor = 'transparent';
@@ -575,6 +574,13 @@ const AdOrderForm = (): JSX.Element => {
              position: static !important; 
              font-size: 9pt !important; 
              line-height: 1.1 !important;
+             display: flex !important; 
+             flex-direction: column !important;
+             min-height: 297mm !important; 
+             height: 297mm !important;
+          }
+          body.clean-view-printing #printable-area-pdf > .print-footer-box {
+            margin-top: auto !important; 
           }
           .print-button-new-window { display: none !important; }
         }
@@ -699,7 +705,7 @@ const AdOrderForm = (): JSX.Element => {
 
         <div className="flex flex-col md:flex-row md:items-stretch gap-4 mb-5 print-header-box">
           <div
-            className="w-full md:w-[300px] h-[280px] p-1.5 border-2 border-black rounded flex flex-col relative company-logo-container-screen company-logo-container-pdf cursor-pointer items-center justify-start overflow-hidden"
+            className="w-full md:w-[300px] h-[280px] p-1.5 rounded flex flex-col relative company-logo-container-screen company-logo-container-pdf cursor-pointer items-center justify-center overflow-hidden border-2 border-black"
             onClick={triggerCompanyLogoUpload}
             title="Click to upload company logo"
           >
