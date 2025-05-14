@@ -788,28 +788,30 @@ const AdOrderForm = (): JSX.Element => {
 
 
       {/* Printable Area */}
-      <div id="printable-area-pdf" ref={printableAreaRef} className="w-full print-target bg-card text-card-foreground shadow-sm border-4 border-black">
+      <div id="printable-area-pdf" ref={printableAreaRef} className="w-full print-target bg-card text-card-foreground shadow-sm">
         {/* Release Order Title */}
-        <div className="text-center mt-2 mb-5 release-order-title-screen"> {/* Adjusted margins */}
+        <div className="text-center mt-0.5 mb-3 release-order-title-screen"> {/* Adjusted margins */}
           <h2 className="text-2xl font-bold inline-block px-3 py-1 bg-black text-white border-2 border-black rounded">RELEASE ORDER</h2>
         </div>
 
         {/* Top Section: Company Info & RO/Date/Client */}
-        <div className="flex flex-col md:flex-row md:items-stretch gap-4 mb-5 print-header-box">
+        <div className="flex flex-col md:flex-row md:items-stretch gap-2 mb-3 print-header-box">
            {/* Left Box: Company Logo/Info */}
           <div
-            className="w-full md:w-[300px] h-[280px] border-2 border-black rounded relative company-logo-container-screen company-logo-container-pdf cursor-pointer overflow-hidden"
+            className="w-full md:w-[300px] h-[280px] border-2 border-black rounded-md relative company-logo-container-screen company-logo-container-pdf cursor-pointer overflow-hidden"
             onClick={triggerCompanyLogoUpload}
             title="Click to upload company logo"
           >
-            <Image
-                src={companyLogo}
-                alt="Company Logo"
-                fill
-                style={{ objectFit: "cover" }} 
-                data-ai-hint="company logo"
-                priority // Ensures LCP optimization if this is a primary image
-              />
+            <div className="relative w-full h-full">
+              <Image
+                  src={companyLogo}
+                  alt="Company Logo"
+                  fill
+                  style={{ objectFit: "cover" }} 
+                  data-ai-hint="company logo"
+                  priority // Ensures LCP optimization if this is a primary image
+                />
+            </div>
             <Input key={companyLogoInputKey} type="file" ref={companyLogoInputRef} onChange={handleCompanyLogoUpload} accept="image/*" className="hidden" aria-label="Upload company logo" />
             {companyLogo !== DEFAULT_COMPANY_LOGO_PLACEHOLDER && companyLogo !== '' && (
               <Button onClick={(e) => { e.stopPropagation(); removeCompanyLogo(); }} variant="ghost" size="icon" className="absolute top-1 right-1 z-10 no-print no-pdf-export no-print-preview" aria-label="Remove Logo">
@@ -819,11 +821,11 @@ const AdOrderForm = (): JSX.Element => {
           </div>
 
           {/* Right Box: RO Info, Adv Manager */}
-          <div className="flex-1 flex flex-col gap-3 p-3 border-2 border-black rounded print-info-column">
-            <div className="flex gap-3 items-center">
+          <div className="flex-1 flex flex-col gap-2 p-2 border-2 border-black rounded-md print-info-column">
+            <div className="flex gap-2 items-center">
               <div className="flex-1 flex items-center">
                 <Label htmlFor="roNumber" className="text-sm font-bold mr-2 whitespace-nowrap">R.O. No. LN:</Label>
-                <Input id="roNumber" type="text" value={ron} onChange={(e) => setRon(e.target.value)} className="text-sm py-1 px-2 h-auto border-2 border-black" placeholder="" />
+                <Input id="roNumber" type="number" value={ron} onChange={(e) => setRon(e.target.value)} className="text-sm py-1 px-2 h-auto border-2 border-black" placeholder="" />
               </div>
               <div className="flex-1 flex items-center">
                 <Label htmlFor="orderDate" className="text-sm font-bold mr-2 whitespace-nowrap">Date:</Label>
@@ -855,12 +857,12 @@ const AdOrderForm = (): JSX.Element => {
               <Label htmlFor="clientName" className="text-sm font-bold mr-2 whitespace-nowrap">Client:</Label>
               <Input id="clientName" value={clientName} onChange={(e) => setClientName(e.target.value)} className="text-sm py-1 px-2 h-auto border-2 border-black" placeholder="" />
             </div>
-            <div className="mt-2">
+            <div className="mt-1">
               <Label className="text-sm font-bold">The Advertisement Manager</Label>
               <Input value={advManagerInput1} onChange={(e) => setAdvManagerInput1(e.target.value)} className="text-sm py-1 px-2 h-auto mt-1 border-2 border-black" placeholder="" />
               <Input value={advManagerInput2} onChange={(e) => setAdvManagerInput2(e.target.value)} className="text-sm py-1 px-2 h-auto mt-1 border-2 border-black" placeholder="" />
             </div>
-            <div className="mt-auto pt-2 border-t border-black"> {/* Pushes this to bottom of flex container */}
+            <div className="mt-auto pt-1 border-t border-black"> {/* Pushes this to bottom of flex container */}
               <p className="text-sm font-bold">Kindly insert the advertisement/s in your issue/s for the following date/s</p>
             </div>
           </div>
@@ -868,13 +870,13 @@ const AdOrderForm = (): JSX.Element => {
 
         {/* Heading/Caption & Package Section */}
         <div className="flex flex-col md:flex-row gap-2 mb-3 print-header-box">
-          <div className="flex-1 p-2 border-2 border-black rounded print-content-block">
+          <div className="flex-1 p-2 border-2 border-black rounded-md print-content-block">
             <div className="flex items-center">
               <Label htmlFor="headingCaption" className="text-sm font-bold mr-2 whitespace-nowrap">Heading/Caption:</Label>
               <Input id="headingCaption" value={headingCaption} onChange={(e) => setHeadingCaption(e.target.value)} className="flex-1 text-sm py-1 px-2 h-auto border-2 border-black" placeholder="" />
             </div>
           </div>
-          <div className="w-full md:w-[40%] p-2 border-2 border-black rounded print-content-block">
+          <div className="w-full md:w-[40%] p-2 border-2 border-black rounded-md print-content-block">
             <div className="flex items-center">
               <Label htmlFor="packageName" className="text-sm font-bold mr-2 whitespace-nowrap">Package:</Label>
               <Input id="packageName" value={packageName} onChange={(e) => setPackageName(e.target.value)} className="flex-1 text-sm py-1 px-2 h-auto border-2 border-black" placeholder="" />
@@ -883,7 +885,7 @@ const AdOrderForm = (): JSX.Element => {
         </div>
 
         {/* Table Section */}
-        <div className="mb-5 table-container-print">
+        <div className="mb-3 table-container-print">
           <Table className="main-table-bordered print-table border-2 border-black">
             <TableHeader className="bg-secondary print-table-header">
               <TableRow>
@@ -929,7 +931,7 @@ const AdOrderForm = (): JSX.Element => {
         </div>
 
         {/* Matter Section */}
-        <div className="flex mb-3 min-h-[80px] items-stretch matter-container-print-parent p-0 border-2 border-black rounded">
+        <div className="flex mb-2 min-h-[80px] items-stretch matter-container-print-parent p-0 border-2 border-black rounded-md">
           <div className="matter-label-screen flex items-center justify-center p-1 w-[38px] self-stretch">
             <span className="text-sm font-bold">MATTER</span>
           </div>
@@ -937,24 +939,24 @@ const AdOrderForm = (): JSX.Element => {
             id="matterTextarea"
             value={matterText}
             onChange={handleMatterChange}
-            className="flex-1 text-sm p-2 border-l-0 rounded-none resize-none min-h-[80px] h-auto no-shadow-outline focus:border-black matter-content-screen border-t-0 border-r-0 border-b-0 border-2 !border-l-black !border-black"
+            className="flex-1 text-sm p-2 border-l-0 rounded-none resize-none min-h-[80px] h-auto no-shadow-outline focus:border-black matter-content-screen !border-l-black"
             placeholder=""
           />
         </div>
 
         {/* Footer Section: Forwarding Info, Notes, Stamp */}
-        <div className="p-3 border-2 border-black rounded flex flex-col print-footer-box relative">
-          <div className="w-full mb-2">
-            <p className="text-xs font-bold mb-1">Forward all bills with relevant VTS copy to :-</p>
+        <div className="p-2 border-2 border-black rounded-md flex flex-col print-footer-box relative">
+          <div className="w-full mb-1">
+            <p className="text-xs font-bold mb-0.5">Forward all bills with relevant VTS copy to :-</p>
             <p className="text-xs leading-snug">D-9 &amp; D-10, 1st Floor, Pushpa Bhawan, <br /> Alaknanda Commercial complex, <br />New Delhi-110019 <br />Tel.: 49573333, 34, 35, 36 <br />Fax: 26028101</p>
           </div>
 
-          <hr className="border-black border-b-2 my-2 w-full" />
+          <hr className="border-black border-b-2 my-1 w-full" />
 
           <div className="flex justify-between items-start mt-0 pt-0">
             {/* Notes Section */}
             <div className="w-[62%]">
-              <p className="text-sm font-bold underline decoration-black decoration-2 underline-offset-2 mb-1">Note:</p>
+              <p className="text-sm font-bold underline decoration-black decoration-2 underline-offset-2 mb-0.5">Note:</p>
               <ol className="list-decimal list-inside text-xs space-y-0.5">
                 <li>Space reserved vide our letter No.</li>
                 <li>No two advertisements of the same client should appear in the same issue.</li>
@@ -965,7 +967,7 @@ const AdOrderForm = (): JSX.Element => {
 
             {/* Stamp Area */}
             <div
-              className="w-[35%] flex flex-col items-center justify-end stamp-parent-container mt-2 md:mt-0 self-end" // Aligns to bottom-right of its flex container
+              className="w-[35%] flex flex-col items-center justify-end stamp-parent-container mt-1 md:mt-0 self-end" // Aligns to bottom-right of its flex container
             >
               <div
                 className="stamp-container-screen w-[178px] h-[98px] flex items-center justify-center text-xs text-gray-500 bg-transparent rounded cursor-pointer hover:opacity-80 relative border-0"
