@@ -358,7 +358,8 @@
     flex-shrink: 0; /* Prevent these crucial blocks from shrinking if space is tight */
   }
   .print-footer-box { /* Specifically for the footer box to push it down */
-    margin-top: auto !important;
+    /* margin-top: auto !important; REMOVED to bring box upward */
+    flex-shrink: 0 !important;
   }
 
   .page-break-before {
@@ -450,7 +451,7 @@
   flex-direction: column; /* Added for screen consistency */
 }
 #printable-area-pdf > .print-footer-box { /* Target direct child for screen */
-  margin-top: auto; /* Push footer down on screen as well */
+  /* margin-top: auto; REMOVED to bring box upward */
   flex-shrink: 0;
 }
 
@@ -604,7 +605,7 @@ body.print-preview-active > #main-application-container > *:not(#printPreviewOve
     flex-direction: column !important; /* Added for flex behavior in preview */
 }
 #printPreviewContent > #printable-area-pdf .print-footer-box {
-    margin-top: auto !important; /* Push footer down in preview */
+    /* margin-top: auto !important; REMOVED to bring box upward */
     flex-shrink: 0 !important;
 }
 
@@ -652,7 +653,7 @@ body.print-preview-active > #main-application-container > *:not(#printPreviewOve
   flex-direction: column !important;
 }
 #printable-area-pdf.fullscreen-preview-active > .print-footer-box {
-    margin-top: auto !important; /* Push footer down in fullscreen */
+    /* margin-top: auto !important; REMOVED to bring box upward */
     flex-shrink: 0 !important;
 }
 
@@ -700,7 +701,7 @@ body.pdf-export-active #printable-area-pdf {
     flex-direction: column !important;
 }
 body.pdf-export-active #printable-area-pdf .print-footer-box {
-    margin-top: auto !important; /* Push footer down in PDF */
+    /* margin-top: auto !important; REMOVED to bring box upward */
     flex-shrink: 0 !important;
 }
 
@@ -929,5 +930,3 @@ body.pdf-export-active #printable-area-pdf .print-header-box > .print-content-bl
   border-radius: 0.25rem !important;
   box-sizing: border-box !important;
 }
-
-    
