@@ -260,7 +260,7 @@
     line-height: 1.1 !important;
   }
    .print-table td, .print-table td .print-textarea, .print-table td .textarea-static-print {
-      min-height: 30px !important; /* Increased min-height for table cells/textareas */
+      min-height: 40px !important; /* Increased min-height for table cells/textareas to make rows longer */
       height: auto !important; /* Allow to expand based on content */
    }
   .print-table .print-table-header, .print-table-header > tr > th {
@@ -329,7 +329,8 @@
    }
 
   .matter-container-print-parent {
-    margin-bottom: 10px !important; /* Reduced margin for space below matter box for print */
+    margin-bottom: 0.75rem !important; /* Match screen's mb-3 (0.75rem) for consistency */
+    page-break-inside: avoid !important;
   }
 
 
@@ -725,7 +726,7 @@ body.pdf-export-active #printable-area-pdf .mb-2,
 body.pdf-export-active #printable-area-pdf .mb-3,
 body.pdf-export-active #printable-area-pdf .mb-4,
 body.pdf-export-active #printable-area-pdf .mb-5 {
-    margin: 0.5px !important;
+    margin: 2px !important; /* Adjusted from 0.5px for better general spacing */
 }
 body.pdf-export-active #printable-area-pdf .gap-1,
 body.pdf-export-active #printable-area-pdf .gap-2,
@@ -766,7 +767,7 @@ body.pdf-export-active .print-table td {
     line-height: 1.0 !important;
     border-width: 1px !important;
     vertical-align: top !important;
-    min-height: 25px !important; /* Increased min-height for PDF table cells */
+    min-height: 30px !important; /* Increased min-height for PDF table cells */
     height: auto !important;
 }
 body.pdf-export-active .print-table .print-table-header {
@@ -800,8 +801,9 @@ body.pdf-export-active .matter-container-print .textarea-static-print {
     min-height: var(--pdf-matter-textarea-min-height, 30px) !important;
     max-height: var(--pdf-matter-textarea-max-height, 60px) !important;
 }
-body.pdf-export-active .matter-container-print-parent {
-    margin-bottom: 5px !important; /* Reduced space below matter for PDF */
+
+body.pdf-export-active #printable-area-pdf .matter-container-print-parent {
+    margin-bottom: 0.75rem !important; /* Match screen mb-3 (0.75rem) for consistency */
 }
 
 
@@ -838,7 +840,7 @@ body.pdf-export-active #printable-area-pdf .print-footer-box li {
 body.pdf-export-active #printable-area-pdf .main-table-bordered td .print-textarea,
 body.pdf-export-active #printable-area-pdf .print-table td .textarea-static-print {
     height: auto !important;
-    min-height: var(--pdf-table-textarea-min-height, 25px) !important; /* Increased default for PDF table textareas */
+    min-height: var(--pdf-table-textarea-min-height, 30px) !important; /* Increased default for PDF table textareas */
     max-height: var(--pdf-table-textarea-max-height, 40px) !important;
     font-size: 6.5pt !important;
     line-height: 1.0 !important;
