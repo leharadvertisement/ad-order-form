@@ -716,8 +716,6 @@ const AdOrderForm = (): JSX.Element => {
                 style={{ objectFit: "cover" }}
                 data-ai-hint="company logo"
                 priority
-                width={300} 
-                height={280} 
               />
             <Input key={companyLogoInputKey} type="file" ref={companyLogoInputRef} onChange={handleCompanyLogoUpload} accept="image/*" className="hidden" aria-label="Upload company logo" />
             {companyLogo !== DEFAULT_COMPANY_LOGO_PLACEHOLDER && companyLogo !== '' && (
@@ -893,4 +891,3 @@ const AdOrderForm = (): JSX.Element => {
 };
 
 export default AdOrderForm;
-
