@@ -80,9 +80,9 @@
   body.clean-view-printing #printable-area-pdf {
     width: 210mm !important;
     min-height: 297mm !important;
-    height: 297mm !important;
+    height: 297mm !important; /* Enforce A4 height */
     margin: 0 auto !important;
-    padding: 4px 24px 48px 24px !important; 
+    padding: 4px 24px 48px 24px !important;
     border: 4px solid black !important;
     box-shadow: none !important;
     page-break-inside: avoid !important;
@@ -102,7 +102,6 @@
       display: flex !important;
       flex-direction: column !important;
   }
-
 
   #printable-area-pdf .p-3,
   body.printing-from-preview #printPreviewContent #printable-area-pdf .p-3,
@@ -133,7 +132,7 @@
   #printable-area-pdf .mb-3, /* Matter container margin */
    body.printing-from-preview #printPreviewContent #printable-area-pdf .mb-3,
    body.clean-view-printing #printable-area-pdf .mb-3 {
-    margin-bottom: 0.5rem !important; 
+    margin-bottom: 0.5rem !important;
   }
 
 
@@ -194,7 +193,7 @@
   body.printing-from-preview #printPreviewContent #printable-area-pdf .main-table-bordered td textarea.print-textarea,
   body.clean-view-printing #printable-area-pdf .main-table-bordered td textarea.print-textarea {
       border: none !important;
-      min-height: 220px !important; 
+      min-height: 230px !important; /* Increased from 220px */
       height: auto !important;
       overflow: hidden !important;
   }
@@ -203,7 +202,7 @@
   body.clean-view-printing #printable-area-pdf .matter-container-print .textarea-static-print {
     border: none !important;
     padding: 1px !important;
-    min-height: 80px !important; 
+    min-height: 80px !important;
     height: auto !important;
     overflow: hidden !important;
   }
@@ -254,7 +253,6 @@
   .print-table th, .print-table td {
     border: 1px solid black !important;
     padding: 6px !important;
-    /* text-align will be specific for th and td below */
     vertical-align: top !important;
     word-wrap: break-word !important;
     color: black !important;
@@ -264,16 +262,16 @@
     line-height: 1.1 !important;
   }
   .print-table th {
-    text-align: center !important; /* Centered for headers */
+    text-align: center !important;
   }
   .print-table td {
-    text-align: left !important; /* Left aligned for data cells */
-    min-height: 220px !important; 
+    text-align: left !important;
+    min-height: 230px !important; /* Increased from 220px */
     height: auto !important;
     overflow: hidden !important;
   }
    .print-table td .print-textarea, .print-table td .textarea-static-print {
-      min-height: 220px !important; 
+      min-height: 230px !important; /* Increased from 220px */
       height: auto !important;
       overflow: hidden !important;
    }
@@ -295,8 +293,8 @@
   .release-order-title-screen,
   .release-order-titlebar-print-preview {
     text-align: center !important;
-    margin-top: 2px !important; 
-    margin-bottom: 15px !important; 
+    margin-top: 2px !important;
+    margin-bottom: 15px !important;
     width: fit-content !important;
     margin-left: auto !important;
     margin-right: auto !important;
@@ -344,7 +342,7 @@
   .matter-container-print-parent {
     border: 2px solid black !important;
     border-radius: 0.25rem !important;
-    margin-bottom: 0.5rem !important; 
+    margin-bottom: 0.5rem !important;
     page-break-inside: avoid !important;
     padding: 0 !important;
   }
@@ -412,7 +410,7 @@
     flex-direction: row !important;
     align-items: stretch !important;
     width: 100% !important;
-    gap: 0.5rem !important; 
+    gap: 0.5rem !important;
     page-break-inside: avoid !important;
   }
 
@@ -451,7 +449,7 @@
   body.printing-from-preview #printPreviewContent #printable-area-pdf .print-header-box > .print-content-block,
   body.clean-view-printing #printable-area-pdf .print-header-box > .print-content-block {
     flex: 1 1 0% !important;
-    padding: 8px !important; 
+    padding: 8px !important;
     border: 2px solid black !important;
     border-radius: 0.25rem !important;
     box-sizing: border-box !important;
@@ -472,7 +470,7 @@
   min-height: 297mm;
   height: auto;
   margin: 0 auto;
-  padding: 4px 24px 48px 24px !important; 
+  padding: 4px 24px 48px 24px !important;
   border: 4px solid black;
   background-color: white;
   box-sizing: border-box;
@@ -521,7 +519,7 @@
 
 #printable-area-pdf .main-table-bordered td .print-textarea {
     border: none !important;
-    min-height: 220px;
+    min-height: 230px; /* Increased from 220px */
 }
 
 
@@ -544,7 +542,7 @@
 
 .release-order-title-screen {
   text-align: center;
-  margin-top: 2px; 
+  margin-top: 2px;
   margin-bottom: 20px;
 }
 .release-order-title-screen h2 {
@@ -638,7 +636,7 @@ body.print-preview-active > #main-application-container > *:not(#printPreviewOve
     margin: 20px auto !important;
     border: 4px solid black !important;
     box-shadow: 0 0 10px rgba(0,0,0,0.2) !important;
-    padding: 4px 24px 48px 24px !important; 
+    padding: 4px 24px 48px 24px !important;
     width: 210mm !important;
     min-height: 297mm !important;
     height: 297mm !important;
@@ -689,7 +687,7 @@ body.print-preview-active > #main-application-container > *:not(#printPreviewOve
 #printPreviewContent #printable-area-pdf .matter-container-print-parent {
     border: 2px solid black !important;
     border-radius: 0.25rem !important;
-    margin-bottom: 0.5rem !important; 
+    margin-bottom: 0.5rem !important;
 }
 
 
@@ -703,7 +701,7 @@ body.print-preview-active > #main-application-container > *:not(#printPreviewOve
   height: 100vh !important;
   max-width: none !important;
   margin: 0 !important;
-  padding: 4px 24px 48px 24px !important; 
+  padding: 4px 24px 48px 24px !important;
   border: 4px solid black !important;
   box-shadow: none !important;
   background-color: white !important;
@@ -743,7 +741,7 @@ body.print-preview-active > #main-application-container > *:not(#printPreviewOve
 
 /* Styles specifically for PDF generation via html2pdf */
 body.pdf-export-active #printable-area-pdf {
-    padding: 4px 24px 48px 24px !important; 
+    padding: 4px 24px 48px 24px !important;
     border-width: 4px !important;
     border-color: black !important;
     font-size: 9pt !important;
@@ -756,10 +754,10 @@ body.pdf-export-active #printable-area-pdf {
     background-color: white !important;
     color: black !important;
     --pdf-textarea-min-height: 20px;
-    --pdf-table-textarea-min-height: 180px;
-    --pdf-matter-textarea-min-height: 80px; 
+    --pdf-table-textarea-min-height: 210px; /* Increased from 180px */
+    --pdf-matter-textarea-min-height: 80px;
     --pdf-matter-textarea-max-height: 100px;
-    --pdf-table-textarea-max-height: 180px;
+    --pdf-table-textarea-max-height: 210px; /* Increased from 180px */
     display: flex !important;
     flex-direction: column !important;
 }
@@ -832,7 +830,7 @@ body.pdf-export-active .release-order-titlebar-print-preview h2 {
     font-size: 22px !important;
 }
 body.pdf-export-active .release-order-titlebar-print-preview {
-     margin-top: 2px !important; 
+     margin-top: 2px !important;
      margin-bottom: 15px !important;
 }
 
@@ -857,7 +855,7 @@ body.pdf-export-active .print-table td {
     line-height: 1.1 !important;
     border-width: 1px !important;
     vertical-align: top !important;
-    min-height: var(--pdf-table-textarea-min-height, 180px) !important;
+    min-height: var(--pdf-table-textarea-min-height, 210px) !important; /* Increased */
     height: auto !important;
     overflow: hidden !important;
 }
@@ -875,13 +873,13 @@ body.pdf-export-active .print-table .print-table-header {
 
 body.pdf-export-active .static-print-text {
     color: black !important;
-    border: 2px solid black !important; 
-    font-size: 9pt !important; 
-    padding: 4px !important; 
-    line-height: 1.1 !important; 
+    border: 2px solid black !important;
+    font-size: 9pt !important;
+    padding: 4px !important;
+    line-height: 1.1 !important;
     overflow: hidden !important;
-    white-space: pre-wrap !important; 
-    min-height: 1.2em; 
+    white-space: pre-wrap !important;
+    min-height: 1.2em;
     border-radius: 0.25rem !important;
 }
 body.pdf-export-active .textarea-static-print {
@@ -907,7 +905,7 @@ body.pdf-export-active .matter-container-print .textarea-static-print {
 body.pdf-export-active #printable-area-pdf .matter-container-print-parent {
     border: 2px solid black !important;
     border-radius: 0.25rem !important;
-    margin-bottom: 0.5rem !important; 
+    margin-bottom: 0.5rem !important;
     padding: 0 !important;
 }
 
@@ -942,8 +940,8 @@ body.pdf-export-active #printable-area-pdf .print-footer-box li {
 body.pdf-export-active #printable-area-pdf .main-table-bordered td .print-textarea,
 body.pdf-export-active #printable-area-pdf .print-table td .textarea-static-print {
     height: auto !important;
-    min-height: var(--pdf-table-textarea-min-height, 180px) !important;
-    max-height: var(--pdf-table-textarea-max-height, 180px) !important;
+    min-height: var(--pdf-table-textarea-min-height, 210px) !important; /* Increased */
+    max-height: var(--pdf-table-textarea-max-height, 210px) !important; /* Increased */
     font-size: 8pt !important;
     line-height: 1.1 !important;
     overflow: hidden !important;
@@ -958,7 +956,7 @@ body.pdf-export-active #printable-area-pdf hr {
 
 .main-table-bordered td textarea.print-textarea {
     height: 100%;
-    min-height: 220px;
+    min-height: 230px; /* Increased */
     display: block;
 }
 
@@ -1015,8 +1013,10 @@ body.pdf-export-active #printable-area-pdf .print-header-box > .print-info-colum
 
 body.pdf-export-active #printable-area-pdf .print-header-box > .print-content-block {
   flex: 1 1 0% !important;
-  padding: 8px !important; 
+  padding: 8px !important;
   border: 2px solid black !important;
   border-radius: 0.25rem !important;
   box-sizing: border-box !important;
 }
+
+    
