@@ -96,9 +96,7 @@
   }
 
   /* Fallback for generic #printable-area-pdf if printed directly (not from preview/clean view) */
-  /* This specific rule might be redundant if the above covers all contexts, but kept for safety */
   #printable-area-pdf:not(body.pdf-export-active #printable-area-pdf):not(body.printing-from-preview #printable-area-pdf):not(body.clean-view-printing #printable-area-pdf) {
-      /* Styles largely same as above, ensuring flex properties are included */
       display: flex !important;
       flex-direction: column !important;
   }
@@ -177,6 +175,8 @@
   body.clean-view-printing #printable-area-pdf .main-table-bordered td textarea.print-textarea {
       border: none !important;
       min-height: 160px !important; 
+      height: auto !important;
+      overflow: visible !important;
   }
 
   .static-print-text {
@@ -217,6 +217,9 @@
     border-top: 1px solid black !important;
     border-bottom: 1px solid black !important;
     padding: 1px !important;
+    min-height: 100px !important; /* Increased height for Matter box */
+    height: auto !important;
+    overflow: visible !important;
   }
 
 
@@ -243,6 +246,7 @@
    .print-table td, .print-table td .print-textarea, .print-table td .textarea-static-print {
       min-height: 160px !important; /* Increased from 60px to make rows longer */
       height: auto !important; 
+      overflow: visible !important;
    }
   .print-table .print-table-header, .print-table-header > tr > th {
     background-color: #f0f0f0 !important;
@@ -256,6 +260,7 @@
     padding: 1px !important;
     border: none !important;
     line-height: 1.1 !important;
+    overflow: visible !important;
   }
 
   .release-order-title-screen, 
@@ -679,16 +684,16 @@ body.pdf-export-active #printable-area-pdf {
     font-size: 9pt !important;
     line-height: 1.1 !important;
     width: 210mm !important;
-    height: 297mm !important;
+    height: 297mm !important; /* Fixed height for PDF single page */
     box-sizing: border-box !important;
-    overflow: hidden !important;
+    overflow: hidden !important; /* Important to prevent content spill */
     position: relative !important;
     background-color: white !important;
     color: black !important;
     --pdf-textarea-min-height: 20px;
     --pdf-table-textarea-min-height: 100px; /* Increased from 45px */
-    --pdf-matter-textarea-min-height: 30px;
-    --pdf-matter-textarea-max-height: 60px;
+    --pdf-matter-textarea-min-height: 80px; /* Increased Matter height */
+    --pdf-matter-textarea-max-height: 100px; /* Increased Matter height */
     --pdf-table-textarea-max-height: 100px; /* Increased from 60px */
     display: flex !important; /* PDF export uses flex */
     flex-direction: column !important;
@@ -769,6 +774,7 @@ body.pdf-export-active .print-table td {
     vertical-align: top !important;
     min-height: 100px !important; /* Increased from 30px */
     height: auto !important;
+    overflow: hidden !important; /* Prevent content spill from cells */
 }
 body.pdf-export-active .print-table .print-table-header {
     background-color: #e0e0e0 !important;
@@ -781,6 +787,8 @@ body.pdf-export-active .static-print-text {
     font-size: 8pt !important;
     padding: 0.5px 0 !important;
     line-height: 1.0 !important;
+    overflow: hidden !important; /* Prevent spill */
+    white-space: nowrap !important; /* Prevent wrapping that might break layout */
 }
 body.pdf-export-active .textarea-static-print {
     color: black !important;
@@ -798,8 +806,9 @@ body.pdf-export-active .matter-container-print .textarea-static-print {
     border-bottom-width: 0.5px !important;
     border-left: none !important;
     border-right: none !important;
-    min-height: var(--pdf-matter-textarea-min-height, 30px) !important;
-    max-height: var(--pdf-matter-textarea-max-height, 60px) !important;
+    min-height: var(--pdf-matter-textarea-min-height, 80px) !important;
+    max-height: var(--pdf-matter-textarea-max-height, 100px) !important;
+    overflow: hidden !important; /* Ensure matter text doesn't spill */
 }
 
 body.pdf-export-active #printable-area-pdf .matter-container-print-parent {
@@ -918,3 +927,5 @@ body.pdf-export-active #printable-area-pdf .print-header-box > .print-content-bl
   border-radius: 0.25rem !important;
   box-sizing: border-box !important;
 }
+
+  
