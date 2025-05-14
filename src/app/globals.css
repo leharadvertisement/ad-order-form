@@ -329,7 +329,7 @@
    }
 
   .matter-container-print-parent {
-    margin-bottom: 15px !important; /* Added margin for space below matter box */
+    margin-bottom: 25px !important; /* Increased margin for space below matter box for print */
   }
 
 
@@ -801,7 +801,7 @@ body.pdf-export-active .matter-container-print .textarea-static-print {
     max-height: var(--pdf-matter-textarea-max-height, 60px) !important;
 }
 body.pdf-export-active .matter-container-print-parent {
-    margin-bottom: 10px !important; /* Space below matter for PDF */
+    margin-bottom: 20px !important; /* Increased space below matter for PDF */
 }
 
 
