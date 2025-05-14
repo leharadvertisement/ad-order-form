@@ -168,7 +168,7 @@ const AdOrderForm = (): JSX.Element => {
         previewTextareas.forEach(ta => adjustTextareaHeight(ta as HTMLTextAreaElement, printPreviewContentRef.current?.ownerDocument));
       }
     }
-  }, [isClient, rowsData, matterText, adjustTextareaHeight, headingCaption, packageName, advManagerInput1, advManagerInput2, clientName, ron, isPreviewing, isFullScreenPreview]); // Dependencies that affect layout
+  }, [isClient, rowsData, matterText, adjustTextareaHeight, headingCaption, packageName, advManagerInput1, advManagerInput2, clientName, ron, isPreviewing, isFullScreenPreview, orderDate]); // Added orderDate to dependencies
 
 
   useEffect(() => {
@@ -459,38 +459,7 @@ const AdOrderForm = (): JSX.Element => {
     });
 
     // Convert table date pickers to static text for PDF
-    const datePickersInTable = clonedElement.querySelectorAll('.table-date-picker-wrapper');
-    datePickersInTable.forEach((wrapper, index) => { // Use index if rowsData order is reliable
-      const p = document.createElement('span');
-      // Assuming rowsData corresponds to the table rows in order
-      const originalRowData = rowsData[index]; // Make sure index is valid
-      const dateValue = originalRowData?.scheduledDate;
-      let displayValue = '\u00A0'; // Default for empty dates
-
-      if (dateValue instanceof Date) {
-        displayValue = format(dateValue, 'dd.MM.yyyy');
-      } else if (typeof dateValue === 'string' && dateValue.trim() !== '') {
-        try { displayValue = format(new Date(dateValue), 'dd.MM.yyyy'); }
-        catch { /* Keep original string or default if parsing fails */ }
-      }
-
-      p.textContent = displayValue;
-      // Apply styles for static date text in table for PDF
-      p.style.display = 'block';
-      p.style.width = '100%';
-      p.style.textAlign = 'center';
-      p.style.minHeight = '1em';
-      p.style.fontFamily = 'Arial, sans-serif'; // Consistent font
-      p.style.fontSize = '8pt'; // Slightly smaller for table cells
-      p.style.fontWeight = 'bold';
-      p.style.lineHeight = '1.0';
-      p.style.color = 'black';
-      p.style.padding = '4px';
-      p.style.backgroundColor = 'transparent';
-      p.style.border = 'none'; // No border for the date text itself inside cell
-      p.style.boxSizing = 'border-box';
-      wrapper.parentNode?.replaceChild(p, wrapper); // Replace DatePicker wrapper
-    });
+    transformTableDatesToStaticText(clonedElement, rowsData);
 
 
     // Convert textareas to static divs for PDF
@@ -626,7 +595,7 @@ const AdOrderForm = (): JSX.Element => {
       document.documentElement.style.removeProperty('--pdf-matter-textarea-max-height');
     });
 
-  }, [orderDate, stampImage, companyLogo, rowsData, matterText, advManagerInput1, advManagerInput2, clientName, headingCaption, packageName, ron, adjustTextareaHeight]); // Dependencies
+  }, [orderDate, stampImage, companyLogo, rowsData, matterText, advManagerInput1, advManagerInput2, clientName, headingCaption, packageName, ron, adjustTextareaHeight, transformTableDatesToStaticText]); // Added transformTableDatesToStaticText
 
 
   const handleOpenCleanViewAndPrint = useCallback(() => {
@@ -674,7 +643,7 @@ const AdOrderForm = (): JSX.Element => {
           body { margin: 0 !important; padding: 0 !important; background-color: white !important; }
           body.clean-view-printing #printable-area-pdf {
              margin: 0 auto !important;
-             padding: 24px 24px 48px 24px !important; /* Consistent padding */
+             padding: 4px 24px 48px 24px !important; /* Consistent padding */
              border: 4px solid black !important; /* Consistent border */
              box-shadow: none !important; /* No shadow when printing */
              page-break-inside: avoid !important; /* Try to keep content on one page */
@@ -747,7 +716,6 @@ const AdOrderForm = (): JSX.Element => {
         <Button onClick={handleOpenCleanViewAndPrint} variant="secondary" size="sm" className="no-print-preview">
           <Printer className="mr-2 h-4 w-4" />Open Clean View &amp; Print
         </Button>
-        {/* Removed FullScreen Preview button as per previous requests */}
       </div>
 
       {/* Print Preview Modal */}
@@ -834,14 +802,16 @@ const AdOrderForm = (): JSX.Element => {
             onClick={triggerCompanyLogoUpload}
             title="Click to upload company logo"
           >
-            <Image
-                src={companyLogo}
-                alt="Company Logo"
-                fill
-                style={{ objectFit: "cover" }}
-                data-ai-hint="company logo"
-                priority // Ensures LCP optimization if this is a primary image
-              />
+            <div className="relative w-full h-full flex items-center justify-center"> {/* Inner div for centering and object-fit */}
+              <Image
+                  src={companyLogo}
+                  alt="Company Logo"
+                  fill
+                  style={{ objectFit: "cover" }} // Changed to cover
+                  data-ai-hint="company logo"
+                  priority // Ensures LCP optimization if this is a primary image
+                />
+            </div>
             <Input key={companyLogoInputKey} type="file" ref={companyLogoInputRef} onChange={handleCompanyLogoUpload} accept="image/*" className="hidden" aria-label="Upload company logo" />
             {companyLogo !== DEFAULT_COMPANY_LOGO_PLACEHOLDER && companyLogo !== '' && (
               <Button onClick={(e) => { e.stopPropagation(); removeCompanyLogo(); }} variant="ghost" size="icon" className="absolute top-1 right-1 z-10 no-print no-pdf-export no-print-preview" aria-label="Remove Logo">
@@ -931,28 +901,28 @@ const AdOrderForm = (): JSX.Element => {
               {rowsData.map((row, index) => (
                 <TableRow key={index} data-row-index={index} className="print-table-row">
                   <TableCell className="main-table-bordered p-0 align-top border border-black">
-                    <Textarea value={row.keyNo as string} onChange={(e) => handleTextareaInput(e, index, 'keyNo')} className="text-xs p-1 border-0 rounded-none resize-none min-h-[220px] h-auto no-shadow-outline print-textarea textarea-align-top" />
+                    <Textarea value={row.keyNo as string} onChange={(e) => handleTextareaInput(e, index, 'keyNo')} className="text-xs text-foreground p-1 border-0 rounded-none resize-none min-h-[220px] h-auto no-shadow-outline print-textarea textarea-align-top" />
                   </TableCell>
                   <TableCell className="main-table-bordered p-0 align-top border border-black">
-                    <Textarea value={row.publication as string} onChange={(e) => handleTextareaInput(e, index, 'publication')} className="text-xs p-1 border-0 rounded-none resize-none min-h-[220px] h-auto no-shadow-outline print-textarea textarea-align-top" />
+                    <Textarea value={row.publication as string} onChange={(e) => handleTextareaInput(e, index, 'publication')} className="text-xs text-foreground p-1 border-0 rounded-none resize-none min-h-[220px] h-auto no-shadow-outline print-textarea textarea-align-top" />
                   </TableCell>
                   <TableCell className="main-table-bordered p-0 align-top border border-black">
-                    <Textarea value={row.edition as string} onChange={(e) => handleTextareaInput(e, index, 'edition')} className="text-xs p-1 border-0 rounded-none resize-none min-h-[220px] h-auto no-shadow-outline print-textarea textarea-align-top" />
+                    <Textarea value={row.edition as string} onChange={(e) => handleTextareaInput(e, index, 'edition')} className="text-xs text-foreground p-1 border-0 rounded-none resize-none min-h-[220px] h-auto no-shadow-outline print-textarea textarea-align-top" />
                   </TableCell>
                   <TableCell className="main-table-bordered p-0 align-top border border-black">
-                    <Textarea value={row.size as string} onChange={(e) => handleTextareaInput(e, index, 'size')} className="text-xs p-1 border-0 rounded-none resize-none min-h-[220px] h-auto no-shadow-outline print-textarea textarea-align-top" />
+                    <Textarea value={row.size as string} onChange={(e) => handleTextareaInput(e, index, 'size')} className="text-xs text-foreground p-1 border-0 rounded-none resize-none min-h-[220px] h-auto no-shadow-outline print-textarea textarea-align-top" />
                   </TableCell>
                   <TableCell className="main-table-bordered p-0 align-top border border-black table-date-picker-wrapper">
                     <DatePicker
                       selected={row.scheduledDate instanceof Date ? row.scheduledDate : undefined}
                       onChange={(date) => handleCellDateChange(date, index)}
                       dateFormat="dd.MM.yyyy"
-                      className="text-xs h-auto w-full text-center" // Simplified className
+                      className="text-xs text-foreground h-auto w-full text-center" // Simplified className, added text-foreground
                       placeholderText=""
                     />
                   </TableCell>
                   <TableCell className="main-table-bordered p-0 align-top border border-black">
-                    <Textarea value={row.position as string} onChange={(e) => handleTextareaInput(e, index, 'position')} className="text-xs p-1 border-0 rounded-none resize-none min-h-[220px] h-auto no-shadow-outline print-textarea textarea-align-top" />
+                    <Textarea value={row.position as string} onChange={(e) => handleTextareaInput(e, index, 'position')} className="text-xs text-foreground p-1 border-0 rounded-none resize-none min-h-[220px] h-auto no-shadow-outline print-textarea textarea-align-top" />
                   </TableCell>
                 </TableRow>
               ))}
@@ -1020,7 +990,6 @@ const AdOrderForm = (): JSX.Element => {
                   </Button>
                 )}
               </div>
-              {/* Removed "Authorised Signatory" text as per previous request */}
             </div>
           </div>
         </div>
